@@ -280,7 +280,9 @@ void MPCNode::pathCB(const nav_msgs::Path::ConstPtr& pathMsg)
                 _pub_odompath.publish(odom_path);
             }
             //DEBUG            
-            //cout << endl << "N: " << odom_path.poses.size() << endl <<  "Car path[0]: " << odom_path.poses[0] << ", path[N]: " << _odom_path.poses[_odom_path.poses.size()-1] << endl;
+            cout << endl << "N: " << odom_path.poses.size() << endl 
+            <<  "Car path[0]: " << odom_path.poses[0];
+            // << ", path[N]: " << _odom_path.poses[_odom_path.poses.size()-1] << endl;
 
 
         }
