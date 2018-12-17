@@ -1,0 +1,24 @@
+<launch>
+    <!-- launch file arguments -->
+    <arg name="debug_mode"  default="false" doc="show debug info (bool)"/> 
+    <arg name="pwm_radian"  default="450.0" doc="non scaled factor pwm/radian (steering)"/> 
+    <arg name="neutral_pt"  default="0.0"   doc="steering neutral point (degree)"/>
+    <arg name="odom_topic"  default="/odom" doc="odom topic name"/>
+    <arg name="odom_freq"   default="50"    doc="freq of odom topic, unit: Hz"/>
+    <arg name="time_out"    default="0.5"   doc="communication time out, unit: sec"/> 
+    <arg name="pub_tf"      default="true"  doc="broadcast odom TF (bool)"/> 
+
+    <node name="base_control"   pkg="hypharos_minicar"  type="base_control.py" output="screen">
+        <param name="port"       value="/dev/stm32base"/>
+        <param name="baudrate"   value="115200"/>   
+        <param name="base_id"    value="base_footprint"/> 
+        <param name="odom_id"    value="odom"/>      
+        <param name="odom_freq"  value="$(arg odom_freq)"/>
+        <param name="odom_topic" value="$(arg odom_topic)"/> 
+        <param name="pwm_radian" value="$(arg pwm_radian)"/>
+        <param name="neutral_pt" value="$(arg neutral_pt)"/>
+        <param name="pub_tf"     value="$(arg pub_tf)"/>   
+        <param name="debug_mode" value="$(arg debug_mode)"/> 
+        <param name="time_out"   value="$(arg time_out)"/> 
+    </node>
+</launch>

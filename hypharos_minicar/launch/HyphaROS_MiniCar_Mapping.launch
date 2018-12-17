@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+
+<launch>
+    <!-- launch file arguments -->
+    <arg name="slam_type"   default="gmapping" doc="opt: gmapping, karto_slam, mrpt_icp, hector_slam"/> 
+    <arg name="debug_mode"  default="false" doc="show debug info (bool)"/> 
+    <arg name="pwm_radian"  default="450" doc="non scaled factor pwm/radian (steering)"/>
+    <arg name="neutral_pt"  default="-5.0"   doc="steering neutral point (degree)"/>
+    <arg name="use_imu"     default="false" doc="use imu for ekf (bool)"/> 
+    <arg name="time_out"    default="1.0"   doc="communication time out, unit: sec"/> 
+    <arg name="output"      default="log"   doc="log or screen"/> 
+    <!-- arg name="output"           default="screen" /--> 
+
+    <!-- Boot up all components -->
+    <include file="$(find hypharos_minicar)/launch/includes/HyphaROS_MiniCar_Drivers.launch.xml">
+        <arg name="debug_mode" value="$(arg debug_mode)" />
+        <arg name="pwm_radian" value="$(arg pwm_radian)"/>
+        <arg name="neutral_pt" value="$(arg neutral_pt)"/>
+        <arg name="use_imu"    value="$(arg use_imu)" />
+        <arg name="time_out"   value="$(arg time_out)" />
+    </include>
+
+    <!-- gmapping -->
+    <include file="$(find hypharos_minicar)/launch/includes/gmapping.launch.xml" if="$(eval slam_type == 'gmapping')">
+        <arg name="output" value="$(arg output)" />
+    </include>
+
+    <!-- karto slam -->
+    <include file="$(find hypharos_minicar)/launch/includes/karto_slam.launch.xml" if="$(eval slam_type == 'karto_slam')">
+        <arg name="output" value="$(arg output)" />
+    </include>
+
+    <!-- mrpt icp -->
+    <include file="$(find hypharos_minicar)/launch/includes/mrpt_icp.launch.xml" if="$(eval slam_type == 'mrpt_icp')">
+        <arg name="output" value="$(arg output)" />
+    </include>
+
+    <!-- hector slam -->
+    <include file="$(find hypharos_minicar)/launch/includes/hector_slam.launch.xml" if="$(eval slam_type == 'hector_slam')">
+        <arg name="output" value="$(arg output)" />
+    </include>
+
+</launch>

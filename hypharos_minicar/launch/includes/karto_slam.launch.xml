@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+
+<launch>
+    <!-- Launch file parameters -->
+    <arg name="output"  default="log" />  <!-- option: "screen" or "log" --> 
+
+    <!-- Karto SLAM -->
+    <node pkg="slam_karto" type="slam_karto" name="slam_karto" output="$(arg output)">
+        <param name="odom_frame" value="odom"/>
+        <param name="map_update_interval" value="10"/>
+        <param name="resolution" value="0.025"/>
+    </node>
+
+</launch>

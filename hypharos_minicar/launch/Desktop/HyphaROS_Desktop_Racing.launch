@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+
+<launch>
+    <!-- Launch arguments -->
+    <arg name="use_rviz"  default="true" />
+    <arg name="use_key"   default="true"/>
+
+    <!-- Keyboard control -->
+    <node pkg="hypharos_minicar" type="teleop_keyboard.py" name="teleop_keyboard" output="screen" if="$(arg use_key)">
+        <param name="safety_mode" value="True"/>
+    </node>
+
+    <!-- Visualization -->
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find hypharos_minicar)/rviz/hypharos_minicar_racing.rviz" if="$(arg use_rviz)" />
+</launch>

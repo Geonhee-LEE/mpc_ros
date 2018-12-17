@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+
+<launch>
+    <!-- Launch file parameters -->
+    <arg name="output"  default="log" />  <!-- option: "screen" or "log" --> 
+
+    <!-- MRPT ICP -->
+    <param name="ini_filename" value="$(find mrpt_icp_slam_2d)/tutorial/icp_slam_demo.ini"/>
+    <param name="odom_frame_id" value="/odom"/>
+    <param name="global_frame_id" value="/map"/>
+    <param name="base_frame_id" value="/laser_link"/>
+    <param name="sensor_source" value="/scan"/>
+    <env name="ROSCONSOLE_CONFIG_FILE" value="$(find mrpt_icp_slam_2d)/config/rosconsole.config"/>
+    <!--SLAM RUN-->
+    <node pkg="mrpt_icp_slam_2d" type="mrpt_icp_slam_2d" name="mrpt_icp_slam_2d" output="$(arg output)"/>
+
+</launch>

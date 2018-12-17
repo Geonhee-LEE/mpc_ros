@@ -1,0 +1,47 @@
+<launch>
+    <!-- launch file arguments -->
+    <arg name="debug_mode"  default="false" doc="show debug info (bool)"/> 
+    <arg name="pwm_radian"  default="450.0" doc="non scaled factor pwm/radian (steering)"/> 
+    <arg name="neutral_pt"  default="0.0"   doc="steering neutral point (degree)"/>
+    <arg name="odom_topic"  default="/odom" doc="odom topic name"/>
+    <arg name="time_out"    default="0.5"   doc="communication time out, unit: sec"/> 
+    <arg name="use_imu"     default="false" doc="use imu for ekf (bool)"/> 
+
+    <!-- TF setting -->
+    <include file="$(find hypharos_minicar)/launch/includes/minicar_tf.launch.xml" />
+
+    <!-- YDLidar -->
+    <include file="$(find hypharos_minicar)/launch/includes/ydlidar.launch.xml" />
+
+    <!-- ODOMETRY -->
+    <group if="$(arg use_imu)">
+        <!-- base control -->
+        <include file="$(find hypharos_minicar)/launch/includes/minicar_base.launch.xml">
+            <arg name="debug_mode" value="$(arg debug_mode)"/>
+            <arg name="odom_topic" value="$(arg odom_topic)"/>
+            <arg name="pwm_radian" value="$(arg pwm_radian)"/>
+            <arg name="neutral_pt" value="$(arg neutral_pt)"/>
+            <arg name="time_out"   value="$(arg time_out)"/>
+            <arg name="pub_tf"     value="false"/>
+        </include>
+        <!-- IMU -->
+        <include file="$(find hypharos_minicar)/launch/includes/minicar_imu.launch.xml" />
+        <!-- Robot_Localization -->
+        <node pkg="robot_localization" type="ekf_localization_node" name="ekf_se" clear_params="true">
+            <rosparam command="load" file="$(find hypharos_minicar)/launch/params/minicar_imu_ekf_params.yaml" />
+            <remap from="/odometry/filtered" to="/odom" />
+        </node>
+    </group>
+
+    <group unless="$(arg use_imu)">
+        <!-- base control -->
+        <include file="$(find hypharos_minicar)/launch/includes/minicar_base.launch.xml">
+            <arg name="debug_mode" value="$(arg debug_mode)"/>
+            <arg name="odom_topic" value="$(arg odom_topic)"/>
+            <arg name="pwm_radian" value="$(arg pwm_radian)"/>
+            <arg name="neutral_pt" value="$(arg neutral_pt)"/>
+            <arg name="time_out"   value="$(arg time_out)"/>
+            <arg name="pub_tf"     value="true"/>
+        </include>
+    </group>
+</launch>

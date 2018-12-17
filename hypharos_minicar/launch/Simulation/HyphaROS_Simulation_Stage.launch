@@ -1,0 +1,62 @@
+<launch>
+
+    <!--  ************** Global Parameters ***************  -->
+    <param name="/use_sim_time" value="true"/>
+    <arg name="controller"  default="mpc" doc="opt: dwa, mpc, pure_pursuit"/> 
+
+    <!--  ************** Stage Simulator ***************  -->
+    <node pkg="stage_ros" type="stageros" name="stageros" args="$(find hypharos_minicar)/launch/Simulation/stage/maze_carlike.world">
+        <remap from="base_scan" to="scan"/>
+    </node>
+
+    <!--  ************** Map Server **************  -->
+    <node name="map_server" pkg="map_server" type="map_server" args="$(find hypharos_minicar)/launch/Simulation/maps/maze.yaml" output="screen">
+        <param name="frame_id" value="/map"/>
+    </node>
+
+    <!--  ************** Localization **************  -->
+    <node pkg="amcl" type="amcl" name="amcl" output="screen">
+        <rosparam file="$(find hypharos_minicar)/launch/Simulation/params/amcl_params.yaml" command="load" />
+        <param name="initial_pose_x"            value="1"/>
+        <param name="initial_pose_y"            value="1"/>
+        <param name="initial_pose_a"            value="0"/>
+    </node>
+
+    <!--  ************** Navigation ***************  -->
+    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+        <rosparam file="$(find hypharos_minicar)/launch/Simulation/params/carlike/costmap_common_params.yaml" command="load" ns="global_costmap" />
+        <rosparam file="$(find hypharos_minicar)/launch/Simulation/params/carlike/costmap_common_params.yaml" command="load" ns="local_costmap" />
+        <rosparam file="$(find hypharos_minicar)/launch/Simulation/params/carlike/local_costmap_params.yaml" command="load" />
+        <rosparam file="$(find hypharos_minicar)/launch/Simulation/params/carlike/global_costmap_params.yaml" command="load" />        
+        <!-- Global Planner -->
+        <param name="base_global_planner" value="global_planner/GlobalPlanner" />
+        <param name="planner_frequency" value="0.0" />
+        <param name="planner_frequency" value="0.0" if="$(eval controller == 'pure_pursuit')"/>
+        <param name="planner_patience" value="5.0" />
+        <rosparam file="$(find hypharos_minicar)/launch/Simulation/params/carlike/global_planner.yaml" command="load" />
+        <!-- Local Planner -->
+        <param name="base_local_planner" value="base_local_planner/TrajectoryPlannerROS" />
+        <!-- Our carlike robot is not able to rotate in place -->
+        <param name="clearing_rotation_allowed" value="false" /> 
+        <!-- external controller -->
+        <remap from="/cmd_vel" to="/fake_cmd" unless="$(eval controller == 'dwa')"/>
+    </node>
+    
+    <!--  ************** MPC Node **************  -->
+    <node name="MPC_Node" pkg="hypharos_minicar" type="MPC_Node" output="screen" if="$(eval controller == 'mpc')" >
+        <rosparam file="$(find hypharos_minicar)/launch/Simulation/params/mpc_params.yaml" command="load" />
+    </node>
+
+    <!--  ************** Pure Pursuit **************  -->
+    <node name="Pure_Pursuit" pkg="hypharos_minicar" type="Pure_Pursuit" output="screen" if="$(eval controller == 'pure_pursuit')" >
+        <rosparam file="$(find hypharos_minicar)/launch/Simulation/params/pure_pursuit_params.yaml" command="load" />
+        <remap from="/pure_pursuit/odom" to="/odom" />
+        <remap from="/pure_pursuit/global_planner" to="/move_base/GlobalPlanner/plan" />
+        <remap from="/pure_pursuit/goal" to="/move_base_simple/goal" />
+        <remap from="/pure_pursuit/cmd_vel" to="/cmd_vel" />
+    </node>
+
+    <!--  ************** Visualisation **************  -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find hypharos_minicar)/launch/Simulation/params/rviz_navigation.rviz"/>
+
+</launch>

@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+
+<launch>
+    <!-- ********************** -->
+    <!-- Launch file parameters -->
+    <!-- ********************** -->
+    <!-- general -->
+    <arg name="debug_mode"  default="false" doc="show debug info (bool)"/> 
+    <arg name="pwm_radian"  default="450" doc="non scaled factor pwm/radian (steering)"/>
+    <arg name="neutral_pt"  default="-5.0"   doc="steering neutral point (degree)"/>
+    <arg name="use_imu"     default="false" doc="use imu for ekf (bool)"/> 
+    <arg name="time_out"    default="1.0"   doc="communication time out, unit: sec"/> 
+    <arg name="output"      default="log"   doc="log or screen"/> 
+    <!-- for amcl -->    
+    <arg name="init_x" default="0.0" />
+    <arg name="init_y" default="0.0" />
+    <arg name="init_a" default="0.0" />
+    <!-- for controller -->
+    <arg name="controller"  default="pure_pursuit" doc="opt: mpc, pure_pursuit"/> 
+
+
+    <!-- ********************** -->
+    <!-- Boot up all components -->
+    <!-- ********************** -->
+    <include file="$(find hypharos_minicar)/launch/includes/HyphaROS_MiniCar_Drivers.launch.xml">
+        <arg name="debug_mode" value="$(arg debug_mode)" />
+        <arg name="pwm_radian" value="$(arg pwm_radian)"/>
+        <arg name="neutral_pt" value="$(arg neutral_pt)"/>
+        <arg name="use_imu"    value="$(arg use_imu)" />
+        <arg name="time_out"   value="$(arg time_out)" />
+    </include>
+
+
+    <!-- ************ -->
+    <!-- Localization -->
+    <!-- ************ -->
+    <!-- Map server (for amcl) -->
+    <node name="map_server" pkg="map_server" type="map_server" args="$(find hypharos_minicar)/map/map_amcl.yaml">
+        <remap from="map" to="map_amcl"/>
+    </node>
+    <!-- Map server (for nav)-->
+    <node name="map_server_nav" pkg="map_server" type="map_server" args="$(find hypharos_minicar)/map/map_nav.yaml"/>
+
+    <!-- amcl -->
+    <include file="$(find hypharos_minicar)/launch/includes/amcl.launch.xml">
+        <arg name="init_x" value="$(arg init_x)"/>
+        <arg name="init_y" value="$(arg init_y)"/>
+        <arg name="init_a" value="$(arg init_a)"/>
+    </include>
+
+
+    <!-- ********************** -->
+    <!-- Navigation (move_base) -->
+    <!-- ********************** -->
+    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+        <rosparam file="$(find hypharos_minicar)/launch/params/costmap_common_params.yaml" command="load" ns="global_costmap" />
+        <rosparam file="$(find hypharos_minicar)/launch/params/costmap_common_params.yaml" command="load" ns="local_costmap" />
+        <rosparam file="$(find hypharos_minicar)/launch/params/local_costmap_params.yaml" command="load" />
+        <rosparam file="$(find hypharos_minicar)/launch/params/global_costmap_params.yaml" command="load" />        
+        <!-- Global Planner -->
+        <param name="base_global_planner" value="global_planner/GlobalPlanner" />
+        <param name="planner_frequency" value="0.0" />
+        <param name="planner_patience" value="5.0" />
+        <rosparam file="$(find hypharos_minicar)/launch/params/global_planner.yaml" command="load" />
+        <!-- Local Planner -->
+        <param name="base_local_planner" value="base_local_planner/TrajectoryPlannerROS" />
+        <!-- Our carlike robot is not able to rotate in place -->
+        <param name="clearing_rotation_allowed" value="false" /> 
+        <!-- external controller -->
+        <remap from="/cmd_vel" to="/fake_cmd" />
+    </node>
+    
+    <!--  ****** MPC Node ******  -->
+    <node name="MPC_Node" pkg="hypharos_minicar" type="MPC_Node" output="screen" if="$(eval controller == 'mpc')" >
+        <rosparam file="$(find hypharos_minicar)/launch/params/mpc/mpc_params.yaml" command="load" />
+    </node>
+
+    <!--  ****** Pure Pursuit ******  -->
+    <node name="Pure_Pursuit" pkg="hypharos_minicar" type="Pure_Pursuit" output="screen" if="$(eval controller == 'pure_pursuit')" >
+        <rosparam file="$(find hypharos_minicar)/launch/params/pure_pursuit/pure_pursuit_params.yaml" command="load" />
+        <remap from="/pure_pursuit/odom" to="/odom" />
+        <remap from="/pure_pursuit/global_planner" to="/move_base/GlobalPlanner/plan" />
+        <remap from="/pure_pursuit/goal" to="/move_base_simple/goal" />
+        <remap from="/pure_pursuit/ackermann_cmd" to="/ackermann_cmd" />
+    </node>
+
+</launch>
