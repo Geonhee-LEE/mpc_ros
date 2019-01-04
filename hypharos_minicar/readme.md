@@ -1,12 +1,12 @@
 # HyphaROS MiniCar (1/20 Scale MPC Racing Car)
-![alt text](https://github.com/Hypha-ROS/hypharos_minicar/blob/master/document/photo/HyphaROS_logo.png)  
+
 
 ## Abstract
 Low cost, High speed 1/20 Racing Car for control laws evaluation !   
 Fully open-sourced (hardware & software), total cost <300USD.  
 Currently supports: Pure-Pursuit, Model-Predictive-Control (Nonlinear)  
 
-![alt text](https://github.com/Hypha-ROS/hypharos_minicar/blob/master/document/photo/HyphaROS_MiniCar_photo.jpg)  
+
 
 ## About us
 FB Page: https://www.facebook.com/HyphaROS/  
