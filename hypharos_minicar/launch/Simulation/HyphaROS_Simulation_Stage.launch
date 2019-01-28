@@ -17,8 +17,8 @@
     <!--  ************** Localization **************  -->
     <node pkg="amcl" type="amcl" name="amcl" output="screen">
         <rosparam file="$(find hypharos_minicar)/launch/Simulation/params/amcl_params.yaml" command="load" />
-        <param name="initial_pose_x"            value="1"/>
-        <param name="initial_pose_y"            value="1"/>
+        <param name="initial_pose_x"            value="0"/>
+        <param name="initial_pose_y"            value="0"/>
         <param name="initial_pose_a"            value="0"/>
     </node>
 

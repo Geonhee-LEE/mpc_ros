@@ -24,7 +24,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Twist.h>
 #include <tf/transform_listener.h>
-#include <tf/transform_datatypes.h>
+// #include <tf/transform_datatypes.h>
 #include <nav_msgs/Path.h>
 #include <nav_msgs/Odometry.h>
 #include <ackermann_msgs/AckermannDriveStamped.h>
@@ -94,7 +94,7 @@ MPCNode::MPCNode()
     pn.param("pub_twist_cmd", _pub_twist_flag, true);
     pn.param("debug_info", _debug_info, false);
     pn.param("delay_mode", _delay_mode, true);
-    pn.param("max_speed", _max_speed, 2.0); // unit: m/s
+    pn.param("max_speed", _max_speed, 0.30); // unit: m/s
     pn.param("waypoints_dist", _waypointsDist, -1.0); // unit: m
     pn.param("path_length", _pathLength, 8.0); // unit: m
     pn.param("goal_radius", _goalRadius, 0.5); // unit: m
@@ -123,7 +123,7 @@ MPCNode::MPCNode()
     pn.param<std::string>("goal_topic", _goal_topic, "/move_base_simple/goal" );
     pn.param<std::string>("map_frame", _map_frame, "map" );
     pn.param<std::string>("odom_frame", _odom_frame, "odom");
-    pn.param<std::string>("car_frame", _car_frame, "base_link" );
+    pn.param<std::string>("car_frame", _car_frame, "base_footprint" );
 
     //Display the parameters
     cout << "\n===== Parameters =====" << endl;

@@ -2,7 +2,7 @@
 pub_twist_cmd: true
 debug_info: false
 delay_mode: true
-max_speed: 2.0 # unit: m/s 
+max_speed: 0.3 # unit: m/s 
 waypoints_dist: -1.0 # unit: m, set < 0 means computed by node
 path_length: 8.0 # unit: m
 goal_radius: 0.5 # unit: m
