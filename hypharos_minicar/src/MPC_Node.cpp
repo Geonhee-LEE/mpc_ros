@@ -242,6 +242,9 @@ void MPCNode::pathCB(const nav_msgs::Path::ConstPtr& pathMsg)
         nav_msgs::Path odom_path = nav_msgs::Path();
         try
         {
+            double total_length = 0.0;
+            int sampling = _downSampling;
+
             //find waypoints distance
             if(_waypointsDist <=0.0)
             {        
@@ -249,10 +252,8 @@ void MPCNode::pathCB(const nav_msgs::Path::ConstPtr& pathMsg)
                 double dy = pathMsg->poses[1].pose.position.y - pathMsg->poses[0].pose.position.y;
                 _waypointsDist = sqrt(dx*dx + dy*dy);
                 _downSampling = int(_pathLength/10.0/_waypointsDist);
-            }
-            
-            double total_length = 0.0;
-            int sampling = _downSampling;
+            }            
+
             // Cut and downsampling the path
             for(int i =0; i< pathMsg->poses.size(); i++)
             {
@@ -369,8 +370,7 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         VectorXd state(6);
         if(_delay_mode)
         {
-            // Kinematic model is used to predict vehicle state at the actual
-            // moment of control (current time + delay dt)
+            // Kinematic model is used to predict vehicle state at the actual moment of control (current time + delay dt)
             const double px_act = v * dt;
             const double py_act = 0;
             const double psi_act = v * steering * dt / Lf;
@@ -436,7 +436,7 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
             cout << "Goal Reached !" << endl;
     }
 
-    // publish cmd 
+    // publish ankermann cmd_vel
     _ackermann_msg.header.frame_id = _car_frame;
     _ackermann_msg.header.stamp = ros::Time::now();
     _ackermann_msg.drive.steering_angle = _steering;
@@ -444,6 +444,7 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
     _ackermann_msg.drive.acceleration = _throttle;
     _pub_ackermann.publish(_ackermann_msg);        
 
+    // publish general cmd_vel 
     if(_pub_twist_flag)
     {
         _twist_msg.linear.x  = _speed; 
