@@ -67,7 +67,8 @@ class MPCNode
         double _mpc_steps, _ref_cte, _ref_epsi, _ref_vel, _w_cte, _w_epsi, _w_vel, 
                _w_delta, _w_accel, _w_delta_d, _w_accel_d, _max_steering, _max_throttle, _bound_value;
 
-        double _Lf, _dt, _steering, _throttle, _speed, _max_speed;
+        //double _Lf; 
+        double _dt, _theta, _throttle, _speed, _max_speed;
         double _pathLength, _goalRadius, _waypointsDist;
         int _controller_freq, _downSampling, _thread_numbers;
         bool _goal_received, _goal_reached, _path_computed, _pub_twist_flag, _debug_info, _delay_mode;
@@ -99,7 +100,7 @@ MPCNode::MPCNode()
     pn.param("path_length", _pathLength, 8.0); // unit: m
     pn.param("goal_radius", _goalRadius, 0.5); // unit: m
     pn.param("controller_freq", _controller_freq, 10);
-    pn.param("vehicle_Lf", _Lf, 0.25); // distance between the front of the vehicle and its center of gravity
+    //pn.param("vehicle_Lf", _Lf, 0.290); // distance between the front of the vehicle and its center of gravity
     _dt = double(1.0/_controller_freq); // time step duration dt in s 
 
     //Parameter for MPC solver
@@ -130,7 +131,7 @@ MPCNode::MPCNode()
     cout << "pub_twist_cmd: "  << _pub_twist_flag << endl;
     cout << "debug_info: "  << _debug_info << endl;
     cout << "delay_mode: "  << _delay_mode << endl;
-    cout << "vehicle_Lf: "  << _Lf << endl;
+    //cout << "vehicle_Lf: "  << _Lf << endl;
     cout << "frequency: "   << _dt << endl;
     cout << "mpc_steps: "   << _mpc_steps << endl;
     cout << "mpc_ref_vel: " << _ref_vel << endl;
@@ -157,7 +158,7 @@ MPCNode::MPCNode()
     _goal_reached  = false;
     _path_computed = false;
     _throttle = 0.0; 
-    _steering = 0.0;
+    _theta = 0.0;
     _speed = 0.0;
 
     _ackermann_msg = ackermann_msgs::AckermannDriveStamped();
@@ -166,7 +167,7 @@ MPCNode::MPCNode()
 
     //Init parameters for MPC object
     _mpc_params["DT"] = _dt;
-    _mpc_params["LF"] = _Lf;
+    //_mpc_params["LF"] = _Lf;
     _mpc_params["STEPS"]    = _mpc_steps;
     _mpc_params["REF_CTE"]  = _ref_cte;
     _mpc_params["REF_EPSI"] = _ref_epsi;
@@ -340,11 +341,13 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         tf::poseMsgToTF(odom.pose.pose, pose);
         const double psi = tf::getYaw(pose.getRotation());
         const double v = odom.twist.twist.linear.x; //twist: body fixed frame
-        // Update system inputs: U=[steering, throttle]
-        const double steering = _steering;  // radian
+        // Update system inputs: U=[theta, throttle]
+        const double theta = _theta; // steering -> theta
+        const double w = odom.twist.twist.angular.z;
+        //const double steering = _steering;  // radian
         const double throttle = _throttle; // accel: >0; brake: <0
         const double dt = _dt;
-        const double Lf = _Lf;
+        //const double Lf = _Lf;
 
         // Waypoints related parameters
         const int N = odom_path.poses.size(); // Number of waypoints
@@ -373,8 +376,8 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
             // Kinematic model is used to predict vehicle state at the actual moment of control (current time + delay dt)
             const double px_act = v * dt;
             const double py_act = 0;
-            const double psi_act = v * steering * dt / Lf;
-            const double v_act = v + throttle * dt;
+            const double psi_act = theta - w * dt; //(steering) psi_act = v * steering * dt / Lf; // psi = (cokevR + vL) / W
+            const double v_act = v + throttle * dt; //v = v + a * dt
             const double cte_act = cte + v * sin(epsi) * dt;
             const double epsi_act = -epsi + psi_act;             
             state << px_act, py_act, psi_act, v_act, cte_act, epsi_act;
@@ -387,8 +390,8 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         // Solve MPC Problem
         vector<double> mpc_results = _mpc.Solve(state, coeffs);
               
-        // MPC result (all described in car frame)        
-        _steering = mpc_results[0]; // radian
+        // MPC result (all described in car frame), output = (acceleration, theta)        
+        _theta = mpc_results[0]; // radian
         _throttle = mpc_results[1]; // acceleration
         _speed = v + _throttle*dt;  // speed
         if (_speed >= _max_speed)
@@ -405,7 +408,7 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
             //cout << "x_points: \n" << x_veh << endl;
             //cout << "y_points: \n" << y_veh << endl;
             cout << "coeffs: \n" << coeffs << endl;
-            cout << "_steering: \n" << _steering << endl;
+            cout << "theta: \n" << _theta << endl;
             cout << "_throttle: \n" << _throttle << endl;
             cout << "_speed: \n" << _speed << endl;
         }
@@ -429,7 +432,6 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
     }
     else
     {
-        _steering = 0.0;
         _throttle = 0.0;
         _speed = 0.0;
         if(_goal_reached && _goal_received)
@@ -437,18 +439,20 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
     }
 
     // publish ankermann cmd_vel
+    /*
     _ackermann_msg.header.frame_id = _car_frame;
     _ackermann_msg.header.stamp = ros::Time::now();
     _ackermann_msg.drive.steering_angle = _steering;
     _ackermann_msg.drive.speed = _speed;
     _ackermann_msg.drive.acceleration = _throttle;
     _pub_ackermann.publish(_ackermann_msg);        
+    */
 
     // publish general cmd_vel 
     if(_pub_twist_flag)
     {
         _twist_msg.linear.x  = _speed; 
-        _twist_msg.angular.z = _steering;
+        _twist_msg.angular.z = _theta;
         _pub_twist.publish(_twist_msg);
     }
     
