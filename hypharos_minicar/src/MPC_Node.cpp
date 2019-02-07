@@ -334,16 +334,15 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         nav_msgs::Odometry odom = _odom; 
         nav_msgs::Path odom_path = _odom_path;   
 
-        // Update system states: X=[x, y, psi, v]
+        // Update system states: X=[x, y, theta, v]
         const double px = odom.pose.pose.position.x; //pose: odom frame
         const double py = odom.pose.pose.position.y;
         tf::Pose pose;
         tf::poseMsgToTF(odom.pose.pose, pose);
-        const double psi = tf::getYaw(pose.getRotation());
+        const double theta = tf::getYaw(pose.getRotation());
         const double v = odom.twist.twist.linear.x; //twist: body fixed frame
         // Update system inputs: U=[w, throttle]
         const double w = _w; // steering -> w
-        const double ang_vel = odom.twist.twist.angular.z;
         //const double steering = _steering;  // radian
         const double throttle = _throttle; // accel: >0; brake: <0
         const double dt = _dt;
@@ -351,8 +350,8 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
 
         // Waypoints related parameters
         const int N = odom_path.poses.size(); // Number of waypoints
-        const double cospsi = cos(psi);
-        const double sinpsi = sin(psi);
+        const double cospsi = cos(theta);
+        const double sinpsi = sin(theta);
 
         // Convert to the vehicle coordinate system
         VectorXd x_veh(N);
@@ -376,11 +375,11 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
             // Kinematic model is used to predict vehicle state at the actual moment of control (current time + delay dt)
             const double px_act = v * dt;
             const double py_act = 0;
-            const double psi_act = w - ang_vel * dt; //(steering) psi_act = v * steering * dt / Lf; // psi = (cokevR + vL) / W
+            const double theta_act = theta - w * dt; //(steering) psi_act = v * steering * dt / Lf;
             const double v_act = v + throttle * dt; //v = v + a * dt
             const double cte_act = cte + v * sin(epsi) * dt;
-            const double epsi_act = -epsi + psi_act;             
-            state << px_act, py_act, psi_act, v_act, cte_act, epsi_act;
+            const double epsi_act = -epsi + theta_act;             
+            state << px_act, py_act, theta_act, v_act, cte_act, epsi_act;
         }
         else
         {
@@ -391,7 +390,7 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         vector<double> mpc_results = _mpc.Solve(state, coeffs);
               
         // MPC result (all described in car frame), output = (acceleration, w)        
-        _w = mpc_results[0]; // radian
+        _w = mpc_results[0]; // radian/sec, angular velocity
         _throttle = mpc_results[1]; // acceleration
         _speed = v + _throttle*dt;  // speed
         if (_speed >= _max_speed)
@@ -402,7 +401,7 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         if(_debug_info)
         {
             cout << "\n\nDEBUG" << endl;
-            cout << "psi: " << psi << endl;
+            cout << "theta: " << theta << endl;
             cout << "V: " << v << endl;
             //cout << "odom_path: \n" << odom_path << endl;
             //cout << "x_points: \n" << x_veh << endl;
@@ -454,7 +453,7 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
     {
         _twist_msg.linear.x  = _speed; 
         _twist_msg.angular.z = _w;
-        _pub_twist.publish(_twist_msg);
+        //_pub_twist.publish(_twist_msg);
     }
     
 }

@@ -40,7 +40,7 @@ class MPC
     private:
         // Parameters for mpc solver
         double _max_steering, _max_throttle, _bound_value;
-        int _mpc_steps, _x_start, _y_start, _psi_start, _v_start, _cte_start, _epsi_start, _delta_start, _a_start;
+        int _mpc_steps, _x_start, _y_start, _theta_start, _v_start, _cte_start, _etheta_start, _angvel_start, _a_start;
         std::map<string, double> _params;
         
 };
