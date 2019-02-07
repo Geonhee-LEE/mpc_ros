@@ -34,7 +34,7 @@ class FG_eval
         // Fitted polynomial coefficients
         Eigen::VectorXd coeffs;
 
-        double _Lf, _dt, _ref_cte, _ref_etheta, _ref_vel; 
+        double _dt, _ref_cte, _ref_etheta, _ref_vel; 
         double  _w_cte, _w_etheta, _w_vel, _w_angvel, _w_accel, _w_angvel_d, _w_accel_d;
         int _mpc_steps, _x_start, _y_start, _theta_start, _v_start, _cte_start, _etheta_start, _angvel_start, _a_start;
 
@@ -44,7 +44,6 @@ class FG_eval
             this->coeffs = coeffs; 
 
             // Set default value    
-            _Lf = 0.25; // distance between the front of the vehicle and its center of gravity
             _dt = 0.1;  // in sec
             _ref_cte   = 0;
             _ref_etheta  = 0;
@@ -72,18 +71,17 @@ class FG_eval
         void LoadParams(const std::map<string, double> &params)
         {
             _dt = params.find("DT") != params.end() ? params.at("DT") : _dt;
-            _Lf = params.find("LF") != params.end() ? params.at("LF") : _Lf;
             _mpc_steps = params.find("STEPS") != params.end()    ? params.at("STEPS") : _mpc_steps;
             _ref_cte   = params.find("REF_CTE") != params.end()  ? params.at("REF_CTE") : _ref_cte;
-            _ref_etheta  = params.find("REF_EPSI") != params.end() ? params.at("REF_EPSI") : _ref_etheta;
+            _ref_etheta  = params.find("REF_ETHETA") != params.end() ? params.at("REF_ETHETA") : _ref_etheta;
             _ref_vel   = params.find("REF_V") != params.end()    ? params.at("REF_V") : _ref_vel;
             
             _w_cte   = params.find("W_CTE") != params.end()   ? params.at("W_CTE") : _w_cte;
             _w_etheta  = params.find("W_EPSI") != params.end()  ? params.at("W_EPSI") : _w_etheta;
             _w_vel   = params.find("W_V") != params.end()     ? params.at("W_V") : _w_vel;
-            _w_angvel = params.find("W_DELTA") != params.end() ? params.at("W_DELTA") : _w_angvel;
+            _w_angvel = params.find("W_ANGVEL") != params.end() ? params.at("W_ANGVEL") : _w_angvel;
             _w_accel = params.find("W_A") != params.end()     ? params.at("W_A") : _w_accel;
-            _w_angvel_d = params.find("W_DDELTA") != params.end() ? params.at("W_DDELTA") : _w_angvel_d;
+            _w_angvel_d = params.find("W_DANGVEL") != params.end() ? params.at("W_DANGVEL") : _w_angvel_d;
             _w_accel_d = params.find("W_DA") != params.end()     ? params.at("W_DA") : _w_accel_d;
 
             _x_start     = 0;
@@ -171,7 +169,7 @@ class FG_eval
 
                 fg[2 + _x_start + i] = x1 - (x0 + v0 * CppAD::cos(theta0) * _dt);
                 fg[2 + _y_start + i] = y1 - (y0 + v0 * CppAD::sin(theta0) * _dt);
-                fg[2 + _theta_start + i] = theta1 -  w0 * _dt;
+                fg[2 + _theta_start + i] = theta1 - (theta0 +  w0 * _dt);
                 fg[2 + _v_start + i] = v1 - (v0 + a0 * _dt);
                 
                 fg[2 + _cte_start + i] = cte1 - ((f0 - y0) + (v0 * CppAD::sin(etheta0) * _dt));
@@ -207,7 +205,7 @@ void MPC::LoadParams(const std::map<string, double> &params)
     _params = params;
     //Init parameters for MPC object
     _mpc_steps = _params.find("STEPS") != _params.end() ? _params.at("STEPS") : _mpc_steps;
-    _max_angvel = _params.find("MAXSTR") != _params.end() ? _params.at("MAXSTR") : _max_angvel;
+    _max_angvel = _params.find("ANGVEL") != _params.end() ? _params.at("ANGVEL") : _max_angvel;
     _max_throttle = _params.find("MAXTHR") != _params.end() ? _params.at("MAXTHR") : _max_throttle;
     _bound_value  = _params.find("BOUND") != _params.end()  ? _params.at("BOUND") : _bound_value;
     

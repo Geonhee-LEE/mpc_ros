@@ -93,8 +93,8 @@ MPCNode::MPCNode()
     //Parameters for control loop
     pn.param("thread_numbers", _thread_numbers, 2); // number of threads for this ROS node
     pn.param("pub_twist_cmd", _pub_twist_flag, true);
-    pn.param("debug_info", _debug_info, false);
-    pn.param("delay_mode", _delay_mode, true);
+    pn.param("debug_info", _debug_info, true);
+    pn.param("delay_mode", _delay_mode, false);
     pn.param("max_speed", _max_speed, 0.30); // unit: m/s
     pn.param("waypoints_dist", _waypointsDist, -1.0); // unit: m
     pn.param("path_length", _pathLength, 8.0); // unit: m
@@ -170,16 +170,16 @@ MPCNode::MPCNode()
     //_mpc_params["LF"] = _Lf;
     _mpc_params["STEPS"]    = _mpc_steps;
     _mpc_params["REF_CTE"]  = _ref_cte;
-    _mpc_params["REF_EPSI"] = _ref_etheta;
+    _mpc_params["REF_ETHETA"] = _ref_etheta;
     _mpc_params["REF_V"]    = _ref_vel;
     _mpc_params["W_CTE"]    = _w_cte;
     _mpc_params["W_EPSI"]   = _w_etheta;
     _mpc_params["W_V"]      = _w_vel;
-    _mpc_params["W_DELTA"]  = _w_angvel;
+    _mpc_params["W_ANGVEL"]  = _w_angvel;
     _mpc_params["W_A"]      = _w_accel;
-    _mpc_params["W_DDELTA"] = _w_angvel_d;
+    _mpc_params["W_DANGVEL"] = _w_angvel_d;
     _mpc_params["W_DA"]     = _w_accel_d;
-    _mpc_params["MAXSTR"]   = _max_angvel;
+    _mpc_params["ANGVEL"]   = _max_angvel;
     _mpc_params["MAXTHR"]   = _max_throttle;
     _mpc_params["BOUND"]    = _bound_value;
     _mpc.LoadParams(_mpc_params);
@@ -281,9 +281,13 @@ void MPCNode::pathCB(const nav_msgs::Path::ConstPtr& pathMsg)
                 odom_path.header.stamp = ros::Time::now();
                 _pub_odompath.publish(odom_path);
             }
+            else
+            {
+                cout << "Failed to path generation" << endl;
+            }
             //DEBUG            
-            cout << endl << "N: " << odom_path.poses.size() << endl 
-            <<  "Car path[0]: " << odom_path.poses[0];
+            //cout << endl << "N: " << odom_path.poses.size() << endl 
+            //<<  "Car path[0]: " << odom_path.poses[0];
             // << ", path[N]: " << _odom_path.poses[_odom_path.poses.size()-1] << endl;
 
 
@@ -329,6 +333,7 @@ void MPCNode::amclCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& a
 // Timer: Control Loop (closed loop nonlinear MPC)
 void MPCNode::controlLoopCB(const ros::TimerEvent&)
 {      
+    
     if(_goal_received && !_goal_reached && _path_computed ) //received goal & goal not reached    
     {    
         nav_msgs::Odometry odom = _odom; 
@@ -375,10 +380,12 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
             // Kinematic model is used to predict vehicle state at the actual moment of control (current time + delay dt)
             const double px_act = v * dt;
             const double py_act = 0;
-            const double theta_act = theta - w * dt; //(steering) theta_act = v * steering * dt / Lf;
+            const double theta_act = - w * dt; //(steering) theta_act = v * steering * dt / Lf;
             const double v_act = v + throttle * dt; //v = v + a * dt
+            
             const double cte_act = cte + v * sin(etheta) * dt;
-            const double etheta_act = -etheta + theta_act;             
+            const double etheta_act = -etheta + theta_act;  
+
             state << px_act, py_act, theta_act, v_act, cte_act, etheta_act;
         }
         else
@@ -407,7 +414,7 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
             //cout << "x_points: \n" << x_veh << endl;
             //cout << "y_points: \n" << y_veh << endl;
             cout << "coeffs: \n" << coeffs << endl;
-            cout << "w: \n" << _w << endl;
+            cout << "_w: \n" << _w << endl;
             cout << "_throttle: \n" << _throttle << endl;
             cout << "_speed: \n" << _speed << endl;
         }
@@ -453,7 +460,7 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
     {
         _twist_msg.linear.x  = _speed; 
         _twist_msg.angular.z = _w;
-        //_pub_twist.publish(_twist_msg);
+        _pub_twist.publish(_twist_msg);
     }
     
 }
