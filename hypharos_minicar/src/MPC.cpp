@@ -112,7 +112,7 @@ class FG_eval
               fg[0] += _w_vel * CppAD::pow(vars[_v_start + i] - _ref_vel, 2); // speed error
             }
 
-            // Minimize the use of actuators.
+                        // Minimize the use of actuators.
             for (int i = 0; i < _mpc_steps - 1; i++) {
               fg[0] += _w_angvel * CppAD::pow(vars[_angvel_start + i], 2);
               fg[0] += _w_accel * CppAD::pow(vars[_a_start + i], 2);
@@ -139,7 +139,7 @@ class FG_eval
                 // The state at time t+1 .
                 AD<double> x1 = vars[_x_start + i + 1];
                 AD<double> y1 = vars[_y_start + i + 1];
-                AD<double> psi1 = vars[_theta_start + i + 1];
+                AD<double> theta1 = vars[_theta_start + i + 1];
                 AD<double> v1 = vars[_v_start + i + 1];
                 AD<double> cte1 = vars[_cte_start + i + 1];
                 AD<double> etheta1 = vars[_etheta_start + i + 1];
@@ -147,7 +147,7 @@ class FG_eval
                 // The state at time t.
                 AD<double> x0 = vars[_x_start + i];
                 AD<double> y0 = vars[_y_start + i];
-                AD<double> psi0 = vars[_theta_start + i];
+                AD<double> theta0 = vars[_theta_start + i];
                 AD<double> v0 = vars[_v_start + i];
                 AD<double> cte0 = vars[_cte_start + i];
                 AD<double> etheta0 = vars[_etheta_start + i];
@@ -162,20 +162,20 @@ class FG_eval
                 {
                     f0 += coeffs[i] * CppAD::pow(x0, i);
                 }
-                AD<double> psides0 = 0.0;
+                AD<double> trj_grad0 = 0.0;
                 for (int i = 1; i < coeffs.size(); i++) 
                 {
-                    psides0 += i*coeffs[i] * CppAD::pow(x0, i-1); // f'(x0)
+                    trj_grad0 += i*coeffs[i] * CppAD::pow(x0, i-1); // f'(x0)
                 }
-                psides0 = CppAD::atan(psides0);
+                trj_grad0 = CppAD::atan(trj_grad0);
 
-                fg[2 + _x_start + i] = x1 - (x0 + v0 * CppAD::cos(psi0) * _dt);
-                fg[2 + _y_start + i] = y1 - (y0 + v0 * CppAD::sin(psi0) * _dt);
-                fg[2 + _theta_start + i] = psi1 -  w0 * _dt;
+                fg[2 + _x_start + i] = x1 - (x0 + v0 * CppAD::cos(theta0) * _dt);
+                fg[2 + _y_start + i] = y1 - (y0 + v0 * CppAD::sin(theta0) * _dt);
+                fg[2 + _theta_start + i] = theta1 -  w0 * _dt;
                 fg[2 + _v_start + i] = v1 - (v0 + a0 * _dt);
                 
                 fg[2 + _cte_start + i] = cte1 - ((f0 - y0) + (v0 * CppAD::sin(etheta0) * _dt));
-                fg[2 + _etheta_start + i] = etheta1 - ((psi0 - psides0) + w0 * _dt);
+                fg[2 + _etheta_start + i] = etheta1 - ((theta0 - trj_grad0) + w0 * _dt);
             }
         }
 };
@@ -187,7 +187,7 @@ MPC::MPC()
 {
     // Set default value    
     _mpc_steps = 40;
-    _max_steering = 0.523; // Maximal steering radian (~30 deg)
+    _max_angvel = 3.0; // Maximal angvel radian (~30 deg)
     _max_throttle = 1.0; // Maximal throttle accel
     _bound_value  = 1.0e3; // Bound value for other variables
 
@@ -207,7 +207,7 @@ void MPC::LoadParams(const std::map<string, double> &params)
     _params = params;
     //Init parameters for MPC object
     _mpc_steps = _params.find("STEPS") != _params.end() ? _params.at("STEPS") : _mpc_steps;
-    _max_steering = _params.find("MAXSTR") != _params.end() ? _params.at("MAXSTR") : _max_steering;
+    _max_angvel = _params.find("MAXSTR") != _params.end() ? _params.at("MAXSTR") : _max_angvel;
     _max_throttle = _params.find("MAXTHR") != _params.end() ? _params.at("MAXTHR") : _max_throttle;
     _bound_value  = _params.find("BOUND") != _params.end()  ? _params.at("BOUND") : _bound_value;
     
@@ -262,8 +262,8 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
     // degrees (values in radians).
     for (int i = _angvel_start; i < _a_start; i++) 
     {
-        vars_lowerbound[i] = -_max_steering;
-        vars_upperbound[i] = _max_steering;
+        vars_lowerbound[i] = -_max_angvel;
+        vars_upperbound[i] = _max_angvel;
     }
     // Acceleration/decceleration upper and lower limits
     for (int i = _a_start; i < n_vars; i++)  

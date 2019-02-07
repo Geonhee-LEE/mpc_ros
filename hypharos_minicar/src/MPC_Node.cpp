@@ -64,8 +64,8 @@ class MPCNode
 
         MPC _mpc;
         map<string, double> _mpc_params;
-        double _mpc_steps, _ref_cte, _ref_epsi, _ref_vel, _w_cte, _w_epsi, _w_vel, 
-               _w_delta, _w_accel, _w_delta_d, _w_accel_d, _max_steering, _max_throttle, _bound_value;
+        double _mpc_steps, _ref_cte, _ref_etheta, _ref_vel, _w_cte, _w_etheta, _w_vel, 
+               _w_angvel, _w_accel, _w_angvel_d, _w_accel_d, _max_angvel, _max_throttle, _bound_value;
 
         //double _Lf; 
         double _dt, _w, _throttle, _speed, _max_speed;
@@ -106,16 +106,16 @@ MPCNode::MPCNode()
     //Parameter for MPC solver
     pn.param("mpc_steps", _mpc_steps, 20.0);
     pn.param("mpc_ref_cte", _ref_cte, 0.0);
-    pn.param("mpc_ref_epsi", _ref_epsi, 0.0);
+    pn.param("mpc_ref_etheta", _ref_etheta, 0.0);
     pn.param("mpc_ref_vel", _ref_vel, 1.5);
     pn.param("mpc_w_cte", _w_cte, 100.0);
-    pn.param("mpc_w_epsi", _w_epsi, 100.0);
+    pn.param("mpc_w_etheta", _w_etheta, 100.0);
     pn.param("mpc_w_vel", _w_vel, 100.0);
-    pn.param("mpc_w_delta", _w_delta, 100.0);
+    pn.param("mpc_w_angvel", _w_angvel, 100.0);
     pn.param("mpc_w_accel", _w_accel, 50.0);
-    pn.param("mpc_w_delta_d", _w_delta_d, 0.0);
+    pn.param("mpc_w_angvel_d", _w_angvel_d, 0.0);
     pn.param("mpc_w_accel_d", _w_accel_d, 0.0);
-    pn.param("mpc_max_steering", _max_steering, 0.523); // Maximal steering radian (~30 deg)
+    pn.param("mpc_max_angvel", _max_angvel, 3.0); // Maximal angvel radian (~30 deg)
     pn.param("mpc_max_throttle", _max_throttle, 1.0); // Maximal throttle accel
     pn.param("mpc_bound_value", _bound_value, 1.0e3); // Bound value for other variables
 
@@ -136,8 +136,8 @@ MPCNode::MPCNode()
     cout << "mpc_steps: "   << _mpc_steps << endl;
     cout << "mpc_ref_vel: " << _ref_vel << endl;
     cout << "mpc_w_cte: "   << _w_cte << endl;
-    cout << "mpc_w_epsi: "  << _w_epsi << endl;
-    cout << "mpc_max_steering: "  << _max_steering << endl;
+    cout << "mpc_w_etheta: "  << _w_etheta << endl;
+    cout << "mpc_max_angvel: "  << _max_angvel << endl;
 
     //Publishers and Subscribers
     _sub_odom   = _nh.subscribe("/odom", 1, &MPCNode::odomCB, this);
@@ -170,16 +170,16 @@ MPCNode::MPCNode()
     //_mpc_params["LF"] = _Lf;
     _mpc_params["STEPS"]    = _mpc_steps;
     _mpc_params["REF_CTE"]  = _ref_cte;
-    _mpc_params["REF_EPSI"] = _ref_epsi;
+    _mpc_params["REF_EPSI"] = _ref_etheta;
     _mpc_params["REF_V"]    = _ref_vel;
     _mpc_params["W_CTE"]    = _w_cte;
-    _mpc_params["W_EPSI"]   = _w_epsi;
+    _mpc_params["W_EPSI"]   = _w_etheta;
     _mpc_params["W_V"]      = _w_vel;
-    _mpc_params["W_DELTA"]  = _w_delta;
+    _mpc_params["W_DELTA"]  = _w_angvel;
     _mpc_params["W_A"]      = _w_accel;
-    _mpc_params["W_DDELTA"] = _w_delta_d;
+    _mpc_params["W_DDELTA"] = _w_angvel_d;
     _mpc_params["W_DA"]     = _w_accel_d;
-    _mpc_params["MAXSTR"]   = _max_steering;
+    _mpc_params["MAXSTR"]   = _max_angvel;
     _mpc_params["MAXTHR"]   = _max_throttle;
     _mpc_params["BOUND"]    = _bound_value;
     _mpc.LoadParams(_mpc_params);
@@ -350,8 +350,8 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
 
         // Waypoints related parameters
         const int N = odom_path.poses.size(); // Number of waypoints
-        const double cospsi = cos(theta);
-        const double sinpsi = sin(theta);
+        const double costheta = cos(theta);
+        const double sintheta = sin(theta);
 
         // Convert to the vehicle coordinate system
         VectorXd x_veh(N);
@@ -360,30 +360,30 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         {
             const double dx = odom_path.poses[i].pose.position.x - px;
             const double dy = odom_path.poses[i].pose.position.y - py;
-            x_veh[i] = dx * cospsi + dy * sinpsi;
-            y_veh[i] = dy * cospsi - dx * sinpsi;
+            x_veh[i] = dx * costheta + dy * sintheta;
+            y_veh[i] = dy * costheta - dx * sintheta;
         }
         
         // Fit waypoints
         auto coeffs = polyfit(x_veh, y_veh, 3); 
 
         const double cte  = polyeval(coeffs, 0.0);
-        const double epsi = atan(coeffs[1]);
+        const double etheta = atan(coeffs[1]);
         VectorXd state(6);
         if(_delay_mode)
         {
             // Kinematic model is used to predict vehicle state at the actual moment of control (current time + delay dt)
             const double px_act = v * dt;
             const double py_act = 0;
-            const double theta_act = theta - w * dt; //(steering) psi_act = v * steering * dt / Lf;
+            const double theta_act = theta - w * dt; //(steering) theta_act = v * steering * dt / Lf;
             const double v_act = v + throttle * dt; //v = v + a * dt
-            const double cte_act = cte + v * sin(epsi) * dt;
-            const double epsi_act = -epsi + theta_act;             
-            state << px_act, py_act, theta_act, v_act, cte_act, epsi_act;
+            const double cte_act = cte + v * sin(etheta) * dt;
+            const double etheta_act = -etheta + theta_act;             
+            state << px_act, py_act, theta_act, v_act, cte_act, etheta_act;
         }
         else
         {
-            state << 0, 0, 0, v, cte, epsi;
+            state << 0, 0, 0, v, cte, etheta;
         }
         
         // Solve MPC Problem
