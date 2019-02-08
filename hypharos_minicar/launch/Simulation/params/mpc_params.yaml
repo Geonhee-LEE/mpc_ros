@@ -2,7 +2,7 @@
 pub_twist_cmd: true
 debug_info: false
 delay_mode: true
-max_speed: 0.3 # unit: m/s 
+max_speed: 0.5 # unit: m/s 
 waypoints_dist: -1.0 # unit: m, set < 0 means computed by node
 path_length: 8.0 # unit: m
 goal_radius: 0.5 # unit: m
@@ -12,16 +12,16 @@ vehicle_Lf: 0.25 # distance between the front of the vehicle and its center of g
 # Parameter for MPC solver
 mpc_steps: 20.0
 mpc_ref_cte: 0.0
-mpc_ref_epsi: 0.0
-mpc_ref_vel: 1.5
+mpc_ref_vel: 0.5
+mpc_ref_etheta: 0.0
 mpc_w_cte: 100.0
-mpc_w_epsi: 100.0
+mpc_w_etheta: 100.0
 mpc_w_vel: 100.0
-mpc_w_delta: 100.0
+mpc_w_angvel: 100.0
+mpc_w_angvel_d: 0.0
 mpc_w_accel: 50.0
-mpc_w_delta_d: 0.0
 mpc_w_accel_d: 0.0
-mpc_max_steering: 0.523 # Maximal steering radian (~30 deg)
+mpc_max_angvel: 3.0 
 mpc_max_throttle: 1.0 # Maximal throttle accel
 mpc_bound_value: 1.0e3 # Bound value for other variables
 

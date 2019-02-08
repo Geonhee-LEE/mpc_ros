@@ -94,8 +94,8 @@ MPCNode::MPCNode()
     pn.param("thread_numbers", _thread_numbers, 2); // number of threads for this ROS node
     pn.param("pub_twist_cmd", _pub_twist_flag, true);
     pn.param("debug_info", _debug_info, true);
-    pn.param("delay_mode", _delay_mode, false);
-    pn.param("max_speed", _max_speed, 0.30); // unit: m/s
+    pn.param("delay_mode", _delay_mode, true);
+    pn.param("max_speed", _max_speed, 0.50); // unit: m/s
     pn.param("waypoints_dist", _waypointsDist, -1.0); // unit: m
     pn.param("path_length", _pathLength, 8.0); // unit: m
     pn.param("goal_radius", _goalRadius, 0.5); // unit: m
@@ -106,14 +106,14 @@ MPCNode::MPCNode()
     //Parameter for MPC solver
     pn.param("mpc_steps", _mpc_steps, 20.0);
     pn.param("mpc_ref_cte", _ref_cte, 0.0);
+    pn.param("mpc_ref_vel", _ref_vel, 0.5);
     pn.param("mpc_ref_etheta", _ref_etheta, 0.0);
-    pn.param("mpc_ref_vel", _ref_vel, 1.5);
     pn.param("mpc_w_cte", _w_cte, 100.0);
     pn.param("mpc_w_etheta", _w_etheta, 100.0);
-    pn.param("mpc_w_vel", _w_vel, 100.0);
+    pn.param("mpc_w_vel", _w_vel, 1.0);
     pn.param("mpc_w_angvel", _w_angvel, 100.0);
-    pn.param("mpc_w_accel", _w_accel, 50.0);
     pn.param("mpc_w_angvel_d", _w_angvel_d, 0.0);
+    pn.param("mpc_w_accel", _w_accel, 50.0);
     pn.param("mpc_w_accel_d", _w_accel_d, 0.0);
     pn.param("mpc_max_angvel", _max_angvel, 3.0); // Maximal angvel radian (~30 deg)
     pn.param("mpc_max_throttle", _max_throttle, 1.0); // Maximal throttle accel
@@ -371,6 +371,7 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         
         // Fit waypoints
         auto coeffs = polyfit(x_veh, y_veh, 3); 
+        cout << "coeffs!! " << coeffs << endl; 
 
         const double cte  = polyeval(coeffs, 0.0);
         const double etheta = atan(coeffs[1]);
@@ -380,7 +381,7 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
             // Kinematic model is used to predict vehicle state at the actual moment of control (current time + delay dt)
             const double px_act = v * dt;
             const double py_act = 0;
-            const double theta_act = - w * dt; //(steering) theta_act = v * steering * dt / Lf;
+            const double theta_act = w * dt; //(steering) theta_act = v * steering * dt / Lf;
             const double v_act = v + throttle * dt; //v = v + a * dt
             
             const double cte_act = cte + v * sin(etheta) * dt;
