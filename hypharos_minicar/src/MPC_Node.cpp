@@ -371,10 +371,13 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         
         // Fit waypoints
         auto coeffs = polyfit(x_veh, y_veh, 3); 
-        cout << "coeffs!! " << coeffs << endl; 
 
         const double cte  = polyeval(coeffs, 0.0);
+        cout << "--------------" << endl; 
+        cout << "cte!! " << cte << endl; 
         const double etheta = atan(coeffs[1]);
+        cout << "etheta!! " << etheta << endl; 
+
         VectorXd state(6);
         if(_delay_mode)
         {
@@ -385,8 +388,19 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
             const double v_act = v + throttle * dt; //v = v + a * dt
             
             const double cte_act = cte + v * sin(etheta) * dt;
-            const double etheta_act = -etheta + theta_act;  
+            const double etheta_act = etheta - theta_act;  
 
+            cout << "px_act!! " << px_act << endl;
+            cout << "py_act!! " << py_act << endl;
+            cout << "w!! " << w << endl;
+            cout << "theta_act!! " << theta_act << endl;
+            cout << "v!! " << v << endl;
+            cout << "speed!! " << _speed << endl;
+            cout << "throttle!! " << throttle << endl;
+            cout << "v_act!! " << v_act << endl;
+            cout << "cte_act!! " << cte_act << endl; 
+            cout << "etheta_act!! " << etheta_act << endl; 
+            
             state << px_act, py_act, theta_act, v_act, cte_act, etheta_act;
         }
         else

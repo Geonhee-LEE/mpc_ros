@@ -102,6 +102,7 @@ class FG_eval
         // fg: function that evaluates the objective and constraints using the syntax       
         void operator()(ADvector& fg, const ADvector& vars) 
         {
+            cout << "---------operator---------" <<endl;
             
             // fg[0] for cost function
             fg[0] = 0;
@@ -109,15 +110,18 @@ class FG_eval
             cost_etheta = 0;
             cost_vel = 0;
 
+            
+            cout << vars <<endl;
             for (int i = 0; i < _mpc_steps; i++) 
             {
               fg[0] += _w_cte * CppAD::pow(vars[_cte_start + i] - _ref_cte, 2); // cross deviation error
               fg[0] += _w_etheta * CppAD::pow(vars[_etheta_start + i] - _ref_etheta, 2); // heading error
               fg[0] += _w_vel * CppAD::pow(vars[_v_start + i] - _ref_vel, 2); // speed error
 
-              cost_cte +=  (_w_cte * CppAD::pow(vars[_cte_start + i] - _ref_cte, 2)); 
+              cost_cte +=  vars[_cte_start + i]; 
               cost_etheta +=  (_w_etheta * CppAD::pow(vars[_etheta_start + i] - _ref_etheta, 2)); 
               cost_vel +=  (_w_vel * CppAD::pow(vars[_v_start + i] - _ref_vel, 2)); 
+              cout << "cost_vel: " << cost_vel << endl; //most of all
               
             }
             cout << "------------------" <<endl;
@@ -144,6 +148,7 @@ class FG_eval
             cout << endl << "cost function of gap: " << fg[0] << endl; 
             cout << "------------------" <<endl;
             
+
             // fg[x] for constraints
             // Initial constraints
             fg[1 + _x_start] = vars[_x_start];
@@ -177,11 +182,15 @@ class FG_eval
                 AD<double> w0 = vars[_angvel_start + i];
                 AD<double> a0 = vars[_a_start + i];
 
+
+                //AD<double> f0 = coeffs[0] + coeffs[1] * x0 + coeffs[2] * CppAD::pow(x0, 2) + coeffs[3] * CppAD::pow(x0, 3);
                 AD<double> f0 = 0.0;
                 for (int i = 0; i < coeffs.size(); i++) 
                 {
                     f0 += coeffs[i] * CppAD::pow(x0, i);
                 }
+
+                //AD<double> trj_grad0 = CppAD::atan(coeffs[1] + 2 * coeffs[2] * x0 + 3 * coeffs[3] * CppAD::pow(x0, 2));
                 AD<double> trj_grad0 = 0.0;
                 for (int i = 1; i < coeffs.size(); i++) 
                 {
@@ -189,6 +198,14 @@ class FG_eval
                 }
                 trj_grad0 = CppAD::atan(trj_grad0);
 
+
+                // Here's `x` to get you started.
+                // The idea here is to constraint this value to be 0.
+                //
+                // NOTE: The use of `AD<double>` and use of `CppAD`!
+                // This is also CppAD can compute derivatives and pass
+                // these to the solver.
+                // TODO: Setup the rest of the model constraints
                 fg[2 + _x_start + i] = x1 - (x0 + v0 * CppAD::cos(theta0) * _dt);
                 fg[2 + _y_start + i] = y1 - (y0 + v0 * CppAD::sin(theta0) * _dt);
                 fg[2 + _theta_start + i] = theta1 - (theta0 +  w0 * _dt);
@@ -255,10 +272,13 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
     const double v = state[3];
     const double cte = state[4];
     const double etheta = state[5];
+
     // Set the number of model variables (includes both states and inputs).
     // For example: If the state is a 4 element vector, the actuators is a 2
     // element vector and there are 10 timesteps. The number of variables is:
+    // 4 * 10 + 2 * 9
     size_t n_vars = _mpc_steps * 6 + (_mpc_steps - 1) * 2;
+    
     // Set the number of constraints
     size_t n_constraints = _mpc_steps * 6;
 
@@ -270,14 +290,26 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
         vars[i] = 0;
     }
 
+    // Set the initial variable values
+    vars[_x_start] = x;
+    vars[_y_start] = y;
+    vars[_theta_start] = theta;
+    vars[_v_start] = v;
+    vars[_cte_start] = cte;
+    vars[_etheta_start] = etheta;
+
+    // Set lower and upper limits for variables.
     Dvector vars_lowerbound(n_vars);
     Dvector vars_upperbound(n_vars);
-    // Set lower and upper limits for variables.
+    
+    // Set all non-actuators upper and lowerlimits
+    // to the max negative and positive values.
     for (int i = 0; i < _angvel_start; i++) 
     {
         vars_lowerbound[i] = -_bound_value;
         vars_upperbound[i] = _bound_value;
     }
+
     // The upper and lower limits of angvel are set to -25 and 25
     // degrees (values in radians).
     for (int i = _angvel_start; i < _a_start; i++) 
@@ -318,6 +350,8 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
     // object that computes objective and constraints
     FG_eval fg_eval(coeffs);
     fg_eval.LoadParams(_params);
+
+    
     // options for IPOPT solver
     std::string options;
     // Uncomment this if you'd like more print information
@@ -337,9 +371,11 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
     CppAD::ipopt::solve_result<Dvector> solution;
 
     // solve the problem
+    cout << "---------solve---------" <<endl;
     CppAD::ipopt::solve<Dvector, FG_eval>(
       options, vars, vars_lowerbound, vars_upperbound, constraints_lowerbound,
       constraints_upperbound, fg_eval, solution);
+    cout << "---------solution---------" <<endl;
 
     // Check some of the solution values
     ok &= solution.status == CppAD::ipopt::solve_result<Dvector>::success;
