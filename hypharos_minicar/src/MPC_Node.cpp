@@ -108,13 +108,13 @@ MPCNode::MPCNode()
     pn.param("mpc_ref_cte", _ref_cte, 0.0);
     pn.param("mpc_ref_vel", _ref_vel, 0.5);
     pn.param("mpc_ref_etheta", _ref_etheta, 0.0);
-    pn.param("mpc_w_cte", _w_cte, 100.0);
-    pn.param("mpc_w_etheta", _w_etheta, 100.0);
+    pn.param("mpc_w_cte", _w_cte, 5000.0);
+    pn.param("mpc_w_etheta", _w_etheta, 5000.0);
     pn.param("mpc_w_vel", _w_vel, 1.0);
     pn.param("mpc_w_angvel", _w_angvel, 100.0);
-    pn.param("mpc_w_angvel_d", _w_angvel_d, 0.0);
+    pn.param("mpc_w_angvel_d", _w_angvel_d, 10.0);
     pn.param("mpc_w_accel", _w_accel, 50.0);
-    pn.param("mpc_w_accel_d", _w_accel_d, 0.0);
+    pn.param("mpc_w_accel_d", _w_accel_d, 10.0);
     pn.param("mpc_max_angvel", _max_angvel, 3.0); // Maximal angvel radian (~30 deg)
     pn.param("mpc_max_throttle", _max_throttle, 1.0); // Maximal throttle accel
     pn.param("mpc_bound_value", _bound_value, 1.0e3); // Bound value for other variables
@@ -284,6 +284,7 @@ void MPCNode::pathCB(const nav_msgs::Path::ConstPtr& pathMsg)
             else
             {
                 cout << "Failed to path generation" << endl;
+                _waypointsDist = -1;
             }
             //DEBUG            
             //cout << endl << "N: " << odom_path.poses.size() << endl 
@@ -345,7 +346,7 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         tf::Pose pose;
         tf::poseMsgToTF(odom.pose.pose, pose);
         const double theta = tf::getYaw(pose.getRotation());
-        const double v = odom.twist.twist.linear.x; //twist: body fixed frame
+        const double v = odom.twist.twist.linear.x * 0.5; //twist: body fixed frame
         // Update system inputs: U=[w, throttle]
         const double w = _w; // steering -> w
         //const double steering = _steering;  // radian
@@ -389,17 +390,6 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
             
             const double cte_act = cte + v * sin(etheta) * dt;
             const double etheta_act = etheta - theta_act;  
-
-            cout << "px_act!! " << px_act << endl;
-            cout << "py_act!! " << py_act << endl;
-            cout << "w!! " << w << endl;
-            cout << "theta_act!! " << theta_act << endl;
-            cout << "v!! " << v << endl;
-            cout << "speed!! " << _speed << endl;
-            cout << "throttle!! " << throttle << endl;
-            cout << "v_act!! " << v_act << endl;
-            cout << "cte_act!! " << cte_act << endl; 
-            cout << "etheta_act!! " << etheta_act << endl; 
             
             state << px_act, py_act, theta_act, v_act, cte_act, etheta_act;
         }

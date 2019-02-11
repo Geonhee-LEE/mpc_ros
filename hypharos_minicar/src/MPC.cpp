@@ -111,23 +111,28 @@ class FG_eval
             cost_vel = 0;
 
             
-            cout << vars <<endl;
+            for (int i = 0; i < _mpc_steps; i++) 
+            {
+                cout << i << endl;
+                cout << "_x_start" << vars[_x_start + i] <<endl;
+                cout << "_y_start" << vars[_y_start + i] <<endl;
+                cout << "_theta_start" << vars[_theta_start + i] <<endl;
+                cout << "_v_start" << vars[_v_start + i] <<endl;
+                cout << "_cte_start" << vars[_cte_start + i] <<endl;
+                cout << "_etheta_start" << vars[_etheta_start + i] <<endl;
+            }
+
             for (int i = 0; i < _mpc_steps; i++) 
             {
               fg[0] += _w_cte * CppAD::pow(vars[_cte_start + i] - _ref_cte, 2); // cross deviation error
               fg[0] += _w_etheta * CppAD::pow(vars[_etheta_start + i] - _ref_etheta, 2); // heading error
               fg[0] += _w_vel * CppAD::pow(vars[_v_start + i] - _ref_vel, 2); // speed error
 
-              cost_cte +=  vars[_cte_start + i]; 
+              cost_cte +=  _w_cte * CppAD::pow(vars[_cte_start + i] - _ref_cte, 2);
               cost_etheta +=  (_w_etheta * CppAD::pow(vars[_etheta_start + i] - _ref_etheta, 2)); 
               cost_vel +=  (_w_vel * CppAD::pow(vars[_v_start + i] - _ref_vel, 2)); 
-              cout << "cost_vel: " << cost_vel << endl; //most of all
-              
             }
             cout << "------------------" <<endl;
-            cout << "cte: " << vars[_cte_start] << endl;
-            cout << "etheta: " << vars[_etheta_start ] << endl;
-            cout << "vel: " << vars[_v_start ] << endl;
             cout << "cost_cte: " << cost_cte << endl;
             cout << "cost_etheta: " << cost_etheta << endl;
             cout << "cost_vel: " << cost_vel << endl; //most of all
@@ -351,7 +356,7 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
     FG_eval fg_eval(coeffs);
     fg_eval.LoadParams(_params);
 
-    
+
     // options for IPOPT solver
     std::string options;
     // Uncomment this if you'd like more print information
@@ -382,7 +387,7 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
 
     // Cost
     auto cost = solution.obj_value;
-    //std::cout << "Cost " << cost << std::endl;
+    std::cout << "Cost " << cost << std::endl;
     this->mpc_x = {};
     this->mpc_y = {};
     for (int i = 0; i < _mpc_steps; i++) 
