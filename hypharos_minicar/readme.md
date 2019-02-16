@@ -117,3 +117,4 @@ The default controller is mpc, you can swith to other slam method through param:
 $ roslaunch hypharos_minicar HyphaROS_Desktop_Racing.launch  
 Use keyboard to interrupt controller's behavior.  
 
+
