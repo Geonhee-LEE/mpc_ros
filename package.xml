@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>hypharos_minicar</name>
+  <name>mpc_ros</name>
   <version>0.0.0</version>
-  <description>The hypharos_minicar package</description>
+  <description>The mpc ros package</description>
 
-  <maintainer email="hypharos@gmail.com">HaoChih, Lin</maintainer>
+  <maintainer email="gunhee6392@gmail.com">Geonhee Lee</maintainer>
   <license>Apache 2.0</license>
-  <url type="website">https://hypharosworkshop.wordpress.com/</url>
+  <url type="website">https://github.com/Geonhee-LEE.com/</url>
 
 
   <buildtool_depend>catkin</buildtool_depend>

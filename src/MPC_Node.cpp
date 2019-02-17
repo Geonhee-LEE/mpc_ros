@@ -106,7 +106,7 @@ MPCNode::MPCNode()
     //Parameter for MPC solver
     pn.param("mpc_steps", _mpc_steps, 20.0);
     pn.param("mpc_ref_cte", _ref_cte, 0.0);
-    pn.param("mpc_ref_vel", _ref_vel, 0.5);
+    pn.param("mpc_ref_vel", _ref_vel, 1.0);
     pn.param("mpc_ref_etheta", _ref_etheta, 0.0);
     pn.param("mpc_w_cte", _w_cte, 5000.0);
     pn.param("mpc_w_etheta", _w_etheta, 5000.0);
@@ -346,7 +346,7 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         tf::Pose pose;
         tf::poseMsgToTF(odom.pose.pose, pose);
         const double theta = tf::getYaw(pose.getRotation());
-        const double v = odom.twist.twist.linear.x * 0.5; //twist: body fixed frame
+        const double v = odom.twist.twist.linear.x; //twist: body fixed frame
         // Update system inputs: U=[w, throttle]
         const double w = _w; // steering -> w
         //const double steering = _steering;  // radian

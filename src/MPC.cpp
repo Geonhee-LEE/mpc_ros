@@ -110,7 +110,7 @@ class FG_eval
             cost_etheta = 0;
             cost_vel = 0;
 
-            
+            /*
             for (int i = 0; i < _mpc_steps; i++) 
             {
                 cout << i << endl;
@@ -120,7 +120,7 @@ class FG_eval
                 cout << "_v_start" << vars[_v_start + i] <<endl;
                 cout << "_cte_start" << vars[_cte_start + i] <<endl;
                 cout << "_etheta_start" << vars[_etheta_start + i] <<endl;
-            }
+            }*/
 
             for (int i = 0; i < _mpc_steps; i++) 
             {
