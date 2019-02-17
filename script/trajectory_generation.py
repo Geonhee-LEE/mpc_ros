@@ -1,0 +1,148 @@
+#!/usr/bin/env python
+import rospy
+
+from geometry_msgs.msg import Twist
+from nav_msgs.msg import Path
+from nav_msgs.msg import Odometry
+from geometry_msgs.msg import PoseStamped
+from math import pow, atan2, sqrt
+from math import sqrt, cos, pi, sin
+import tf
+
+odom_path = Path()
+error_path = Path()
+desired_path = Path()
+
+robot_odom = Odometry()
+
+odom_count = 0
+sum_error = 0
+error_x = 0
+
+
+current_path_x, current_path_y, current_path_theta = 0, 0, 0
+
+#path_arr_x = [0, 1, -1, 1, -1, 1, -1, 1, -1, 1]
+#path_arr_y = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+path_arr_yy = [0, 0.1, 1, 1, 0, 1, -1, -1, 2, 0]
+path_arr_xx = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+def odom_cb(data):
+    global odom_path
+    global odom_count
+    global robot_odom
+
+    robot_odom = data
+    odom_count = odom_count + 1
+
+    if odom_count % 100 == 0:
+        odom_path.header = data.header
+        odom_path.header.frame_id = "odom"
+
+        pose = PoseStamped()
+        pose.header = data.header
+        pose.pose = data.pose.pose
+        pose.header.frame_id = "odom"
+        odom_path.poses.append(pose)
+
+        odom_path_pub.publish(odom_path)
+        generation_desired_path()
+
+def generation_error_path():
+    error_path.header.frame_id = "odom"
+    error_path.header.seq = 1
+
+    pose = PoseStamped()
+    pose.header.frame_id = "odom"
+    pose.header.stamp = rospy.get_rostime()
+    pose.pose.position.x = current_path_x
+    pose.pose.position.y = current_path_y
+    pose.pose.orientation.w = 1
+    error_path.poses.append(pose)
+
+
+    pose = PoseStamped()
+    pose.header.frame_id = "odom"
+    error_path.header.seq = 2
+    pose.header.stamp = rospy.get_rostime()
+    pose.pose.position.x = robot_odom.pose.pose.position.x
+    pose.pose.position.y = current_path_y
+    pose.pose.orientation.w = 1
+    error_path.poses.append(pose)
+    
+
+    error_path_pub.publish(error_path)
+
+
+def generation_desired_path():
+    rospy.loginfo("generation_desired_path()")
+    global desired_path
+
+    iter = 1000
+    period = 1000
+    
+    for i in range(0, iter):
+        desired_path.header.stamp = rospy.get_rostime()
+        desired_path.header.frame_id = "odom"
+        desired_path.header.seq = i
+
+        pose = PoseStamped()
+        pose.header.seq = i 
+        pose.header.frame_id = "odom"
+        pose.header.stamp = rospy.get_rostime()
+        pose.pose.position.x = 5 * cos(2 * pi* i / period) / (sin(2 * pi * i / period) ** 2 + 1)
+        pose.pose.position.y = 5 * sin(2 * pi* i / period) * cos(2 * pi* i / period) / (sin(2 * pi * i / period) ** 2 + 1)
+
+        desired_path.poses.append(pose)
+
+    desired_path_pub.publish(desired_path) 
+
+
+ 
+def calculate_error(path_x, path_y, path_theta, robot_x, robot_y, robot_theta):
+    global error_x, sum_error
+    error_x = abs(path_x - robot_x)
+    sum_error = error_x + sum_error
+
+    print("path_x: ", path_x)
+    print("path_y: ", path_y)
+    print("path_theta: ", path_theta)
+    print("robot_x: ", robot_x)
+    print("robot_y: ", robot_y)
+    print("robot_theta: ", robot_theta)
+
+def find_line_position(path_number, y):
+    global current_path_x, current_path_y, current_path_theta, sum_error
+    current_path_y = y
+
+    if len(path_arr_yy) == path_number + 1:
+        print("### Passing Last path ###")
+        generateVel(0.0, 0.0)
+        print("Total error sum :", sum_error)
+        return
+
+    start_pt_x, start_pt_y = desired_path.poses[path_number].pose.position.x, desired_path.poses[path_number].pose.position.y
+    next_pt_x, next_pt_y = desired_path.poses[path_number+1].pose.position.x, desired_path.poses[path_number+1].pose.position.y 
+        
+    
+    if desired_path.poses[path_number].pose.position.x == desired_path.poses[path_number+1].pose.position.x:
+        current_path_x = desired_path.poses[path_number].pose.position.x
+        current_path_theta = 1.570796
+    elif desired_path.poses[path_number].pose.position.y == desired_path.poses[path_number+1].pose.position.y:
+        current_path_y = desired_path.poses[path_number].pose.position.y
+    else:
+        current_path_x = (y - start_pt_y)*(next_pt_x - start_pt_x)/(next_pt_y - start_pt_y) + start_pt_x
+        current_path_theta = atan2(next_pt_y - start_pt_y, next_pt_x - start_pt_x)
+
+rospy.init_node('path_node')
+
+odom_sub = rospy.Subscriber('/odom', Odometry, odom_cb)
+
+desired_path_pub = rospy.Publisher('/desired_path', Path, queue_size=500)
+odom_path_pub = rospy.Publisher('/path', Path, queue_size=10)
+error_path_pub = rospy.Publisher('/error_path', Path, queue_size=10)
+
+
+
+if __name__ == '__main__':
+    rospy.spin()
