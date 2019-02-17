@@ -2,7 +2,7 @@
 
 
 ## Abstract
-Strongly refered on the HyphaROS MPC MiniCar(https://hypharosworkshop.wordpress.com/ )
+Strongly refered on the HyphaROS MPC MiniCar(https://hypharosworkshop.wordpress.com/ ).
 I change the mobile robot model from bycycle to the unicycle which means differential drive wheeled mobile robot for implementing service mobile robot.
 
 
@@ -44,8 +44,7 @@ $ catkin_make
 ## Operation
 ### Simulation
 $ roslaunch mpc_ros HyphaROS_Simulation_Stage.launch  
-The default controller is mpc, you can switch to pure-pursuit or DWA through param: "controller"    
-![alt text](https://github.com/Hypha-ROS/mpc_ros/blob/master/document/photo/HyphaROS_MPC_MiniCar_Simulation.jpg)    
+The default controller is mpc, you can switch to pure-pursuit or DWA through param: "controller"     
   
 ### Ethernet Connection
 The default static eth IP on Odroid image is 10.0.0.1, hence, to connect to your Odroid through cable, please set your host IP as 10.0.0.X  
