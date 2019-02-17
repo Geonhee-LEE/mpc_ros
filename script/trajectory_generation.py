@@ -79,21 +79,65 @@ def generation_desired_path():
     global desired_path
 
     iter = 1000
-    period = 1000
     
-    for i in range(0, iter):
+    #lemniscate
+    '''
+    period = 1000
+    for t in range(0, iter):
         desired_path.header.stamp = rospy.get_rostime()
         desired_path.header.frame_id = "odom"
-        desired_path.header.seq = i
+        desired_path.header.seq = t
 
         pose = PoseStamped()
-        pose.header.seq = i 
+        pose.header.seq = t 
         pose.header.frame_id = "odom"
         pose.header.stamp = rospy.get_rostime()
-        pose.pose.position.x = 5 * cos(2 * pi* i / period) / (sin(2 * pi * i / period) ** 2 + 1)
-        pose.pose.position.y = 5 * sin(2 * pi* i / period) * cos(2 * pi* i / period) / (sin(2 * pi * i / period) ** 2 + 1)
+        pose.pose.position.x = 5 * cos(2 * pi* t / period) / (sin(2 * pi * t / period) ** 2 + 1)
+        pose.pose.position.y = 5 * sin(2 * pi* t / period) * cos(2 * pi* t / period) / (sin(2 * pi * t / period) ** 2 + 1)
 
         desired_path.poses.append(pose)
+    '''
+
+    #circle
+    '''
+    radius = 5
+    period = 1000
+    for t in range(0, iter):
+        desired_path.header.stamp = rospy.get_rostime()
+        desired_path.header.frame_id = "odom"
+        desired_path.header.seq = t
+
+        pose = PoseStamped()
+        pose.header.seq = t 
+        pose.header.frame_id = "odom"
+        pose.header.stamp = rospy.get_rostime()
+        pose.pose.position.x = radius * sin(2 * pi * t / period) #+ self.x_0
+        pose.pose.position.y = -radius * cos(2 * pi * t / period) #+ self.y_0
+
+        desired_path.poses.append(pose)
+    '''
+
+    #epitrochoid
+    R = 5
+    r = 1
+    d = 3
+    period = 1000
+    scale_factor = 1    
+    period = 1000
+    for t in range(0, iter):
+        desired_path.header.stamp = rospy.get_rostime()
+        desired_path.header.frame_id = "odom"
+        desired_path.header.seq = t
+
+        pose = PoseStamped()
+        pose.header.seq = t
+        pose.header.frame_id = "odom"
+        pose.header.stamp = rospy.get_rostime()
+        pose.pose.position.x = scale_factor * ((R + r) * cos(2 * pi * t/ period) - d * cos(((R + r) / r) * 2 * pi * t / period))
+        pose.pose.position.y = scale_factor * ((R + r) * sin(2 * pi * t/ period) - d * sin(((R + r) / r) * 2 * pi * t / period))
+
+        desired_path.poses.append(pose)
+
 
     desired_path_pub.publish(desired_path) 
 
