@@ -1,22 +1,15 @@
-# HyphaROS MiniCar (1/20 Scale MPC Racing Car)
+# Model Predictive Control implementation about ROS 
 
 
 ## Abstract
-Low cost, High speed 1/20 Racing Car for control laws evaluation !   
-Fully open-sourced (hardware & software), total cost <300USD.  
-Currently supports: Pure-Pursuit, Model-Predictive-Control (Nonlinear)  
-
+Strongly refered on the HyphaROS MPC MiniCar(https://hypharosworkshop.wordpress.com/ )
+I change the mobile robot model from bycycle to the unicycle which means differential drive wheeled mobile robot for implementing service mobile robot.
 
 
 ## About us
-FB Page: https://www.facebook.com/HyphaROS/  
-Website: https://hypharosworkshop.wordpress.com/  
-Contact: hypha.ros@gmail.com  
-Developer:   
-* HaoChih, LIN  
-
-Date: 2018/08/16  
-License: Apache 2.0  
+Contact: gunhee6392@gmail.com  
+Date: 2019/02/16  
+License: Apache 2.0 (from HyphaROS MPC MiniCar) 
 
 ## Features
 * Nonlinear Bicycle Model Based MPC (through ipopt solver)  
@@ -34,40 +27,6 @@ License: Apache 2.0
 * Multi-cars racing through ROS 2.0 layer  
 * High Speed Drifting  
 
-## Hardware 
-* Odroid XU4  
-(Ref: https://www.hardkernel.com/main/products/prdt_info.php)   
-* YDLidar X4  
-(Ref: http://www.ydlidar.com/product/X4)  
-* STM32(F103) MCU (with OLED display)  
-* Diff Motor with A/B encoder(res: 340)  
-* Ackermann Based 1/20 car chassis  
-(Ref: https://item.taobao.com/item.htm?spm=a312a.7700824.w4004-15726392027.68.79503c88Rqwzb9&id=554619475840)   
-Total Cost: < 300 USD  
-
-## Document  
-HyphaROS MPC MiniCar 1-Day Workshop:  
-https://drive.google.com/open?id=1yX0aeA4spf_szpxXFpIlH0EQKIgiwJx7  
-ROS Summer School in China 2018 Slides:  
-https://goo.gl/RpVBDH  
-
-## Software
-### VirtualBox Image ###  
-OVA image file (Kinetic, password: hypharos, 20180816)  
-Link: https://drive.google.com/open?id=1uRvXGakvQrbynmPHX_KIFJxPm8o6MWPb  
-
-### Odroid Image
-Image file for Odroid XU4.(with SD card >=16G, password: hypharos)  
-Link: https://goo.gl/87vrNk   
-(if your SD card is around 13GB, it's OK to force Win32DiskImager to write the file!)   
-The default ethernet IP address is 10.0.0.1  
-
-### STM32 (MCU)
-Source codes: https://drive.google.com/open?id=19rjjpJmz85lTSxCyu-9CtvZhUW37c2LS         
-[WARNING!]  
-Since the original STM32 codes came from third-paries,   
-currently, the quality of codes are not guaranteed by us.  
-For MCUISP Driver: http://www.mcuisp.com/English%20mcuisp%20web/ruanjianxiazai-english.htm  
 
 ### Install from source (16.04) 
 1. Install ROS Kinetic (Desktop-Full) (http://wiki.ros.org/kinetic/Installation/Ubuntu)  
