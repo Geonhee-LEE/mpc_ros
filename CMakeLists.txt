@@ -28,7 +28,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_package(
    INCLUDE_DIRS include
-#  LIBRARIES hypharos_minicar
+#  LIBRARIES mpc_ros
 #  CATKIN_DEPENDS costmap_2d dynamic_reconfigure geometry_msgs message_generation move_base roscpp rospy std_msgs tf visualization_msgs
 #  DEPENDS system_lib
 )

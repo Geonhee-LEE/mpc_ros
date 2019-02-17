@@ -78,15 +78,15 @@ $ sudo apt-get install remmina synaptic gimp git ros-kinetic-navigation* ros-kin
 (http://wiki.ros.org/ROS/Tutorials/InstallingandConfiguringROSEnvironment#Create_a_ROS_Workspace)  
 $ cd catkin_ws/src  
 $ git clone https://github.com/EAIBOT/ydlidar  
-$ git clone https://github.com/Hypha-ROS/hypharos_minicar   
+$ git clone https://github.com/Hypha-ROS/mpc_ros   
 $ cd ..  
 $ catkin_make  
 
 ## Operation
 ### Simulation
-$ roslaunch hypharos_minicar HyphaROS_Simulation_Stage.launch  
+$ roslaunch mpc_ros HyphaROS_Simulation_Stage.launch  
 The default controller is mpc, you can switch to pure-pursuit or DWA through param: "controller"    
-![alt text](https://github.com/Hypha-ROS/hypharos_minicar/blob/master/document/photo/HyphaROS_MPC_MiniCar_Simulation.jpg)    
+![alt text](https://github.com/Hypha-ROS/mpc_ros/blob/master/document/photo/HyphaROS_MPC_MiniCar_Simulation.jpg)    
   
 ### Ethernet Connection
 The default static eth IP on Odroid image is 10.0.0.1, hence, to connect to your Odroid through cable, please set your host IP as 10.0.0.X  
@@ -97,24 +97,24 @@ Use ethernet or display connection to make Odroid connect to your local Wifi AP.
 
 ### Mapping
 * MiniCar (Odroid) side:  
-$ roslaunch hypharos_minicar HyphaROS_MiniCar_Mapping.launch  
+$ roslaunch mpc_ros mpc_ros_Mapping.launch  
 The default mapping algorithm is gmapping, you can swith to other slam method through param: "slam_type"  
 (crrently supports: gmapping, karto_slam, mrpt_icp and hector_slam)  
   
 * Host (Desktop) side:  
-$ roslaunch hypharos_minicar HyphaROS_Desktop_Mapping.launch  
+$ roslaunch mpc_ros HyphaROS_Desktop_Mapping.launch  
 Use keyboard to control the minicar.  
   
 After mapping, remember to save two maps, one for amcl and the other for move_base!  
 
 ### Racing
 * MiniCar (Odroid) side:  
-$ roslaunch hypharos_minicar HyphaROS_MiniCar_Racing.launch  
+$ roslaunch mpc_ros mpc_ros_Racing.launch  
 The default controller is mpc, you can swith to other slam method through param: "controller"  
 (crrently supports: mpc and pure_pursuit)  
   
 * Host (Desktop) side:  
-$ roslaunch hypharos_minicar HyphaROS_Desktop_Racing.launch  
+$ roslaunch mpc_ros HyphaROS_Desktop_Racing.launch  
 Use keyboard to interrupt controller's behavior.  
 
 

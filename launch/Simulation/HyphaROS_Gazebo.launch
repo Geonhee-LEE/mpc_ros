@@ -32,7 +32,7 @@
 
     <!--  ************** Localization **************  -->
     <node pkg="amcl" type="amcl" name="amcl" output="screen">
-        <rosparam file="$(find hypharos_minicar)/launch/Simulation/params/amcl_params.yaml" command="load" />
+        <rosparam file="$(find mpc_ros)/launch/Simulation/params/amcl_params.yaml" command="load" />
         <param name="initial_pose_x"            value="1"/>
         <param name="initial_pose_y"            value="1"/>
         <param name="initial_pose_a"            value="0"/>
@@ -40,16 +40,16 @@
 
     <!--  ************** Navigation ***************  -->
     <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
-        <rosparam file="$(find hypharos_minicar)/launch/Simulation/params/carlike/costmap_common_params.yaml" command="load" ns="global_costmap" />
-        <rosparam file="$(find hypharos_minicar)/launch/Simulation/params/carlike/costmap_common_params.yaml" command="load" ns="local_costmap" />
-        <rosparam file="$(find hypharos_minicar)/launch/Simulation/params/carlike/local_costmap_params.yaml" command="load" />
-        <rosparam file="$(find hypharos_minicar)/launch/Simulation/params/carlike/global_costmap_params.yaml" command="load" />        
+        <rosparam file="$(find mpc_ros)/launch/Simulation/params/carlike/costmap_common_params.yaml" command="load" ns="global_costmap" />
+        <rosparam file="$(find mpc_ros)/launch/Simulation/params/carlike/costmap_common_params.yaml" command="load" ns="local_costmap" />
+        <rosparam file="$(find mpc_ros)/launch/Simulation/params/carlike/local_costmap_params.yaml" command="load" />
+        <rosparam file="$(find mpc_ros)/launch/Simulation/params/carlike/global_costmap_params.yaml" command="load" />        
         <!-- Global Planner -->
         <param name="base_global_planner" value="global_planner/GlobalPlanner" />
         <param name="planner_frequency" value="0.0" />
         <param name="planner_frequency" value="0.0" if="$(eval controller == 'pure_pursuit')"/>
         <param name="planner_patience" value="5.0" />
-        <rosparam file="$(find hypharos_minicar)/launch/Simulation/params/carlike/global_planner.yaml" command="load" />
+        <rosparam file="$(find mpc_ros)/launch/Simulation/params/carlike/global_planner.yaml" command="load" />
         <!-- Local Planner -->
         <param name="base_local_planner" value="base_local_planner/TrajectoryPlannerROS" />
         <!-- Our carlike robot is not able to rotate in place -->
@@ -59,13 +59,13 @@
     </node>
     
     <!--  ************** MPC Node **************  -->
-    <node name="MPC_Node" pkg="hypharos_minicar" type="MPC_Node" output="screen" if="$(eval controller == 'mpc')" >
-        <rosparam file="$(find hypharos_minicar)/launch/Simulation/params/mpc_params.yaml" command="load" />
+    <node name="MPC_Node" pkg="mpc_ros" type="MPC_Node" output="screen" if="$(eval controller == 'mpc')" >
+        <rosparam file="$(find mpc_ros)/launch/Simulation/params/mpc_params.yaml" command="load" />
     </node>
 
     <!--  ************** Pure Pursuit **************  -->
-    <node name="Pure_Pursuit" pkg="hypharos_minicar" type="Pure_Pursuit" output="screen" if="$(eval controller == 'pure_pursuit')" >
-        <rosparam file="$(find hypharos_minicar)/launch/Simulation/params/pure_pursuit_params.yaml" command="load" />
+    <node name="Pure_Pursuit" pkg="mpc_ros" type="Pure_Pursuit" output="screen" if="$(eval controller == 'pure_pursuit')" >
+        <rosparam file="$(find mpc_ros)/launch/Simulation/params/pure_pursuit_params.yaml" command="load" />
         <remap from="/pure_pursuit/odom" to="/odom" />
         <remap from="/pure_pursuit/global_planner" to="/move_base/GlobalPlanner/plan" />
         <remap from="/pure_pursuit/goal" to="/move_base_simple/goal" />
@@ -73,6 +73,6 @@
     </node>
 
     <!--  ************** Visualisation **************  -->
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find hypharos_minicar)/launch/Simulation/params/rviz_navigation.rviz"/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mpc_ros)/launch/Simulation/params/rviz_navigation.rviz"/>
 
 </launch>
