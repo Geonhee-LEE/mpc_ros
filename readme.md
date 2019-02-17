@@ -2,8 +2,8 @@
 
 
 ## Abstract
-Strongly refered on the HyphaROS MPC MiniCar(https://hypharosworkshop.wordpress.com/ ).
-I change the mobile robot model from bycycle to the unicycle which means differential drive wheeled mobile robot for implementing service mobile robot.
+I Strongly refered to the HyphaROS MPC MiniCar(https://hypharosworkshop.wordpress.com/)(Thanks for great source).
+I just changed the mobile robot model from bycycle to the unicycle which means differential drive wheeled mobile robot for implementing service mobile robot.
 
 
 ## About us
