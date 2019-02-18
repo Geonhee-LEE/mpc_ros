@@ -4,9 +4,8 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Global Planner1/Potential map1
+        - /Global Planner1
         - /Local Planner1/Local costmap1
-        - /RobotModel1
       Splitter Ratio: 0.605095983
     Tree Height: 744
   - Class: rviz/Selection
@@ -424,6 +423,29 @@ Visualization Manager:
       Update Interval: 0
       Value: true
       Visual Enabled: true
+    - Alpha: 1
+      Buffer Length: 1
+      Class: rviz/Path
+      Color: 255; 255; 0
+      Enabled: true
+      Head Diameter: 0.300000012
+      Head Length: 0.200000003
+      Length: 0.0500000007
+      Line Style: Lines
+      Line Width: 0.0299999993
+      Name: Generated Path
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Pose Color: 255; 85; 255
+      Pose Style: Axes
+      Radius: 0.00499999989
+      Shaft Diameter: 0.100000001
+      Shaft Length: 0.100000001
+      Topic: /desired_path
+      Unreliable: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 0; 0; 0
@@ -449,25 +471,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 8.14354134
+      Distance: 18.2833633
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.271613747
-        Y: -0.707306623
-        Z: -1.43588853
+        X: 2.41244841
+        Y: -0.154801264
+        Z: -1.44641376
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 1.56480002
+      Pitch: 1.30980027
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.71043015
+      Yaw: 4.72541285
     Saved: ~
 Window Geometry:
   Displays:

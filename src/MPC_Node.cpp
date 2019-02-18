@@ -48,7 +48,7 @@ class MPCNode
         
     private:
         ros::NodeHandle _nh;
-        ros::Subscriber _sub_odom, _sub_path, _sub_goal, _sub_amcl;
+        ros::Subscriber _sub_odom, _sub_gen_path, _sub_path, _sub_goal, _sub_amcl;
         ros::Publisher _pub_odompath, _pub_twist, _pub_ackermann, _pub_mpctraj;
         ros::Timer _timer1;
         tf::TransformListener _tf_listener;
@@ -78,6 +78,7 @@ class MPCNode
 
         void odomCB(const nav_msgs::Odometry::ConstPtr& odomMsg);
         void pathCB(const nav_msgs::Path::ConstPtr& pathMsg);
+        void desiredPathCB(const nav_msgs::Path::ConstPtr& pathMsg);
         void goalCB(const geometry_msgs::PoseStamped::ConstPtr& goalMsg);
         void amclCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& amclMsg);
         void controlLoopCB(const ros::TimerEvent&);
@@ -142,6 +143,7 @@ MPCNode::MPCNode()
     //Publishers and Subscribers
     _sub_odom   = _nh.subscribe("/odom", 1, &MPCNode::odomCB, this);
     _sub_path   = _nh.subscribe( _globalPath_topic, 1, &MPCNode::pathCB, this);
+    _sub_gen_path   = _nh.subscribe( "desired_path", 1, &MPCNode::desiredPathCB, this);
     _sub_goal   = _nh.subscribe( _goal_topic, 1, &MPCNode::goalCB, this);
     _sub_amcl   = _nh.subscribe("/amcl_pose", 5, &MPCNode::amclCB, this);
     _pub_odompath  = _nh.advertise<nav_msgs::Path>("/mpc_reference", 1); // reference path for MPC 
@@ -233,6 +235,79 @@ Eigen::VectorXd MPCNode::polyfit(Eigen::VectorXd xvals, Eigen::VectorXd yvals, i
 void MPCNode::odomCB(const nav_msgs::Odometry::ConstPtr& odomMsg)
 {
     _odom = *odomMsg;
+}
+// CallBack: Update generated path (conversion to odom frame)
+void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& pathMsg)
+{
+    
+    _goal_received = true;
+    _goal_reached = false;
+    ROS_INFO("Goal Received !");
+
+    nav_msgs::Path odom_path = nav_msgs::Path();    
+    
+    try
+    {
+        double total_length = 0.0;
+        int sampling = _downSampling;
+
+        //find waypoints distance
+        if(_waypointsDist <=0.0)
+        {        
+            double dx = pathMsg->poses[1].pose.position.x - pathMsg->poses[0].pose.position.x;
+            double dy = pathMsg->poses[1].pose.position.y - pathMsg->poses[0].pose.position.y;
+            _waypointsDist = sqrt(dx*dx + dy*dy); 
+            _downSampling = int(_pathLength/10.0/_waypointsDist); //_pathLength = 8m
+            cout << "_waypointsDist:"<< _waypointsDist << ",_downSampling:" << _downSampling << endl;
+            
+        }    
+            
+        cout << "pathMsg->poses.size(): "<< pathMsg->poses.size() << endl;
+
+        // Cut and downsampling the path
+        for(int i = 0; i < pathMsg->poses.size(); i++)
+        {
+            cout <<"i:" << i << ", total_length: "<<total_length << ", _pathLength: " << _pathLength << endl;
+
+            if(total_length > _pathLength)
+                cout << "total_length > _pathLength" << endl;
+                //break;
+            
+            cout << "sampling: "<< sampling << ", _downSampling: "<< _downSampling << endl;
+            if(sampling == _downSampling)
+            {   
+                cout << "sampling == _downSampling" << endl;
+                geometry_msgs::PoseStamped tempPose;
+                _tf_listener.transformPose(_odom_frame, ros::Time(0) , pathMsg->poses[i], _map_frame, tempPose);                     
+                odom_path.poses.push_back(tempPose);  
+                sampling = 0;
+            }
+            total_length = total_length + _waypointsDist; 
+            sampling = sampling + 1;  
+        }
+
+        cout << "odom_path.poses.size(): "<< odom_path.poses.size() << endl;
+        if(odom_path.poses.size() >= 6 )
+        {
+            cout << "odom_path.poses.size() >= 6" << endl;
+            _odom_path = odom_path; // Path waypoints in odom frame
+            _path_computed = true;
+            // publish odom path
+            odom_path.header.frame_id = _odom_frame;
+            odom_path.header.stamp = ros::Time::now();
+            _pub_odompath.publish(odom_path);
+        }
+        else
+        {
+            cout << "Failed to path generation" << endl;
+            _waypointsDist = -1;
+        }            
+    }
+    catch(tf::TransformException &ex)
+    {
+        ROS_ERROR("%s",ex.what());
+        ros::Duration(1.0).sleep();
+    }
 }
 
 // CallBack: Update path waypoints (conversion to odom frame)

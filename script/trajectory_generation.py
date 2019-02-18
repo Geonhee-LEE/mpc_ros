@@ -8,6 +8,7 @@ from geometry_msgs.msg import PoseStamped
 from math import pow, atan2, sqrt
 from math import sqrt, cos, pi, sin
 import tf
+from tf.transformations import quaternion_from_euler
 
 odom_path = Path()
 error_path = Path()
@@ -76,27 +77,36 @@ def generation_error_path():
 
 def generation_desired_path():
     rospy.loginfo("generation_desired_path()")
-    global desired_path
+    
+    #global desired_path
 
+    desired_path = Path()
     iter = 1000
     
     #lemniscate
-    '''
+    
     period = 1000
     for t in range(0, iter):
         desired_path.header.stamp = rospy.get_rostime()
-        desired_path.header.frame_id = "odom"
+        desired_path.header.frame_id = "map"
         desired_path.header.seq = t
 
         pose = PoseStamped()
-        pose.header.seq = t 
-        pose.header.frame_id = "odom"
-        pose.header.stamp = rospy.get_rostime()
+        #pose.header.seq = t 
+        pose.header.frame_id = "map"
+        #pose.header.stamp = rospy.get_rostime()
         pose.pose.position.x = 5 * cos(2 * pi* t / period) / (sin(2 * pi * t / period) ** 2 + 1)
         pose.pose.position.y = 5 * sin(2 * pi* t / period) * cos(2 * pi* t / period) / (sin(2 * pi * t / period) ** 2 + 1)
+        
+        grad =  atan2((5 * sin(2 * pi* (t+1) / period) * cos(2 * pi* (t+1) / period) / (sin(2 * pi * (t+1) / period) ** 2 + 1)- pose.pose.position.y) , (5 * cos(2 * pi* (t+1) / period) / (sin(2 * pi * (t+1) / period) ** 2 + 1)-pose.pose.position.x + 1e-5))
+        q = quaternion_from_euler(0, 0, grad)
+        pose.pose.orientation.x = q[0]
+        pose.pose.orientation.y = q[1]
+        pose.pose.orientation.z = q[2]
+        pose.pose.orientation.w = q[3]
 
         desired_path.poses.append(pose)
-    '''
+    
 
     #circle
     '''
@@ -104,42 +114,46 @@ def generation_desired_path():
     period = 1000
     for t in range(0, iter):
         desired_path.header.stamp = rospy.get_rostime()
-        desired_path.header.frame_id = "odom"
+        desired_path.header.frame_id = "map"
         desired_path.header.seq = t
 
         pose = PoseStamped()
         pose.header.seq = t 
-        pose.header.frame_id = "odom"
+        pose.header.frame_id = "map"
         pose.header.stamp = rospy.get_rostime()
         pose.pose.position.x = radius * sin(2 * pi * t / period) #+ self.x_0
-        pose.pose.position.y = -radius * cos(2 * pi * t / period) #+ self.y_0
+        pose.pose.position.y = -radius * cos(2 * pi * t / period) #+ self.y_0+
+        pose.pose.orientation.w = 1
 
         desired_path.poses.append(pose)
     '''
 
     #epitrochoid
+    '''
     R = 5
     r = 1
     d = 3
-    period = 1000
+    period = 500
     scale_factor = 1    
-    period = 1000
+    period = 500
     for t in range(0, iter):
         desired_path.header.stamp = rospy.get_rostime()
-        desired_path.header.frame_id = "odom"
+        desired_path.header.frame_id = "map"
         desired_path.header.seq = t
 
         pose = PoseStamped()
         pose.header.seq = t
-        pose.header.frame_id = "odom"
+        pose.header.frame_id = "map"
         pose.header.stamp = rospy.get_rostime()
         pose.pose.position.x = scale_factor * ((R + r) * cos(2 * pi * t/ period) - d * cos(((R + r) / r) * 2 * pi * t / period))
         pose.pose.position.y = scale_factor * ((R + r) * sin(2 * pi * t/ period) - d * sin(((R + r) / r) * 2 * pi * t / period))
+        pose.pose.orientation.w = 1
 
         desired_path.poses.append(pose)
-
+    '''
 
     desired_path_pub.publish(desired_path) 
+    desired_path = []
 
 
  
