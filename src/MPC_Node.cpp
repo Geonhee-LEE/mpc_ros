@@ -123,7 +123,7 @@ MPCNode::MPCNode()
     //Parameter for topics & Frame name
     pn.param<std::string>("global_path_topic", _globalPath_topic, "/move_base/TrajectoryPlannerROS/global_plan" );
     pn.param<std::string>("goal_topic", _goal_topic, "/move_base_simple/goal" );
-    pn.param<std::string>("map_frame", _map_frame, "odom" );
+    pn.param<std::string>("map_frame", _map_frame, "map" ); //*****for mpc, "odom"
     pn.param<std::string>("odom_frame", _odom_frame, "odom");
     pn.param<std::string>("car_frame", _car_frame, "base_footprint" );
 
@@ -146,14 +146,14 @@ MPCNode::MPCNode()
     _sub_gen_path   = _nh.subscribe( "desired_path", 1, &MPCNode::desiredPathCB, this);
     _sub_goal   = _nh.subscribe( _goal_topic, 1, &MPCNode::goalCB, this);
     _sub_amcl   = _nh.subscribe("/amcl_pose", 5, &MPCNode::amclCB, this);
-    _pub_odompath  = _nh.advertise<nav_msgs::Path>("/mpc_reference", 1); // reference path for MPC 
+    _pub_odompath  = _nh.advertise<nav_msgs::Path>("/mpc_reference", 1); // reference path for MPC ///mpc_reference 
     _pub_mpctraj   = _nh.advertise<nav_msgs::Path>("/mpc_trajectory", 1);// MPC trajectory output
     _pub_ackermann = _nh.advertise<ackermann_msgs::AckermannDriveStamped>("/ackermann_cmd", 1);
     if(_pub_twist_flag)
         _pub_twist = _nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1); //for stage (Ackermann msg non-supported)
     
     //Timer
-    _timer1 = _nh.createTimer(ros::Duration((1.0)/_controller_freq), &MPCNode::controlLoopCB, this); // 10Hz
+    //_timer1 = _nh.createTimer(ros::Duration((1.0)/_controller_freq), &MPCNode::controlLoopCB, this); // 10Hz
 
     //Init variables
     _goal_received = false;
@@ -246,30 +246,6 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
 
     nav_msgs::Path mpc_path = nav_msgs::Path();   // For generating mpc reference path  
     
-    /**
-    nav_msgs::Odometry odom = _odom; // 
-    
-    const double px = odom.pose.pose.position.x; //pose: odom frame
-    const double py = odom.pose.pose.position.y; //pose: odom frame
-
-    // Waypoints related parameters
-    const int N = totalPathMsg->poses.size(); // Number of waypoints
-    const double costheta = cos(theta);
-    const double sintheta = sin(theta);
-
-    // Convert to the vehicle coordinate system
-    VectorXd x_veh(N);
-    VectorXd y_veh(N);
-
-    for(int i = 0; i < N; i++) 
-    {
-        const double dx = totalPathMsg->poses[i].pose.position.x - px;
-        const double dy = totalPathMsg->poses[i].pose.position.y - py;
-        x_veh[i] = dx * costheta + dy * sintheta;
-        y_veh[i] = dy * costheta - dx * sintheta;
-    }
-    **/
-
     try
     {
         double total_length = 0.0;
@@ -327,7 +303,7 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
             //cout << "sampling: "<< sampling << ", _downSampling: "<< _downSampling << endl;
             if(sampling == _downSampling)
             {   
-                cout << "sampling == _downSampling" << endl;
+                //cout << "sampling == _downSampling" << endl;
                 geometry_msgs::PoseStamped tempPose;
                 _tf_listener.transformPose(_odom_frame, ros::Time(0) , 
                                             totalPathMsg->poses[i], _map_frame, tempPose);                     
