@@ -4,7 +4,7 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Global Planner1
+        - /Global Options1
         - /Local Planner1/Local costmap1
       Splitter Ratio: 0.605095983
     Tree Height: 744
@@ -81,12 +81,12 @@ Visualization Manager:
       Class: rviz/Map
       Color Scheme: map
       Draw Behind: false
-      Enabled: true
+      Enabled: false
       Name: Map
       Topic: /map
       Unreliable: false
       Use Timestamp: false
-      Value: true
+      Value: false
     - Class: rviz/Group
       Displays:
         - Alpha: 1
@@ -228,7 +228,7 @@ Visualization Manager:
           Unreliable: false
           Use Timestamp: false
           Value: true
-      Enabled: true
+      Enabled: false
       Name: Global Planner
     - Class: rviz/Group
       Displays:
@@ -289,7 +289,7 @@ Visualization Manager:
           Unreliable: false
           Use Timestamp: false
           Value: true
-      Enabled: true
+      Enabled: false
       Name: Local Planner
     - Alpha: 1
       Buffer Length: 1
@@ -307,7 +307,7 @@ Visualization Manager:
         Y: 0
         Z: 0
       Pose Color: 255; 85; 255
-      Pose Style: None
+      Pose Style: Axes
       Radius: 0.0299999993
       Shaft Diameter: 0.100000001
       Shaft Length: 0.100000001
@@ -450,7 +450,7 @@ Visualization Manager:
   Global Options:
     Background Color: 0; 0; 0
     Default Light: true
-    Fixed Frame: map
+    Fixed Frame: odom
     Frame Rate: 30
   Name: root
   Tools:
@@ -471,16 +471,16 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 18.2833633
+      Distance: 17.7125473
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 2.41244841
-        Y: -0.154801264
-        Z: -1.44641376
+        X: 2.88357973
+        Y: 0.416430801
+        Z: -1.29549575
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false

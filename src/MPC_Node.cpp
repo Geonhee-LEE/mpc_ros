@@ -123,7 +123,7 @@ MPCNode::MPCNode()
     //Parameter for topics & Frame name
     pn.param<std::string>("global_path_topic", _globalPath_topic, "/move_base/TrajectoryPlannerROS/global_plan" );
     pn.param<std::string>("goal_topic", _goal_topic, "/move_base_simple/goal" );
-    pn.param<std::string>("map_frame", _map_frame, "map" );
+    pn.param<std::string>("map_frame", _map_frame, "odom" );
     pn.param<std::string>("odom_frame", _odom_frame, "odom");
     pn.param<std::string>("car_frame", _car_frame, "base_footprint" );
 
@@ -237,65 +237,117 @@ void MPCNode::odomCB(const nav_msgs::Odometry::ConstPtr& odomMsg)
     _odom = *odomMsg;
 }
 // CallBack: Update generated path (conversion to odom frame)
-void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& pathMsg)
+void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
 {
     
     _goal_received = true;
     _goal_reached = false;
     ROS_INFO("Goal Received !");
 
-    nav_msgs::Path odom_path = nav_msgs::Path();    
+    nav_msgs::Path mpc_path = nav_msgs::Path();   // For generating mpc reference path  
     
+    /**
+    nav_msgs::Odometry odom = _odom; // 
+    
+    const double px = odom.pose.pose.position.x; //pose: odom frame
+    const double py = odom.pose.pose.position.y; //pose: odom frame
+
+    // Waypoints related parameters
+    const int N = totalPathMsg->poses.size(); // Number of waypoints
+    const double costheta = cos(theta);
+    const double sintheta = sin(theta);
+
+    // Convert to the vehicle coordinate system
+    VectorXd x_veh(N);
+    VectorXd y_veh(N);
+
+    for(int i = 0; i < N; i++) 
+    {
+        const double dx = totalPathMsg->poses[i].pose.position.x - px;
+        const double dy = totalPathMsg->poses[i].pose.position.y - py;
+        x_veh[i] = dx * costheta + dy * sintheta;
+        y_veh[i] = dy * costheta - dx * sintheta;
+    }
+    **/
+
     try
     {
         double total_length = 0.0;
-        int sampling = _downSampling;
-
+        //int sampling = _downSampling;
+        int sampling = 1;
+        _pathLength = 6;
         //find waypoints distance
-        if(_waypointsDist <=0.0)
+        if(_waypointsDist <= 0.0)
         {        
-            double dx = pathMsg->poses[1].pose.position.x - pathMsg->poses[0].pose.position.x;
-            double dy = pathMsg->poses[1].pose.position.y - pathMsg->poses[0].pose.position.y;
-            _waypointsDist = sqrt(dx*dx + dy*dy); 
-            _downSampling = int(_pathLength/10.0/_waypointsDist); //_pathLength = 8m
+            double gap_x = totalPathMsg->poses[1].pose.position.x - totalPathMsg->poses[0].pose.position.x;
+            double gap_y = totalPathMsg->poses[1].pose.position.y - totalPathMsg->poses[0].pose.position.y;
+            _waypointsDist = sqrt(gap_x*gap_x + gap_y*gap_y); 
+            //_downSampling = int(_pathLength/10.0/_waypointsDist); //_pathLength = 8m
+            _downSampling = 1;
             cout << "_waypointsDist:"<< _waypointsDist << ",_downSampling:" << _downSampling << endl;
             
-        }    
+        }               
+        cout << "totalPathMsg->poses.size(): "<< totalPathMsg->poses.size() << endl;
+        
+        // Find the nearst point for robot position
+        nav_msgs::Odometry odom = _odom; 
+        int min_idx, min_val = 100;
+        const int N = totalPathMsg->poses.size(); // Number of waypoints        
+        const double px = odom.pose.pose.position.x; //pose: odom frame
+        const double py = odom.pose.pose.position.y;
+        for(int i = 0; i < N; i++) 
+        {
+            const double dx = totalPathMsg->poses[i].pose.position.x - px;
+            const double dy = totalPathMsg->poses[i].pose.position.y - py;
+       
+            if(min_val >= sqrt(dx*dx + dy*dy))
+            {
+                min_val = sqrt(dx*dx + dy*dy);
+                min_idx = i;
+            }
+        }   
+        cout << "min_idx:"<< min_idx << ",min_val:" << min_val << endl;
             
-        cout << "pathMsg->poses.size(): "<< pathMsg->poses.size() << endl;
+        // Decompose the total path into a part of path 
 
         // Cut and downsampling the path
-        for(int i = 0; i < pathMsg->poses.size(); i++)
+        static int cnt = -1;
+        cnt = cnt + 30;
+
+        for(int i = min_idx; i < totalPathMsg->poses.size() ; i++)
         {
-            cout <<"i:" << i << ", total_length: "<<total_length << ", _pathLength: " << _pathLength << endl;
+            //cout <<"i:" << i << ", total_length: "<<total_length << ", _pathLength: " << _pathLength << endl;
 
             if(total_length > _pathLength)
+            {
                 cout << "total_length > _pathLength" << endl;
-                //break;
+                break;
+            }
             
-            cout << "sampling: "<< sampling << ", _downSampling: "<< _downSampling << endl;
+            //cout << "sampling: "<< sampling << ", _downSampling: "<< _downSampling << endl;
             if(sampling == _downSampling)
             {   
                 cout << "sampling == _downSampling" << endl;
                 geometry_msgs::PoseStamped tempPose;
-                _tf_listener.transformPose(_odom_frame, ros::Time(0) , pathMsg->poses[i], _map_frame, tempPose);                     
-                odom_path.poses.push_back(tempPose);  
+                _tf_listener.transformPose(_odom_frame, ros::Time(0) , 
+                                            totalPathMsg->poses[i], _map_frame, tempPose);                     
+                mpc_path.poses.push_back(tempPose);  
                 sampling = 0;
             }
             total_length = total_length + _waypointsDist; 
             sampling = sampling + 1;  
         }
 
-        cout << "odom_path.poses.size(): "<< odom_path.poses.size() << endl;
-        if(odom_path.poses.size() >= 6 )
+        cout << "mpc_path.poses.size(): "<< mpc_path.poses.size() << endl;
+        if(mpc_path.poses.size() >= 6 )
         {
-            cout << "odom_path.poses.size() >= 6" << endl;
-            _odom_path = odom_path; // Path waypoints in odom frame
+            cout << "mpc_path.poses.size() >= 6" << endl;
+            _odom_path = mpc_path; // Path waypoints in odom frame
             _path_computed = true;
             // publish odom path
-            odom_path.header.frame_id = _odom_frame;
-            odom_path.header.stamp = ros::Time::now();
-            _pub_odompath.publish(odom_path);
+            mpc_path.header.frame_id = _odom_frame;
+            mpc_path.header.stamp = ros::Time::now();
+            _pub_odompath.publish(mpc_path);
         }
         else
         {
@@ -313,6 +365,7 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& pathMsg)
 // CallBack: Update path waypoints (conversion to odom frame)
 void MPCNode::pathCB(const nav_msgs::Path::ConstPtr& pathMsg)
 {
+    /*
     if(_goal_received && !_goal_reached)
     {    
         nav_msgs::Path odom_path = nav_msgs::Path();
@@ -374,6 +427,7 @@ void MPCNode::pathCB(const nav_msgs::Path::ConstPtr& pathMsg)
             ros::Duration(1.0).sleep();
         }
     }
+    */
 }
 
 // CallBack: Update goal status

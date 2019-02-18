@@ -6,8 +6,11 @@
 
     <!--  ************** GAZEBO Simulator ***************  -->
     <arg name="x_pos" default="0.0"/>
-    <arg name="y_pos" default="-0.0"/>
+    <arg name="y_pos" default="-5.0"/>
     <arg name="z_pos" default="0.0"/>
+    <arg name="roll" default="0"/>
+    <arg name="pitch" default="0"/>
+    <arg name="yaw" default="0"/>
 
     <param name="robot_description" command="$(find xacro)/xacro.py $(find zetabank_description)/urdf/zetabank.urdf.xacro" />
 
@@ -15,12 +18,12 @@
         <arg name="world_name" value="$(find zetabank_gazebo)/models/temp_world.world"/>
         <arg name="paused" value="false"/>
         <arg name="use_sim_time" value="true"/>
-        <arg name="gui" value="false"/>
+        <arg name="gui" value="true"/>
         <arg name="headless" value="false"/>
         <arg name="debug" value="false"/>
     </include>
     
-    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model zetabank -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -param robot_description" />
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model zetabank -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -R $(arg roll) -P $(arg pitch) -Y $(arg yaw) -param robot_description" />
     <include file="$(find zetabank_bringup)/launch/zetabank_remote.launch" />
 
 
@@ -33,9 +36,9 @@
     <!--  ************** Localization **************  -->
     <node pkg="amcl" type="amcl" name="amcl" output="screen">
         <rosparam file="$(find mpc_ros)/launch/Simulation/params/amcl_params.yaml" command="load" />
-        <param name="initial_pose_x"            value="1"/>
-        <param name="initial_pose_y"            value="1"/>
-        <param name="initial_pose_a"            value="0"/>
+        <param name="initial_pose_x"            value="$(arg x_pos)"/>
+        <param name="initial_pose_y"            value="$(arg y_pos)"/>
+        <param name="initial_pose_a"            value="$(arg yaw)"/>
     </node>
 
     <!--  ************** Navigation ***************  -->
