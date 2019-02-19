@@ -236,15 +236,15 @@ void MPCNode::odomCB(const nav_msgs::Odometry::ConstPtr& odomMsg)
 {
     _odom = *odomMsg;
 }
+
 // CallBack: Update generated path (conversion to odom frame)
 void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
 {
-    
     _goal_received = true;
     _goal_reached = false;
-    ROS_INFO("Goal Received !");
-
     nav_msgs::Path mpc_path = nav_msgs::Path();   // For generating mpc reference path  
+    geometry_msgs::PoseStamped tempPose;
+    nav_msgs::Odometry odom = _odom; 
 
     try
     {
@@ -255,49 +255,49 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
         {        
             double gap_x = totalPathMsg->poses[1].pose.position.x - totalPathMsg->poses[0].pose.position.x;
             double gap_y = totalPathMsg->poses[1].pose.position.y - totalPathMsg->poses[0].pose.position.y;
-            _waypointsDist = sqrt(gap_x*gap_x + gap_y*gap_y); 
-            
-        }               
-        cout << "totalPathMsg->poses.size(): "<< totalPathMsg->poses.size() << endl;
-        
+            _waypointsDist = sqrt(gap_x*gap_x + gap_y*gap_y);             
+        }                       
+
         // Find the nearst point for robot position
-        nav_msgs::Odometry odom = _odom; 
-        int min_idx, min_val = 100;
-        const int N = totalPathMsg->poses.size(); // Number of waypoints        
+        int min_idx, min_val = 100;        
+        int N = totalPathMsg->poses.size(); // Number of waypoints        
         const double px = odom.pose.pose.position.x; //pose: odom frame
         const double py = odom.pose.pose.position.y;
+        double dx, dy; // difference distance
+
         for(int i = 0; i < N; i++) 
         {
-            const double dx = totalPathMsg->poses[i].pose.position.x - px;
-            const double dy = totalPathMsg->poses[i].pose.position.y - py;
+            dx = totalPathMsg->poses[i].pose.position.x - px;
+            dy = totalPathMsg->poses[i].pose.position.y - py;
        
             if(min_val >= sqrt(dx*dx + dy*dy))
             {
                 min_val = sqrt(dx*dx + dy*dy);
                 min_idx = i;
+
+                if(i < N * 0.02)
+                    min_idx = N - 100; //for smoothing about init position
             }
         }   
-        cout << "min_idx:"<< min_idx << ",min_val:" << min_val << endl;
-                    
-        for(int i = min_idx; i < totalPathMsg->poses.size() ; i++)
+
+        for(int i = min_idx; i < N ; i++)
         {
             if(total_length > _pathLength)
                 break;
-
-            geometry_msgs::PoseStamped tempPose;
+            
             _tf_listener.transformPose(_odom_frame, ros::Time(0) , 
                                             totalPathMsg->poses[i], _map_frame, tempPose);                     
             mpc_path.poses.push_back(tempPose);                          
-            total_length = total_length + _waypointsDist;             
+            total_length = total_length + _waypointsDist;           
         }   
+        
         // Connect the end of path to the front
         if(total_length < _pathLength )
         {
-            for(int i = 0; i < totalPathMsg->poses.size() ; i++)
+            for(int i = 0; i < N ; i++)
             {
                 if(total_length > _pathLength)                
                     break;
-                geometry_msgs::PoseStamped tempPose;
                 _tf_listener.transformPose(_odom_frame, ros::Time(0) , 
                                                 totalPathMsg->poses[i], _map_frame, tempPose);                     
                 mpc_path.poses.push_back(tempPose);                          
@@ -305,9 +305,8 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
             }
         }  
 
-        if(mpc_path.poses.size() >= 6 )
+        if(mpc_path.poses.size() >= _pathLength )
         {
-            cout << "mpc_path.poses.size() >= 6" << endl;
             _odom_path = mpc_path; // Path waypoints in odom frame
             _path_computed = true;
             // publish odom path
@@ -428,8 +427,7 @@ void MPCNode::amclCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& a
 
 // Timer: Control Loop (closed loop nonlinear MPC)
 void MPCNode::controlLoopCB(const ros::TimerEvent&)
-{      
-    
+{          
     if(_goal_received && !_goal_reached && _path_computed ) //received goal & goal not reached    
     {    
         nav_msgs::Odometry odom = _odom; 
@@ -469,10 +467,7 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         auto coeffs = polyfit(x_veh, y_veh, 3); 
 
         const double cte  = polyeval(coeffs, 0.0);
-        cout << "--------------" << endl; 
-        cout << "cte!! " << cte << endl; 
         const double etheta = atan(coeffs[1]);
-        cout << "etheta!! " << etheta << endl; 
 
         VectorXd state(6);
         if(_delay_mode)

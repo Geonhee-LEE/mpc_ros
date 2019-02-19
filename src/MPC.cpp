@@ -102,8 +102,6 @@ class FG_eval
         // fg: function that evaluates the objective and constraints using the syntax       
         void operator()(ADvector& fg, const ADvector& vars) 
         {
-            cout << "---------operator---------" <<endl;
-            
             // fg[0] for cost function
             fg[0] = 0;
             cost_cte =  0;
@@ -132,26 +130,23 @@ class FG_eval
               cost_etheta +=  (_w_etheta * CppAD::pow(vars[_etheta_start + i] - _ref_etheta, 2)); 
               cost_vel +=  (_w_vel * CppAD::pow(vars[_v_start + i] - _ref_vel, 2)); 
             }
-            cout << "------------------" <<endl;
-            cout << "cost_cte: " << cost_cte << endl;
-            cout << "cost_etheta: " << cost_etheta << endl;
-            cout << "cost_vel: " << cost_vel << endl; //most of all
-            cout << "cost function of cte, theta, vel: " << fg[0] << endl;
+            cout << "-----------------------------------------------" <<endl;
+            cout << "cost_cte, etheta, velocity: " << cost_cte << ", " << cost_etheta  << ", " << cost_vel << endl;
+            
 
             // Minimize the use of actuators.
             for (int i = 0; i < _mpc_steps - 1; i++) {
               fg[0] += _w_angvel * CppAD::pow(vars[_angvel_start + i], 2);
               fg[0] += _w_accel * CppAD::pow(vars[_a_start + i], 2);
             }
-            cout << endl << "cost function of actuators: " << fg[0] << endl; 
+            cout << "cost of actuators: " << fg[0] << endl; 
 
             // Minimize the value gap between sequential actuations.
             for (int i = 0; i < _mpc_steps - 2; i++) {
               fg[0] += _w_angvel_d * CppAD::pow(vars[_angvel_start + i + 1] - vars[_angvel_start + i], 2);
               fg[0] += _w_accel_d * CppAD::pow(vars[_a_start + i + 1] - vars[_a_start + i], 2);
             }
-            cout << endl << "cost function of gap: " << fg[0] << endl; 
-            cout << "------------------" <<endl;
+            cout << "cost of gap: " << fg[0] << endl; 
             
 
             // fg[x] for constraints
@@ -376,18 +371,18 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
     CppAD::ipopt::solve_result<Dvector> solution;
 
     // solve the problem
-    cout << "---------solve---------" <<endl;
     CppAD::ipopt::solve<Dvector, FG_eval>(
       options, vars, vars_lowerbound, vars_upperbound, constraints_lowerbound,
       constraints_upperbound, fg_eval, solution);
-    cout << "---------solution---------" <<endl;
 
     // Check some of the solution values
     ok &= solution.status == CppAD::ipopt::solve_result<Dvector>::success;
 
     // Cost
     auto cost = solution.obj_value;
-    std::cout << "Cost " << cost << std::endl;
+    std::cout << "------------ Total Cost(solution): " << cost << "------------" << std::endl;
+    cout << "-----------------------------------------------" <<endl;
+
     this->mpc_x = {};
     this->mpc_y = {};
     for (int i = 0; i < _mpc_steps; i++) 
