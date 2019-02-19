@@ -36,7 +36,7 @@ def odom_cb(data):
     robot_odom = data
     odom_count = odom_count + 1
 
-    if odom_count % 100 == 0:
+    if odom_count % 10 == 0:
         odom_path.header = data.header
         odom_path.header.frame_id = "odom"
 
@@ -208,7 +208,7 @@ rospy.init_node('path_node')
 odom_sub = rospy.Subscriber('/odom', Odometry, odom_cb)
 
 desired_path_pub = rospy.Publisher('/desired_path', Path, queue_size=500)
-odom_path_pub = rospy.Publisher('/path', Path, queue_size=10)
+odom_path_pub = rospy.Publisher('/recorded_path', Path, queue_size=10)
 error_path_pub = rospy.Publisher('/error_path', Path, queue_size=10)
 
 

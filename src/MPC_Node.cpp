@@ -249,8 +249,6 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
     try
     {
         double total_length = 0.0;
-        //int sampling = _downSampling;
-        int sampling = 1;
         _pathLength = 6;
         //find waypoints distance
         if(_waypointsDist <= 0.0)
@@ -258,9 +256,6 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
             double gap_x = totalPathMsg->poses[1].pose.position.x - totalPathMsg->poses[0].pose.position.x;
             double gap_y = totalPathMsg->poses[1].pose.position.y - totalPathMsg->poses[0].pose.position.y;
             _waypointsDist = sqrt(gap_x*gap_x + gap_y*gap_y); 
-            //_downSampling = int(_pathLength/10.0/_waypointsDist); //_pathLength = 8m
-            _downSampling = 1;
-            cout << "_waypointsDist:"<< _waypointsDist << ",_downSampling:" << _downSampling << endl;
             
         }               
         cout << "totalPathMsg->poses.size(): "<< totalPathMsg->poses.size() << endl;
@@ -283,36 +278,33 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
             }
         }   
         cout << "min_idx:"<< min_idx << ",min_val:" << min_val << endl;
-            
-        // Cut and downsampling the path
-        static int cnt = -1;
-        cnt = cnt + 30;
-
+                    
         for(int i = min_idx; i < totalPathMsg->poses.size() ; i++)
         {
-            //cout <<"i:" << i << ", total_length: "<<total_length << ", _pathLength: " << _pathLength << endl;
-
             if(total_length > _pathLength)
-            {
-                cout << "total_length > _pathLength" << endl;
                 break;
-            }
-            
-            //cout << "sampling: "<< sampling << ", _downSampling: "<< _downSampling << endl;
-            if(sampling == _downSampling)
-            {   
-                //cout << "sampling == _downSampling" << endl;
+
+            geometry_msgs::PoseStamped tempPose;
+            _tf_listener.transformPose(_odom_frame, ros::Time(0) , 
+                                            totalPathMsg->poses[i], _map_frame, tempPose);                     
+            mpc_path.poses.push_back(tempPose);                          
+            total_length = total_length + _waypointsDist;             
+        }   
+        // Connect the end of path to the front
+        if(total_length < _pathLength )
+        {
+            for(int i = 0; i < totalPathMsg->poses.size() ; i++)
+            {
+                if(total_length > _pathLength)                
+                    break;
                 geometry_msgs::PoseStamped tempPose;
                 _tf_listener.transformPose(_odom_frame, ros::Time(0) , 
-                                            totalPathMsg->poses[i], _map_frame, tempPose);                     
-                mpc_path.poses.push_back(tempPose);  
-                sampling = 0;
+                                                totalPathMsg->poses[i], _map_frame, tempPose);                     
+                mpc_path.poses.push_back(tempPose);                          
+                total_length = total_length + _waypointsDist;    
             }
-            total_length = total_length + _waypointsDist; 
-            sampling = sampling + 1;  
-        }
+        }  
 
-        cout << "mpc_path.poses.size(): "<< mpc_path.poses.size() << endl;
         if(mpc_path.poses.size() >= 6 )
         {
             cout << "mpc_path.poses.size() >= 6" << endl;
@@ -327,7 +319,7 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
         {
             cout << "Failed to path generation" << endl;
             _waypointsDist = -1;
-        }            
+        }       
     }
     catch(tf::TransformException &ex)
     {
