@@ -114,12 +114,12 @@ def generation_desired_path():
     period = 1000
     for t in range(0, iter):
         desired_path.header.stamp = rospy.get_rostime()
-        desired_path.header.frame_id = "map"
+        desired_path.header.frame_id = "odom"
         desired_path.header.seq = t
 
         pose = PoseStamped()
         pose.header.seq = t 
-        pose.header.frame_id = "map"
+        pose.header.frame_id = "odom"
         pose.header.stamp = rospy.get_rostime()
         pose.pose.position.x = radius * sin(2 * pi * t / period) #+ self.x_0
         pose.pose.position.y = -radius * cos(2 * pi * t / period) #+ self.y_0+

@@ -123,7 +123,7 @@ MPCNode::MPCNode()
     //Parameter for topics & Frame name
     pn.param<std::string>("global_path_topic", _globalPath_topic, "/move_base/TrajectoryPlannerROS/global_plan" );
     pn.param<std::string>("goal_topic", _goal_topic, "/move_base_simple/goal" );
-    pn.param<std::string>("map_frame", _map_frame, "map" ); //*****for mpc, "odom"
+    pn.param<std::string>("map_frame", _map_frame, "odom" ); //*****for mpc, "odom"
     pn.param<std::string>("odom_frame", _odom_frame, "odom");
     pn.param<std::string>("car_frame", _car_frame, "base_footprint" );
 
@@ -153,7 +153,7 @@ MPCNode::MPCNode()
         _pub_twist = _nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1); //for stage (Ackermann msg non-supported)
     
     //Timer
-    //_timer1 = _nh.createTimer(ros::Duration((1.0)/_controller_freq), &MPCNode::controlLoopCB, this); // 10Hz
+    _timer1 = _nh.createTimer(ros::Duration((1.0)/_controller_freq), &MPCNode::controlLoopCB, this); // 10Hz //*****mpc
 
     //Init variables
     _goal_received = false;
@@ -245,7 +245,7 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
     ROS_INFO("Goal Received !");
 
     nav_msgs::Path mpc_path = nav_msgs::Path();   // For generating mpc reference path  
-    
+
     try
     {
         double total_length = 0.0;
@@ -284,8 +284,6 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
         }   
         cout << "min_idx:"<< min_idx << ",min_val:" << min_val << endl;
             
-        // Decompose the total path into a part of path 
-
         // Cut and downsampling the path
         static int cnt = -1;
         cnt = cnt + 30;
