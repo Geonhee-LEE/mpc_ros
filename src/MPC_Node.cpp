@@ -82,6 +82,10 @@ class MPCNode
         void goalCB(const geometry_msgs::PoseStamped::ConstPtr& goalMsg);
         void amclCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& amclMsg);
         void controlLoopCB(const ros::TimerEvent&);
+        void makeGlobalPath(const nav_msgs::Odometry::ConstPtr& odomMsg);
+
+        //test
+        int test_cnt;
 
 }; // end of class
 
@@ -185,7 +189,7 @@ MPCNode::MPCNode()
     _mpc_params["MAXTHR"]   = _max_throttle;
     _mpc_params["BOUND"]    = _bound_value;
     _mpc.LoadParams(_mpc_params);
-
+    test_cnt = 0;
 }
 
 
@@ -235,8 +239,14 @@ Eigen::VectorXd MPCNode::polyfit(Eigen::VectorXd xvals, Eigen::VectorXd yvals, i
 void MPCNode::odomCB(const nav_msgs::Odometry::ConstPtr& odomMsg)
 {
     _odom = *odomMsg;
+    
+    makeGlobalPath(odomMsg);
 }
 
+void MPCNode::makeGlobalPath(const nav_msgs::Odometry::ConstPtr& odomMsg)
+{
+
+}
 // CallBack: Update generated path (conversion to odom frame)
 void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
 {
@@ -259,18 +269,38 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
         }                       
 
         // Find the nearst point for robot position
-        int min_idx, min_val = 100;        
+        int min_idx = 0; 
+        int min_val = 100; // why double is wrong?        
         int N = totalPathMsg->poses.size(); // Number of waypoints        
         const double px = odom.pose.pose.position.x; //pose: odom frame
         const double py = odom.pose.pose.position.y;
+        const double ptheta = odom.pose.pose.position.y;
+        
         double dx, dy; // difference distance
+        double pre_yaw = 0;
+        double roll, pitch, yaw = 0;
 
+        /*
         for(int i = 0; i < N; i++) 
         {
             dx = totalPathMsg->poses[i].pose.position.x - px;
             dy = totalPathMsg->poses[i].pose.position.y - py;
+                    
+            tf::Quaternion q(
+                totalPathMsg->poses[i].pose.orientation.x,
+                totalPathMsg->poses[i].pose.orientation.y,
+                totalPathMsg->poses[i].pose.orientation.z,
+                totalPathMsg->poses[i].pose.orientation.w);
+            tf::Matrix3x3 m(q);
+            m.getRPY(roll, pitch, yaw);
+
+            if(abs(pre_yaw - yaw) > 5)
+            {
+                cout << "abs(pre_yaw - yaw)" << abs(pre_yaw - yaw) << endl;
+                pre_yaw = yaw;
+            }
        
-            if(min_val >= sqrt(dx*dx + dy*dy))
+            if(min_val > sqrt(dx*dx + dy*dy))
             {
                 min_val = sqrt(dx*dx + dy*dy);
                 min_idx = i;
@@ -278,9 +308,13 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
                 if(i < N * 0.02)
                     min_idx = N - 100; //for smoothing about init position
             }
-        }   
+        } */  
 
-        for(int i = min_idx; i < N ; i++)
+       test_cnt = test_cnt + 1;
+        if( test_cnt > N)
+            test_cnt = 0;
+
+        for(int i = test_cnt; i < N ; i++)
         {
             if(total_length > _pathLength)
                 break;
