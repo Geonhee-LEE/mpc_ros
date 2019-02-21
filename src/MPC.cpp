@@ -130,8 +130,8 @@ class FG_eval
               cost_etheta +=  (_w_etheta * CppAD::pow(vars[_etheta_start + i] - _ref_etheta, 2)); 
               cost_vel +=  (_w_vel * CppAD::pow(vars[_v_start + i] - _ref_vel, 2)); 
             }
-            //cout << "-----------------------------------------------" <<endl;
-            //cout << "cost_cte, etheta, velocity: " << cost_cte << ", " << cost_etheta  << ", " << cost_vel << endl;
+            cout << "-----------------------------------------------" <<endl;
+            cout << "cost_cte, etheta, velocity: " << cost_cte << ", " << cost_etheta  << ", " << cost_vel << endl;
             
 
             // Minimize the use of actuators.
@@ -139,14 +139,14 @@ class FG_eval
               fg[0] += _w_angvel * CppAD::pow(vars[_angvel_start + i], 2);
               fg[0] += _w_accel * CppAD::pow(vars[_a_start + i], 2);
             }
-            //cout << "cost of actuators: " << fg[0] << endl; 
+            cout << "cost of actuators: " << fg[0] << endl; 
 
             // Minimize the value gap between sequential actuations.
             for (int i = 0; i < _mpc_steps - 2; i++) {
               fg[0] += _w_angvel_d * CppAD::pow(vars[_angvel_start + i + 1] - vars[_angvel_start + i], 2);
               fg[0] += _w_accel_d * CppAD::pow(vars[_a_start + i + 1] - vars[_a_start + i], 2);
             }
-            //cout << "cost of gap: " << fg[0] << endl; 
+            cout << "cost of gap: " << fg[0] << endl; 
             
 
             // fg[x] for constraints
@@ -380,8 +380,8 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
 
     // Cost
     auto cost = solution.obj_value;
-    //std::cout << "------------ Total Cost(solution): " << cost << "------------" << std::endl;
-    //cout << "-----------------------------------------------" <<endl;
+    std::cout << "------------ Total Cost(solution): " << cost << "------------" << std::endl;
+    cout << "-----------------------------------------------" <<endl;
 
     this->mpc_x = {};
     this->mpc_y = {};

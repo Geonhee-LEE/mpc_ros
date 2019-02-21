@@ -191,6 +191,7 @@ MPCNode::MPCNode()
     _mpc_params["MAXTHR"]   = _max_throttle;
     _mpc_params["BOUND"]    = _bound_value;
     _mpc.LoadParams(_mpc_params);
+
 }
 
 
@@ -402,10 +403,11 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
                 min_val = sqrt(dx*dx + dy*dy);
                 min_idx = i;
 
-                //if(i < N * 0.02)
-                //    min_idx = N - 100; //for smoothing about init position
             }
         }
+
+        if( min_idx >=  N * 0.99 )
+            _pub_twist_flag = false;
 
 
         for(int i = min_idx; i < N ; i++)
@@ -431,6 +433,7 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
                 mpc_path.poses.push_back(tempPose);                          
                 total_length = total_length + _waypointsDist;    
             }
+
         }  
 
         if(mpc_path.poses.size() >= _pathLength )
@@ -682,6 +685,12 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
     {
         _twist_msg.linear.x  = _speed; 
         _twist_msg.angular.z = _w;
+        _pub_twist.publish(_twist_msg);
+    }
+    else
+    {
+        _twist_msg.linear.x  = 0; 
+        _twist_msg.angular.z = 0;
         _pub_twist.publish(_twist_msg);
     }
     
