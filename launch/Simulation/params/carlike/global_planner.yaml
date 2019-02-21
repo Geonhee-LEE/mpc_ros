@@ -1,3 +1,3 @@
 GlobalPlanner:
-    use_dijkstra: true
+    use_dijkstra: false
     use_grid_path: false

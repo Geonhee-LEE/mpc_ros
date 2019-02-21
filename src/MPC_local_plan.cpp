@@ -86,6 +86,7 @@ class MPCNode
 
         //For making global planner
         nav_msgs::Path _gen_path;
+        int min_idx;
 
 }; // end of class
 
@@ -102,7 +103,7 @@ MPCNode::MPCNode()
     pn.param("delay_mode", _delay_mode, true);
     pn.param("max_speed", _max_speed, 0.50); // unit: m/s
     pn.param("waypoints_dist", _waypointsDist, -1.0); // unit: m
-    pn.param("path_length", _pathLength, 8.0); // unit: m
+    pn.param("path_length", _pathLength, 2.0); // unit: m
     pn.param("goal_radius", _goalRadius, 0.5); // unit: m
     pn.param("controller_freq", _controller_freq, 10);
     //pn.param("vehicle_Lf", _Lf, 0.290); // distance between the front of the vehicle and its center of gravity
@@ -127,7 +128,7 @@ MPCNode::MPCNode()
     //Parameter for topics & Frame name
     pn.param<std::string>("global_path_topic", _globalPath_topic, "/move_base/TrajectoryPlannerROS/global_plan" );
     pn.param<std::string>("goal_topic", _goal_topic, "/move_base_simple/goal" );
-    pn.param<std::string>("map_frame", _map_frame, "map" ); //*****for mpc, "odom"
+    pn.param<std::string>("map_frame", _map_frame, "odom" ); //*****for mpc, "odom"
     pn.param<std::string>("odom_frame", _odom_frame, "odom");
     pn.param<std::string>("car_frame", _car_frame, "base_footprint" );
 
@@ -311,7 +312,7 @@ void MPCNode::makeGlobalPath(const nav_msgs::Odometry odomMsg)
 // CallBack: Update generated path (conversion to odom frame)
 void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
 {
-    /*
+    
     _gen_path = *totalPathMsg;
 
     //For plan the global path about desired path 
@@ -326,7 +327,6 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
     try
     {
         double total_length = 0.0;
-        _pathLength = 6;
         //find waypoints distance
         if(_waypointsDist <= 0.0)
         {        
@@ -336,7 +336,7 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
         }                       
 
         // Find the nearst point for robot position
-        int min_idx = 0; 
+        
         int min_val = 100; // why double is wrong?        
         int N = totalPathMsg->poses.size(); // Number of waypoints        
         const double px = odom.pose.pose.position.x; //pose: odom frame
@@ -347,7 +347,7 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
         double pre_yaw = 0;
         double roll, pitch, yaw = 0;
 
-        
+        /* Circle
         for(int i = 0; i < N; i++) 
         {
             dx = totalPathMsg->poses[i].pose.position.x - px;
@@ -376,6 +376,37 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
                     min_idx = N - 100; //for smoothing about init position
             }
         }
+        */
+
+        for(int i = min_idx; i < N; i++) 
+        {
+            dx = totalPathMsg->poses[i].pose.position.x - px;
+            dy = totalPathMsg->poses[i].pose.position.y - py;
+                    
+            tf::Quaternion q(
+                totalPathMsg->poses[i].pose.orientation.x,
+                totalPathMsg->poses[i].pose.orientation.y,
+                totalPathMsg->poses[i].pose.orientation.z,
+                totalPathMsg->poses[i].pose.orientation.w);
+            tf::Matrix3x3 m(q);
+            m.getRPY(roll, pitch, yaw);
+
+            if(abs(pre_yaw - yaw) > 5)
+            {
+                cout << "abs(pre_yaw - yaw)" << abs(pre_yaw - yaw) << endl;
+                pre_yaw = yaw;
+            }
+       
+            if(min_val > sqrt(dx*dx + dy*dy) && abs(i - min_idx) < 50) 
+            {
+                min_val = sqrt(dx*dx + dy*dy);
+                min_idx = i;
+
+                //if(i < N * 0.02)
+                //    min_idx = N - 100; //for smoothing about init position
+            }
+        }
+
 
         for(int i = min_idx; i < N ; i++)
         {
@@ -383,7 +414,7 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
                 break;
             
             _tf_listener.transformPose(_odom_frame, ros::Time(0) , 
-                                            totalPathMsg->poses[i], _map_frame, tempPose);                     
+                                            totalPathMsg->poses[i], _odom_frame, tempPose);                     
             mpc_path.poses.push_back(tempPose);                          
             total_length = total_length + _waypointsDist;           
         }   
@@ -396,7 +427,7 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
                 if(total_length > _pathLength)                
                     break;
                 _tf_listener.transformPose(_odom_frame, ros::Time(0) , 
-                                                totalPathMsg->poses[i], _map_frame, tempPose);                     
+                                                totalPathMsg->poses[i], _odom_frame, tempPose);                     
                 mpc_path.poses.push_back(tempPose);                          
                 total_length = total_length + _waypointsDist;    
             }
@@ -422,7 +453,7 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
         ROS_ERROR("%s",ex.what());
         ros::Duration(1.0).sleep();
     }
-    */
+    
 }
 
 // CallBack: Update path waypoints (conversion to odom frame)
@@ -456,7 +487,7 @@ void MPCNode::pathCB(const nav_msgs::Path::ConstPtr& pathMsg)
                 if(sampling == _downSampling)
                 {   
                     geometry_msgs::PoseStamped tempPose;
-                    _tf_listener.transformPose(_odom_frame, ros::Time(0) , pathMsg->poses[i], _map_frame, tempPose);                     
+                    _tf_listener.transformPose(_odom_frame, ros::Time(0) , pathMsg->poses[i], _odom_frame, tempPose);                     
                     odom_path.poses.push_back(tempPose);  
                     sampling = 0;
                 }

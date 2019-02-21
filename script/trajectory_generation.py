@@ -85,15 +85,16 @@ def generation_desired_path():
     
     #lemniscate
     '''
+    
     period = 1000
     for t in range(0, iter):
         desired_path.header.stamp = rospy.get_rostime()
-        desired_path.header.frame_id = "map"
+        desired_path.header.frame_id = "odom"
         desired_path.header.seq = t
 
         pose = PoseStamped()
         #pose.header.seq = t 
-        pose.header.frame_id = "map"
+        pose.header.frame_id = "odom"
         #pose.header.stamp = rospy.get_rostime()
         pose.pose.position.x = 5 * cos(2 * pi* t / period) / (sin(2 * pi * t / period) ** 2 + 1)
         pose.pose.position.y = 5 * sin(2 * pi* t / period) * cos(2 * pi* t / period) / (sin(2 * pi * t / period) ** 2 + 1)
@@ -107,9 +108,11 @@ def generation_desired_path():
 
         desired_path.poses.append(pose)
     '''
+    
 
     #circle
     '''
+    
     radius = 5
     period = 1000
     for t in range(0, iter):
@@ -131,11 +134,13 @@ def generation_desired_path():
         pose.pose.orientation.w = q[3]
 
         desired_path.poses.append(pose)
+    
     '''
 
     #epitrochoid
     '''
     '''
+    
     R = 5
     r = 1
     d = 3
@@ -159,8 +164,9 @@ def generation_desired_path():
         pose.pose.orientation.z = q[2]
         pose.pose.orientation.w = q[3]
         
-
+        
         desired_path.poses.append(pose)
+    
     '''
     '''
 
