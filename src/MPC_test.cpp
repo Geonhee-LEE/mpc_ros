@@ -15,7 +15,7 @@
 # limitations under the License.
 */
 
-#include "MPC_test.h"
+#include "MPC.h"
 //#include <cppad/cppad.hpp>
 #include <cppad/ipopt/solve.hpp>
 #include <Eigen/Core>
@@ -34,9 +34,6 @@ class FG_eval
         // Fitted polynomial coefficients
         Eigen::VectorXd coeffs;
 
-        //For debug
-        unsigned int dis_cnt;
-
         double _dt, _ref_cte, _ref_etheta, _ref_vel; 
         double  _w_cte, _w_etheta, _w_vel, _w_angvel, _w_accel, _w_angvel_d, _w_accel_d;
         int _mpc_steps, _x_start, _y_start, _theta_start, _v_start, _cte_start, _etheta_start, _angvel_start, _a_start;
@@ -47,6 +44,19 @@ class FG_eval
         { 
             this->coeffs = coeffs; 
 
+            // Set default value    
+            _dt = 0.1;  // in sec
+            _ref_cte   = 0;
+            _ref_etheta  = 0;
+            _ref_vel   = 0.5; // m/s
+            _w_cte     = 100;
+            _w_etheta    = 100;
+            _w_vel     = 1;
+            _w_angvel   = 100;
+            _w_accel   = 50;
+            _w_angvel_d = 0;
+            _w_accel_d = 0;
+
             _mpc_steps   = 40;
             _x_start     = 0;
             _y_start     = _x_start + _mpc_steps;
@@ -56,9 +66,6 @@ class FG_eval
             _etheta_start  = _cte_start + _mpc_steps;
             _angvel_start = _etheta_start + _mpc_steps;
             _a_start     = _angvel_start + _mpc_steps - 1;
-
-            //For debug
-            dis_cnt = 0;
         }
 
         // Load parameters for constraints
@@ -123,41 +130,24 @@ class FG_eval
               cost_etheta +=  (_w_etheta * CppAD::pow(vars[_etheta_start + i] - _ref_etheta, 2)); 
               cost_vel +=  (_w_vel * CppAD::pow(vars[_v_start + i] - _ref_vel, 2)); 
             }
-
-            dis_cnt = dis_cnt + 1;
-            if( dis_cnt >= 10)
-            {
-                cout << "-----------------------------------------------" <<endl;
-                cout << "cost_cte, etheta, velocity: " << cost_cte << ", " << cost_etheta  << ", " << cost_vel << endl;
-            }
+            cout << "-----------------------------------------------" <<endl;
+            cout << "cost_cte, etheta, velocity: " << cost_cte << ", " << cost_etheta  << ", " << cost_vel << endl;
             
 
             // Minimize the use of actuators.
-            for (int i = 0; i < _mpc_steps - 1; i++) 
-            {
+            for (int i = 0; i < _mpc_steps - 1; i++) {
               fg[0] += _w_angvel * CppAD::pow(vars[_angvel_start + i], 2);
               fg[0] += _w_accel * CppAD::pow(vars[_a_start + i], 2);
             }
-
-            if( dis_cnt >= 10)
-            {
-                cout << "cost of actuators: " << fg[0] << endl; 
-            }
+            cout << "cost of actuators: " << fg[0] << endl; 
 
             // Minimize the value gap between sequential actuations.
-            for (int i = 0; i < _mpc_steps - 2; i++) 
-            {
+            for (int i = 0; i < _mpc_steps - 2; i++) {
               fg[0] += _w_angvel_d * CppAD::pow(vars[_angvel_start + i + 1] - vars[_angvel_start + i], 2);
               fg[0] += _w_accel_d * CppAD::pow(vars[_a_start + i + 1] - vars[_a_start + i], 2);
             }
+            cout << "cost of gap: " << fg[0] << endl; 
             
-            if( dis_cnt >= 10)
-            {
-                cout << "cost of gap: " << fg[0] << endl; 
-                cout << "-----------------------------------------------" <<endl;
-
-                dis_cnt = 0;
-            }
 
             // fg[x] for constraints
             // Initial constraints
@@ -233,6 +223,11 @@ class FG_eval
 MPC::MPC() 
 {
     // Set default value    
+    _mpc_steps = 20;
+    _max_angvel = 3.0; // Maximal angvel radian (~30 deg)
+    _max_throttle = 1.0; // Maximal throttle accel
+    _bound_value  = 1.0e3; // Bound value for other variables
+
     _x_start     = 0;
     _y_start     = _x_start + _mpc_steps;
     _theta_start   = _y_start + _mpc_steps;
@@ -242,7 +237,6 @@ MPC::MPC()
     _angvel_start = _etheta_start + _mpc_steps;
     _a_start     = _angvel_start + _mpc_steps - 1;
 
-    dis_cnt = 0;
 }
 
 void MPC::LoadParams(const std::map<string, double> &params)
@@ -252,7 +246,7 @@ void MPC::LoadParams(const std::map<string, double> &params)
     _mpc_steps = _params.find("STEPS") != _params.end() ? _params.at("STEPS") : _mpc_steps;
     _max_angvel = _params.find("ANGVEL") != _params.end() ? _params.at("ANGVEL") : _max_angvel;
     _max_throttle = _params.find("MAXTHR") != _params.end() ? _params.at("MAXTHR") : _max_throttle;
-    _bound_value  = _params.find("BOUND") != _params.end()  ? _params.at("BOUND") : _bound_value;  // Bound value for other variables
+    _bound_value  = _params.find("BOUND") != _params.end()  ? _params.at("BOUND") : _bound_value;
     
     _x_start     = 0;
     _y_start     = _x_start + _mpc_steps;
@@ -278,7 +272,6 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
     const double v = state[3];
     const double cte = state[4];
     const double etheta = state[5];
- 
 
     // Set the number of model variables (includes both states and inputs).
     // For example: If the state is a 4 element vector, the actuators is a 2
@@ -387,15 +380,9 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
 
     // Cost
     auto cost = solution.obj_value;
+    std::cout << "------------ Total Cost(solution): " << cost << "------------" << std::endl;
+    cout << "-----------------------------------------------" <<endl;
 
-    dis_cnt += 1;
-
-    if(dis_cnt >= 10)
-    {
-        std::cout << "------------ Total Cost(solution): " << cost << "------------" << std::endl;
-        dis_cnt = 0;
-    }
-    
     this->mpc_x = {};
     this->mpc_y = {};
     for (int i = 0; i < _mpc_steps; i++) 

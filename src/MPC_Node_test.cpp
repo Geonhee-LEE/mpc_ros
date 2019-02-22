@@ -527,6 +527,7 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
     {    
         nav_msgs::Odometry odom = _odom; 
         nav_msgs::Path odom_path = _odom_path;   
+        geometry_msgs::Point goal_pos = _goal_pos;
 
         // Update system states: X=[x, y, theta, v]
         const double px = odom.pose.pose.position.x; //pose: odom frame
@@ -557,12 +558,37 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
             x_veh[i] = dx * costheta + dy * sintheta;
             y_veh[i] = dy * costheta - dx * sintheta;
         }
-        
+
         // Fit waypoints
         auto coeffs = polyfit(x_veh, y_veh, 3); 
-
         const double cte  = polyeval(coeffs, 0.0);
-        const double etheta = atan(coeffs[1]);
+        double etheta = atan(coeffs[1]);
+
+        // Global coordinate system about theta
+        double gx = 0;
+        double gy = 0;
+        int N_sample = N * 0.3;
+        for(int i = 1; i < N_sample; i++) 
+        {
+            gx += odom_path.poses[i].pose.position.x - odom_path.poses[i-1].pose.position.x;
+            gy += odom_path.poses[i].pose.position.y - odom_path.poses[i-1].pose.position.y;
+        }       
+        
+        // Implementation about theta error more precisly
+        if(gx && gy)
+        {   
+            //double etheta2 = atan2(gy,gx);
+            etheta = atan2(gy,gx) - theta;
+            //cout << "gx:"<< gx << "gy:"<< gy  << endl;
+            //cout << "line theta:"<< etheta2 << "robot theta:" << theta << endl;
+        }
+
+        // Difference bewteen current position and goal position
+        const double x_err = goal_pos.x -  odom.pose.pose.position.x;
+        const double y_err = goal_pos.y -  odom.pose.pose.position.y;
+        const double goal_err = sqrt(x_err*x_err + y_err*y_err);
+
+        cout << "x_err:"<< x_err << ", y_err:"<< y_err  << endl;
 
         VectorXd state(6);
         if(_delay_mode)
@@ -589,13 +615,15 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         // MPC result (all described in car frame), output = (acceleration, w)        
         _w = mpc_results[0]; // radian/sec, angular velocity
         _throttle = mpc_results[1]; // acceleration
-        _speed = v + _throttle*dt;  // speed
+
+        _speed = v + _throttle * dt;  // speed
         if (_speed >= _max_speed)
             _speed = _max_speed;
         if(_speed <= 0.0)
             _speed = 0.0;
 
-        if(_debug_info)
+        //if(_debug_info)
+        if(1)
         {
             cout << "\n\nDEBUG" << endl;
             cout << "theta: " << theta << endl;
@@ -634,17 +662,6 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         if(_goal_reached && _goal_received)
             cout << "Goal Reached: control loop !" << endl;
     }
-
-    // publish ankermann cmd_vel
-    /*
-    _ackermann_msg.header.frame_id = _car_frame;
-    _ackermann_msg.header.stamp = ros::Time::now();
-    _ackermann_msg.drive.steering_angle = _steering;
-    _ackermann_msg.drive.speed = _speed;
-    _ackermann_msg.drive.acceleration = _throttle;
-    _pub_ackermann.publish(_ackermann_msg);        
-    */
-
     // publish general cmd_vel 
     if(_pub_twist_flag)
     {
