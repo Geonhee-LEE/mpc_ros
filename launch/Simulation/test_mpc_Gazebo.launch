@@ -18,7 +18,7 @@
         <arg name="world_name" value="$(find zetabank_gazebo)/models/temp_world.world"/>
         <arg name="paused" value="false"/>
         <arg name="use_sim_time" value="true"/>
-        <arg name="gui" value="true"/>
+        <arg name="gui" value="false"/>
         <arg name="headless" value="false"/>
         <arg name="debug" value="false"/>
     </include>
@@ -63,7 +63,7 @@
     </node>
     
     <!--  ************** MPC Node **************  -->
-    <node name="MPC_Node" pkg="mpc_ros" type="MPC_Node" output="screen" if="$(eval controller == 'mpc')" >
+    <node name="MPC_Node_test" pkg="mpc_ros" type="MPC_Node_test" output="screen" if="$(eval controller == 'mpc')" >
         <rosparam file="$(find mpc_ros)/launch/Simulation/params/mpc_params.yaml" command="load" />
     </node>
 
