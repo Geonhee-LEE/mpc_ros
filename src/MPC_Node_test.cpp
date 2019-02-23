@@ -580,7 +580,7 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
             //double etheta2 = atan2(gy,gx);
             etheta = atan2(gy,gx) - theta;
             //cout << "gx:"<< gx << "gy:"<< gy  << endl;
-            //cout << "line theta:"<< etheta2 << "robot theta:" << theta << endl;
+            cout << "etheta:"<< etheta << "theta:" << theta << endl;
         }
 
         // Difference bewteen current position and goal position

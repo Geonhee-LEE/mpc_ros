@@ -139,7 +139,6 @@ def generation_desired_path():
 
     #epitrochoid
     '''
-    '''
     
     R = 5
     r = 1
@@ -168,7 +167,67 @@ def generation_desired_path():
         desired_path.poses.append(pose)
     
     '''
+
+
+    #square
     '''
+    '''
+    period = 1000
+    l = 10
+    PI = 3.141592
+    x = 0.0
+    y = 0.0
+    for t in range(0, iter):
+        desired_path.header.stamp = rospy.get_rostime()
+        desired_path.header.frame_id = "odom"
+        desired_path.header.seq = t
+
+        pose = PoseStamped()
+        pose.header.seq = t
+        pose.header.frame_id = "odom"
+        pose.header.stamp = rospy.get_rostime()
+
+        if(t <= period * 0.25):
+            x = 0
+            y += l/(period*0.25)
+            pose.pose.position.x = x
+            pose.pose.position.y = y
+            q = quaternion_from_euler(0, 0, PI/2)
+            pose.pose.orientation.x = q[0]
+            pose.pose.orientation.y = q[1]
+            pose.pose.orientation.z = q[2]
+            pose.pose.orientation.w = q[3]
+        elif(t <= period * 0.5):
+            x -= l/(period*0.25)
+            pose.pose.position.x = x
+            pose.pose.position.y = y
+            q = quaternion_from_euler(0, 0, PI)
+            pose.pose.orientation.x = q[0]
+            pose.pose.orientation.y = q[1]
+            pose.pose.orientation.z = q[2]
+            pose.pose.orientation.w = q[3]
+        elif(t <= period * 0.75):
+            y -=  l/(period*0.25)
+            pose.pose.position.x = x
+            pose.pose.position.y = y
+            q = quaternion_from_euler(0, 0, -PI/2)
+            pose.pose.orientation.x = q[0]
+            pose.pose.orientation.y = q[1]
+            pose.pose.orientation.z = q[2]
+            pose.pose.orientation.w = q[3]
+        elif(t <= period):
+            x += l/(period*0.25)
+            pose.pose.position.x = x
+            pose.pose.position.y = y
+            q = quaternion_from_euler(0, 0, 0)
+            pose.pose.orientation.x = q[0]
+            pose.pose.orientation.y = q[1]
+            pose.pose.orientation.z = q[2]
+            pose.pose.orientation.w = q[3]
+        
+        
+        print("pose :", pose)
+        desired_path.poses.append(pose)
 
     desired_path_pub.publish(desired_path) 
     desired_path = []

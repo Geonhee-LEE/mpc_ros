@@ -40,6 +40,10 @@ Visualization Manager:
           Value: true
         base_link:
           Value: false
+        caster_back_left_link:
+          Value: false
+        caster_back_right_link:
+          Value: false
         imu_link:
           Value: false
         lidar_link:
@@ -76,6 +80,10 @@ Visualization Manager:
           odom:
             base_footprint:
               base_link:
+                caster_back_left_link:
+                  {}
+                caster_back_right_link:
+                  {}
                 imu_link:
                   {}
                 lidar_link:
@@ -416,6 +424,16 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
         base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        caster_back_left_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        caster_back_right_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
