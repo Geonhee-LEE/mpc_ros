@@ -622,8 +622,7 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         if(_speed <= 0.0)
             _speed = 0.0;
 
-        //if(_debug_info)
-        if(1)
+        if(_debug_info)
         {
             cout << "\n\nDEBUG" << endl;
             cout << "theta: " << theta << endl;
