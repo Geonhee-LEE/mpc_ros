@@ -309,7 +309,6 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
         vars_lowerbound[i] = -_bound_value;
         vars_upperbound[i] = _bound_value;
     }
-
     // The upper and lower limits of angvel are set to -25 and 25
     // degrees (values in radians).
     for (int i = _angvel_start; i < _a_start; i++) 

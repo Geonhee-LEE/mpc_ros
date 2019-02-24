@@ -681,7 +681,7 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
     {
         _twist_msg.linear.x  = _speed; 
         _twist_msg.angular.z = _w;
-        //_pub_twist.publish(_twist_msg);
+        _pub_twist.publish(_twist_msg);
     }
     
 }
