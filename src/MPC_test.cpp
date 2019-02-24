@@ -15,7 +15,7 @@
 # limitations under the License.
 */
 
-#include "MPC.h"
+#include "MPC_test.h"
 //#include <cppad/cppad.hpp>
 #include <cppad/ipopt/solve.hpp>
 #include <Eigen/Core>
@@ -385,11 +385,14 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
 
     this->mpc_x = {};
     this->mpc_y = {};
+    this->mpc_theta = {};
     for (int i = 0; i < _mpc_steps; i++) 
     {
         this->mpc_x.push_back(solution.x[_x_start + i]);
         this->mpc_y.push_back(solution.x[_y_start + i]);
+        this->mpc_theta.push_back(solution.x[_theta_start + i]);
     }
+    
     vector<double> result;
     result.push_back(solution.x[_angvel_start]);
     result.push_back(solution.x[_a_start]);

@@ -25,12 +25,13 @@
 #include <geometry_msgs/Twist.h>
 #include <tf/transform_listener.h>
 // #include <tf/transform_datatypes.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <nav_msgs/Path.h>
 #include <nav_msgs/Odometry.h>
 #include <ackermann_msgs/AckermannDriveStamped.h>
 #include <visualization_msgs/Marker.h>
 
-#include "MPC.h"
+#include "MPC_test.h"
 #include <Eigen/Core>
 #include <Eigen/QR>
 
@@ -534,7 +535,7 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         const double py = odom.pose.pose.position.y;
         tf::Pose pose;
         tf::poseMsgToTF(odom.pose.pose, pose);
-        const double theta = tf::getYaw(pose.getRotation());
+        double theta = tf::getYaw(pose.getRotation());
         const double v = odom.twist.twist.linear.x; //twist: body fixed frame
         // Update system inputs: U=[w, throttle]
         const double w = _w; // steering -> w
@@ -574,14 +575,18 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
             gy += odom_path.poses[i].pose.position.y - odom_path.poses[i-1].pose.position.y;
         }       
         
+        double temp_theta = theta;
+        double traj_deg = atan2(gy,gx);
+        double PI = 3.141592;
+        // Degree conversion -pi~pi -> 0~2pi(ccw) since need a continuity
+        if(temp_theta < -PI + traj_deg) 
+            temp_theta = temp_theta + 2 * PI;
+        
         // Implementation about theta error more precisly
         if(gx && gy)
-        {   
-            //double etheta2 = atan2(gy,gx);
-            etheta = atan2(gy,gx) - theta;
-            //cout << "gx:"<< gx << "gy:"<< gy  << endl;
-            cout << "etheta:"<< etheta << "theta:" << theta << endl;
-        }
+            etheta = temp_theta - traj_deg;
+
+        cout << "etheta: "<< etheta << ", atan2(gy,gx): " << atan2(gy,gx) << ", temp_theta:" << traj_deg << endl;
 
         // Difference bewteen current position and goal position
         const double x_err = goal_pos.x -  odom.pose.pose.position.x;
@@ -640,13 +645,23 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         _mpc_traj = nav_msgs::Path();
         _mpc_traj.header.frame_id = _car_frame; // points in car coordinate        
         _mpc_traj.header.stamp = ros::Time::now();
+
+
+        geometry_msgs::PoseStamped tempPose;
+        tf2::Quaternion myQuaternion;
+
         for(int i=0; i<_mpc.mpc_x.size(); i++)
         {
-            geometry_msgs::PoseStamped tempPose;
             tempPose.header = _mpc_traj.header;
             tempPose.pose.position.x = _mpc.mpc_x[i];
             tempPose.pose.position.y = _mpc.mpc_y[i];
-            tempPose.pose.orientation.w = 1.0;
+
+            myQuaternion.setRPY( 0, 0, _mpc.mpc_theta[i] );  
+            tempPose.pose.orientation.x = myQuaternion[0];
+            tempPose.pose.orientation.y = myQuaternion[1];
+            tempPose.pose.orientation.z = myQuaternion[2];
+            tempPose.pose.orientation.w = myQuaternion[3];
+                
             _mpc_traj.poses.push_back(tempPose); 
         }     
         // publish the mpc trajectory
@@ -666,7 +681,7 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
     {
         _twist_msg.linear.x  = _speed; 
         _twist_msg.angular.z = _w;
-        _pub_twist.publish(_twist_msg);
+        //_pub_twist.publish(_twist_msg);
     }
     
 }

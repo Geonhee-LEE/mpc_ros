@@ -34,6 +34,7 @@ class MPC
         vector<double> Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs);
         vector<double> mpc_x;
         vector<double> mpc_y;
+        vector<double> mpc_theta;
 
         void LoadParams(const std::map<string, double> &params);
     
