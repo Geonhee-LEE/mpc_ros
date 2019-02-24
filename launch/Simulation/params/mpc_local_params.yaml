@@ -4,7 +4,7 @@ debug_info: false
 delay_mode: true
 max_speed: 0.5 # unit: m/s 
 waypoints_dist: -1.0 # unit: m, set < 0 means computed by node
-path_length: 2.0 # unit: m
+path_length: 4.0 # unit: m
 goal_radius: 0.5 # unit: m
 controller_freq: 10
 
@@ -14,7 +14,7 @@ mpc_ref_cte: 0.0
 mpc_ref_vel: 0.5
 mpc_ref_etheta: 0.0
 mpc_w_cte: 5000.0
-mpc_w_etheta: 5000.0
+mpc_w_etheta: 500.0
 mpc_w_vel: 100.0
 mpc_w_angvel: 0.0
 mpc_w_angvel_d: 10.0
