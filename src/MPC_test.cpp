@@ -212,7 +212,8 @@ class FG_eval
                 fg[2 + _v_start + i] = v1 - (v0 + a0 * _dt);
                 
                 fg[2 + _cte_start + i] = cte1 - ((f0 - y0) + (v0 * CppAD::sin(etheta0) * _dt));
-                fg[2 + _etheta_start + i] = etheta1 - ((theta0 - trj_grad0) + w0 * _dt);//theta0-trj_grad0)->etheta 
+                //fg[2 + _etheta_start + i] = etheta1 - ((theta0 - trj_grad0) + w0 * _dt);//theta0-trj_grad0)->etheta 
+                fg[2 + _etheta_start + i] = etheta1 - (etheta0 + w0 * _dt);//theta0-trj_grad0)->etheta 
             }
         }
 };

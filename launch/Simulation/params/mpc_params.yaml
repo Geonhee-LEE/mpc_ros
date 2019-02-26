@@ -14,8 +14,8 @@ mpc_ref_cte: 0.0
 mpc_ref_vel: 0.5
 mpc_ref_etheta: 0.0
 mpc_w_cte: 100.0
-mpc_w_etheta: 5000.0
-mpc_w_vel: 100.0
+mpc_w_etheta: 0000.0
+mpc_w_vel: 1000.0
 mpc_w_angvel: 100.0
 mpc_w_angvel_d: 0.0
 mpc_w_accel: 50.0

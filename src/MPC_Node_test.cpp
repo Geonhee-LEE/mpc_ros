@@ -579,12 +579,16 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         double traj_deg = atan2(gy,gx);
         double PI = 3.141592;
         // Degree conversion -pi~pi -> 0~2pi(ccw) since need a continuity
-        if(temp_theta < -PI + traj_deg) 
+        
+        
+        if(temp_theta <= -PI + traj_deg) 
             temp_theta = temp_theta + 2 * PI;
         
         // Implementation about theta error more precisly
-        if(gx && gy)
+        if(gx && gy && temp_theta - traj_deg < 1.8 * PI)
             etheta = temp_theta - traj_deg;
+        else
+            etheta = 0;
 
         cout << "etheta: "<< etheta << ", atan2(gy,gx): " << atan2(gy,gx) << ", temp_theta:" << traj_deg << endl;
 
