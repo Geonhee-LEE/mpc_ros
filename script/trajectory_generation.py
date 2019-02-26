@@ -36,7 +36,7 @@ def odom_cb(data):
     robot_odom = data
     odom_count = odom_count + 1
 
-    if odom_count % 10 == 0:
+    if odom_count % 3 == 0:
         odom_path.header = data.header
         odom_path.header.frame_id = "odom"
 
@@ -140,6 +140,7 @@ def generation_desired_path():
     #epitrochoid
     
     '''
+    '''
     
     R = 5
     r = 1
@@ -168,10 +169,10 @@ def generation_desired_path():
         desired_path.poses.append(pose)
     
     '''
+    '''
 
 
     #square
-    '''
     '''
     period = 1000
     l = 10
@@ -226,7 +227,6 @@ def generation_desired_path():
             pose.pose.orientation.z = q[2]
             pose.pose.orientation.w = q[3]
         desired_path.poses.append(pose)
-    '''
     '''
 
     desired_path_pub.publish(desired_path) 

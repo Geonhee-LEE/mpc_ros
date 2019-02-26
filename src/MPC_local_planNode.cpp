@@ -30,7 +30,7 @@
 #include <ackermann_msgs/AckermannDriveStamped.h>
 #include <visualization_msgs/Marker.h>
 
-#include "MPC.h"
+#include "MPC_local.h"
 #include <Eigen/Core>
 #include <Eigen/QR>
 
@@ -192,6 +192,7 @@ MPCNode::MPCNode()
     _mpc_params["BOUND"]    = _bound_value;
     _mpc.LoadParams(_mpc_params);
 
+    min_idx = 0;
 }
 
 

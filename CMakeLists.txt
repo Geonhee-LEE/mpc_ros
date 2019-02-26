@@ -65,7 +65,7 @@ ADD_EXECUTABLE( MPC_Node_test src/MPC_test.cpp src/MPC_Node_test.cpp )
 TARGET_LINK_LIBRARIES(MPC_Node_test ipopt ${catkin_LIBRARIES} )
 
 # MPC_Node
-ADD_EXECUTABLE( MPC_local_plan src/MPC.cpp src/MPC_local_planNode.cpp )
+ADD_EXECUTABLE( MPC_local_plan src/MPC_local.cpp src/MPC_local_planNode.cpp )
 TARGET_LINK_LIBRARIES(MPC_local_plan ipopt ${catkin_LIBRARIES} )
 
 # Pure Pursuit Node

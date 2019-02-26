@@ -15,7 +15,7 @@
 # limitations under the License.
 */
 
-#include "MPC_test.h"
+#include "MPC_local.h"
 //#include <cppad/cppad.hpp>
 #include <cppad/ipopt/solve.hpp>
 #include <Eigen/Core>
@@ -212,8 +212,8 @@ class FG_eval
                 fg[2 + _v_start + i] = v1 - (v0 + a0 * _dt);
                 
                 fg[2 + _cte_start + i] = cte1 - ((f0 - y0) + (v0 * CppAD::sin(etheta0) * _dt));
-                //fg[2 + _etheta_start + i] = etheta1 - ((theta0 - trj_grad0) + w0 * _dt);//theta0-trj_grad0)->etheta : it can have more curvature prediction, but its gradient can be only adjust positive plan.   
-                fg[2 + _etheta_start + i] = etheta1 - (etheta0 + w0 * _dt);
+                fg[2 + _etheta_start + i] = etheta1 - ((theta0 - trj_grad0) + w0 * _dt);//theta0-trj_grad0)->etheta : it can have more curvature prediction, but its gradient can be only adjust positive plan.   
+                //fg[2 + _etheta_start + i] = etheta1 - (etheta0 + w0 * _dt);
             }
         }
 };
@@ -382,7 +382,8 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
     auto cost = solution.obj_value;
     std::cout << "------------ Total Cost(solution): " << cost << "------------" << std::endl;
     cout << "-----------------------------------------------" <<endl;
-
+    _mpc_cost = cost;
+    
     this->mpc_x = {};
     this->mpc_y = {};
     this->mpc_theta = {};
