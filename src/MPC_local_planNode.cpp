@@ -36,8 +36,18 @@
 #include <Eigen/Core>
 #include <Eigen/QR>
 
+
+// inlcude iostream and string libraries
+#include <iostream>
+#include <fstream>
+#include <string>
+
+
 using namespace std;
 using namespace Eigen;
+
+
+
 
 /********************/
 /* CLASS DEFINITION */
@@ -46,6 +56,7 @@ class MPCNode
 {
     public:
         MPCNode();
+        ~MPCNode();
         int get_thread_numbers();
         
     private:
@@ -88,7 +99,10 @@ class MPCNode
         //For making global planner
         nav_msgs::Path _gen_path;
         int min_idx;
-
+        
+        fstream file;
+        vector<double> matrix;
+        unsigned int idx;
 }; // end of class
 
 
@@ -198,8 +212,15 @@ MPCNode::MPCNode()
     _mpc.LoadParams(_mpc_params);
 
     min_idx = 0;
+    idx = 0;
+    file.open("/home/geonhee/catkin_ws/src/mpc_ros/write.csv");
 }
 
+MPCNode::~MPCNode()
+{
+    file.close();
+    
+};
 
 // Public: return _thread_numbers
 int MPCNode::get_thread_numbers()
@@ -571,15 +592,6 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
             cout << "Goal Reached: control loop !" << endl;
     }
 
-    // publish ankermann cmd_vel
-    /*
-    _ackermann_msg.header.frame_id = _car_frame;
-    _ackermann_msg.header.stamp = ros::Time::now();
-    _ackermann_msg.drive.steering_angle = _steering;
-    _ackermann_msg.drive.speed = _speed;
-    _ackermann_msg.drive.acceleration = _throttle;
-    _pub_ackermann.publish(_ackermann_msg);        
-    */
 
     // publish general cmd_vel 
     if(_pub_twist_flag)
@@ -611,6 +623,30 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         _twist_msg.angular.z = 0;
         _pub_twist.publish(_twist_msg);
     }
+    
+  
+    /*
+    file.open("/home/geonhee/catkin_ws/src/mpc_ros/write.csv");
+    string line;
+    while (getline(file, line,'\n')) 
+    {
+        istringstream templine(line); 
+        string data;
+        while (getline( templine, data,',')) 
+        {
+            cout << "data.c_str(): "<< data << endl;
+            matrix.push_back(atof(data.c_str()));  
+        }
+    }
+    file.close();*/
+
+    //writefile
+    idx++;
+    file << idx<< "," << _mpc._mpc_totalcost<< "," <<  _mpc._mpc_ctecost<< ","
+    << _mpc._mpc_ethetacost<< ","  << _twist_msg.linear.x<< "," << _twist_msg.angular.z << ","
+    << _odom.pose.pose.position.x<< "," << _odom.pose.pose.position.y << ",";
+    
+        
     
 }
 
