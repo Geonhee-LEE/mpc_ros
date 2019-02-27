@@ -6,12 +6,8 @@ Panels:
       Expanded:
         - /Global Options1
         - /Local Planner1/Local costmap1
-        - /MPC_Reference1
-        - /Generated Path1
-        - /Recorded Path1
-        - /Path1
       Splitter Ratio: 0.605095983
-    Tree Height: 744
+    Tree Height: 356
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -52,7 +48,7 @@ Visualization Manager:
       Cell Size: 1
       Class: rviz/Grid
       Color: 249; 249; 255
-      Enabled: true
+      Enabled: false
       Line Style:
         Line Width: 0.0299999993
         Value: Lines
@@ -65,7 +61,7 @@ Visualization Manager:
       Plane: XY
       Plane Cell Count: 50
       Reference Frame: <Fixed Frame>
-      Value: true
+      Value: false
     - Alpha: 1
       Axes Length: 1
       Axes Radius: 0.100000001
@@ -299,7 +295,7 @@ Visualization Manager:
       Buffer Length: 1
       Class: rviz/Path
       Color: 85; 0; 255
-      Enabled: true
+      Enabled: false
       Head Diameter: 0.300000012
       Head Length: 0.200000003
       Length: 0.300000012
@@ -317,12 +313,12 @@ Visualization Manager:
       Shaft Length: 0.100000001
       Topic: /mpc_reference
       Unreliable: false
-      Value: true
+      Value: false
     - Alpha: 1
       Buffer Length: 1
       Class: rviz/Path
       Color: 255; 0; 0
-      Enabled: true
+      Enabled: false
       Head Diameter: 0.300000012
       Head Length: 0.00999999978
       Length: 0.200000003
@@ -340,7 +336,7 @@ Visualization Manager:
       Shaft Length: 0.00999999978
       Topic: /mpc_trajectory
       Unreliable: false
-      Value: true
+      Value: false
     - Class: rviz/Marker
       Enabled: false
       Marker Topic: /pure_pursuit/path_marker
@@ -446,7 +442,7 @@ Visualization Manager:
       Head Length: 0.200000003
       Length: 0.0500000007
       Line Style: Billboards
-      Line Width: 0.0299999993
+      Line Width: 1
       Name: Generated Path
       Offset:
         X: 0
@@ -476,39 +472,16 @@ Visualization Manager:
         Y: 0
         Z: 0
       Pose Color: 255; 85; 255
-      Pose Style: None
-      Radius: 0.0299999993
+      Pose Style: Axes
+      Radius: 0.100000001
       Shaft Diameter: 0.100000001
       Shaft Length: 0.100000001
       Topic: /recorded_path
       Unreliable: false
       Value: true
-    - Alpha: 1
-      Buffer Length: 1
-      Class: rviz/Path
-      Color: 25; 255; 0
-      Enabled: true
-      Head Diameter: 0.300000012
-      Head Length: 0.200000003
-      Length: 0.300000012
-      Line Style: Billboards
-      Line Width: 0.300000012
-      Name: Path
-      Offset:
-        X: 0
-        Y: 0
-        Z: 0
-      Pose Color: 255; 85; 255
-      Pose Style: None
-      Radius: 0.0299999993
-      Shaft Diameter: 0.100000001
-      Shaft Length: 0.100000001
-      Topic: /global_path
-      Unreliable: false
-      Value: true
   Enabled: true
   Global Options:
-    Background Color: 0; 0; 0
+    Background Color: 255; 255; 255
     Default Light: true
     Fixed Frame: odom
     Frame Rate: 30
@@ -531,25 +504,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 24.1310997
+      Distance: 25.0681458
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -1.07618499
-        Y: 0.809470296
-        Z: -1.84606767
+        X: -2.59457922
+        Y: 5.1380291
+        Z: -1.79599714
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 1.56979632
+      Pitch: 1.54479635
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.72541428
+      Yaw: 4.70541382
     Saved: ~
 Window Geometry:
   Displays:

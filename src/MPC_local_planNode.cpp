@@ -24,6 +24,8 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Twist.h>
 #include <tf/transform_listener.h>
+#include <std_msgs/Float32.h>
+
 // #include <tf/transform_datatypes.h>
 #include <nav_msgs/Path.h>
 #include <nav_msgs/Odometry.h>
@@ -49,7 +51,7 @@ class MPCNode
     private:
         ros::NodeHandle _nh;
         ros::Subscriber _sub_odom, _sub_gen_path, _sub_path, _sub_goal, _sub_amcl;
-        ros::Publisher _pub_globalpath,_pub_odompath, _pub_twist, _pub_ackermann, _pub_mpctraj;
+        ros::Publisher _pub_totalcost, _pub_ctecost, _pub_ethetacost,_pub_odompath, _pub_twist, _pub_ackermann, _pub_mpctraj;
         ros::Timer _timer1;
         tf::TransformListener _tf_listener;
 
@@ -82,7 +84,6 @@ class MPCNode
         void goalCB(const geometry_msgs::PoseStamped::ConstPtr& goalMsg);
         void amclCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& amclMsg);
         void controlLoopCB(const ros::TimerEvent&);
-        void makeGlobalPath(const nav_msgs::Odometry odomMsg);
 
         //For making global planner
         nav_msgs::Path _gen_path;
@@ -151,12 +152,16 @@ MPCNode::MPCNode()
     _sub_gen_path   = _nh.subscribe( "desired_path", 1, &MPCNode::desiredPathCB, this);
     _sub_goal   = _nh.subscribe( _goal_topic, 1, &MPCNode::goalCB, this);
     _sub_amcl   = _nh.subscribe("/amcl_pose", 5, &MPCNode::amclCB, this);
-    _pub_globalpath  = _nh.advertise<nav_msgs::Path>("/global_path", 1); // Global path generated from another source
+    
     _pub_odompath  = _nh.advertise<nav_msgs::Path>("/mpc_reference", 1); // reference path for MPC ///mpc_reference 
     _pub_mpctraj   = _nh.advertise<nav_msgs::Path>("/mpc_trajectory", 1);// MPC trajectory output
     _pub_ackermann = _nh.advertise<ackermann_msgs::AckermannDriveStamped>("/ackermann_cmd", 1);
     if(_pub_twist_flag)
         _pub_twist = _nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1); //for stage (Ackermann msg non-supported)
+    
+    _pub_totalcost  = _nh.advertise<std_msgs::Float32>("/total_cost", 1); // Global path generated from another source
+    _pub_ctecost  = _nh.advertise<std_msgs::Float32>("/cross_track_error", 1); // Global path generated from another source
+    _pub_ethetacost  = _nh.advertise<std_msgs::Float32>("/theta_error", 1); // Global path generated from another source
     
     //Timer
     _timer1 = _nh.createTimer(ros::Duration((1.0)/_controller_freq), &MPCNode::controlLoopCB, this); // 10Hz //*****mpc
@@ -245,71 +250,11 @@ void MPCNode::odomCB(const nav_msgs::Odometry::ConstPtr& odomMsg)
     
 }
 
-void MPCNode::makeGlobalPath(const nav_msgs::Odometry odomMsg)
-{
-    /*
-    nav_msgs::Path global_path = nav_msgs::Path();   
-    geometry_msgs::PoseStamped startPose;  
-    geometry_msgs::PoseStamped tempPose;
-    nav_msgs::Odometry odom = odomMsg; 
-    //Calculate the waypoint distance
-    double gap_x = _gen_path.poses[1].pose.position.x - _gen_path.poses[0].pose.position.x;
-    double gap_y = _gen_path.poses[1].pose.position.y - _gen_path.poses[0].pose.position.y;
-    _waypointsDist = sqrt(gap_x*gap_x + gap_y*gap_y);  
-    static double pre_odom_x = odom.pose.pose.position.x;
-    static double pre_odom_y = odom.pose.pose.position.y;
-    static double odom_diff = 0;
-    static int n_waypointMove = 0;
-    int N = _gen_path.poses.size(); // Number of waypoints    
-    try
-    {
-        double total_length = 0.0;
-        startPose.header.stamp = ros::Time::now();
-        startPose.header.frame_id = _odom_frame;
-        startPose.pose = odom.pose.pose;
-        global_path.poses.push_back(startPose); // copy current odom position to the start position
-               
-        // Calculate the difference and save the odom x,y
-        odom_diff = sqrt((odom.pose.pose.position.x - pre_odom_x)*(odom.pose.pose.position.x - pre_odom_x) + (odom.pose.pose.position.y-pre_odom_y)*(odom.pose.pose.position.y-pre_odom_y));
-        pre_odom_x = odom.pose.pose.position.x;
-        pre_odom_y = odom.pose.pose.position.y;
-        n_waypointMove += (int)(odom_diff / _waypointsDist);
-        cout << "n_waypointMove: " << n_waypointMove << endl;
-        if(n_waypointMove > N)
-        {
-            n_waypointMove = 0;
-        }
-        // Append the part of the generated path
-        for(int i = n_waypointMove; i < N ; i++)
-        {            
-            _tf_listener.transformPose(_odom_frame, ros::Time(0) , 
-                                            _gen_path.poses[i], _map_frame, tempPose);                     
-            global_path.poses.push_back(tempPose);                          
-            total_length = total_length + _waypointsDist;           
-        }   
-        
-        // publish global_path
-        global_path.header.frame_id = _odom_frame;
-        global_path.header.stamp = ros::Time::now();
-        _pub_globalpath.publish(global_path); 
-        //desiredPathCB(global_path); // for cutting and down sampling       
-    }
-    catch(tf::TransformException &ex)
-    {
-        ROS_ERROR("%s",ex.what());
-        ros::Duration(1.0).sleep();
-    }
-    */
-
-}
 // CallBack: Update generated path (conversion to odom frame)
 void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
 {
     
     _gen_path = *totalPathMsg;
-
-    //For plan the global path about desired path 
-    makeGlobalPath(_odom);
     
     _goal_received = true;
     _goal_reached = false;
@@ -340,35 +285,6 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
         double pre_yaw = 0;
         double roll, pitch, yaw = 0;
 
-        /* Circle
-        for(int i = 0; i < N; i++) 
-        {
-            dx = totalPathMsg->poses[i].pose.position.x - px;
-            dy = totalPathMsg->poses[i].pose.position.y - py;
-                    
-            tf::Quaternion q(
-                totalPathMsg->poses[i].pose.orientation.x,
-                totalPathMsg->poses[i].pose.orientation.y,
-                totalPathMsg->poses[i].pose.orientation.z,
-                totalPathMsg->poses[i].pose.orientation.w);
-            tf::Matrix3x3 m(q);
-            m.getRPY(roll, pitch, yaw);
-            if(abs(pre_yaw - yaw) > 5)
-            {
-                cout << "abs(pre_yaw - yaw)" << abs(pre_yaw - yaw) << endl;
-                pre_yaw = yaw;
-            }
-       
-            if(min_val > sqrt(dx*dx + dy*dy))
-            {
-                min_val = sqrt(dx*dx + dy*dy);
-                min_idx = i;
-                if(i < N * 0.02)
-                    min_idx = N - 100; //for smoothing about init position
-            }
-        }
-        */
-
         for(int i = min_idx; i < N; i++) 
         {
             dx = totalPathMsg->poses[i].pose.position.x - px;
@@ -392,13 +308,11 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
             {
                 min_val = sqrt(dx*dx + dy*dy);
                 min_idx = i;
-
             }
         }
 
-        if( min_idx >=  N * 0.99 )
+        if( min_idx >=  N * 0.97 )
             _pub_twist_flag = false;
-
 
         for(int i = min_idx; i < N ; i++)
         {
@@ -423,7 +337,6 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
                 mpc_path.poses.push_back(tempPose);                          
                 total_length = total_length + _waypointsDist;    
             }
-
         }  
 
         if(mpc_path.poses.size() >= _pathLength )
@@ -451,8 +364,7 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
 
 // CallBack: Update path waypoints (conversion to odom frame)
 void MPCNode::pathCB(const nav_msgs::Path::ConstPtr& pathMsg)
-{
-    
+{    
     if(_goal_received && !_goal_reached)
     {    
         cout << "PathCB condition" << endl;
@@ -512,8 +424,7 @@ void MPCNode::pathCB(const nav_msgs::Path::ConstPtr& pathMsg)
             ROS_ERROR("%s",ex.what());
             ros::Duration(1.0).sleep();
         }
-    }
-    
+    }    
 }
 
 // CallBack: Update goal status
@@ -676,6 +587,23 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         _twist_msg.linear.x  = _speed; 
         _twist_msg.angular.z = _w;
         _pub_twist.publish(_twist_msg);
+
+        std_msgs::Float32 mpc_total_cost;
+        mpc_total_cost.data = static_cast<float>(_mpc._mpc_totalcost);
+        _pub_totalcost.publish(mpc_total_cost);
+
+        std_msgs::Float32 mpc_cte_cost;
+        mpc_cte_cost.data = static_cast<float>(_mpc._mpc_ctecost);
+        _pub_ctecost.publish(mpc_cte_cost);
+
+        std_msgs::Float32 mpc_etheta_cost;
+        mpc_etheta_cost.data = static_cast<float>(_mpc._mpc_ethetacost);
+        _pub_ethetacost.publish(mpc_etheta_cost);
+
+        cout << "_mpc_totalcost: "<< _mpc._mpc_totalcost << endl;
+        cout << "_mpc_ctecost: "<< _mpc._mpc_ctecost << endl;
+        cout << "_mpc_ethetacost: "<< _mpc._mpc_ethetacost << endl;
+        cout << "_mpc_velcost: "<< _mpc._mpc_velcost << endl;
     }
     else
     {

@@ -140,7 +140,6 @@ def generation_desired_path():
     #epitrochoid
     
     '''
-    '''
     
     R = 5
     r = 1
@@ -169,10 +168,36 @@ def generation_desired_path():
         desired_path.poses.append(pose)
     
     '''
+
+    #epitrochoid
+    
+    '''
+    period = 1000
+    scale_factor = 1  
+    for t in range(0, iter):
+        desired_path.header.stamp = rospy.get_rostime()
+        desired_path.header.frame_id = "odom"
+        desired_path.header.seq = t
+
+        pose = PoseStamped()
+        pose.header.seq = t
+        pose.header.frame_id = "odom"
+        pose.header.stamp = rospy.get_rostime()
+        pose.pose.position.x = 10 * cos(2 * pi* t / period) / (sin(2 * pi * t / period) ** 2 + 1)
+        pose.pose.position.y = 10 * sin(2 * pi* t / period) * cos(2 * pi* t / period) / (sin(2 * pi * t / period) ** 2 + 1)
+        grad =  atan2((10 * cos(2 * pi* (t+1) / period) / (sin(2 * pi * (t+1) / period) ** 2 + 1)- pose.pose.position.y)\
+                      ,10 * sin(2 * pi* (t+1) / period) * cos(2 * pi* (t+1) / period) / (sin(2 * pi * (t+1) / period) ** 2 + 1)-pose.pose.position.x + 1e-5)
+        q = quaternion_from_euler(0, 0, grad)
+        pose.pose.orientation.x = q[0]
+        pose.pose.orientation.y = q[1]
+        pose.pose.orientation.z = q[2]
+        pose.pose.orientation.w = q[3]      
+        
+        desired_path.poses.append(pose)
     '''
 
-
     #square
+    '''
     '''
     period = 1000
     l = 10
@@ -227,6 +252,7 @@ def generation_desired_path():
             pose.pose.orientation.z = q[2]
             pose.pose.orientation.w = q[3]
         desired_path.poses.append(pose)
+    '''
     '''
 
     desired_path_pub.publish(desired_path) 

@@ -36,8 +36,11 @@ class MPC
         vector<double> mpc_y;
         vector<double> mpc_theta;
 
-        double _mpc_cost;
-        
+        double _mpc_totalcost;
+        double _mpc_ctecost;
+        double _mpc_ethetacost;
+        double _mpc_velcost;
+
         void LoadParams(const std::map<string, double> &params);
     
     private:

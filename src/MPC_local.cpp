@@ -351,6 +351,7 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
     FG_eval fg_eval(coeffs);
     fg_eval.LoadParams(_params);
 
+    fg_eval.cost_cte;
 
     // options for IPOPT solver
     std::string options;
@@ -382,8 +383,11 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
     auto cost = solution.obj_value;
     std::cout << "------------ Total Cost(solution): " << cost << "------------" << std::endl;
     cout << "-----------------------------------------------" <<endl;
-    _mpc_cost = cost;
-    
+    _mpc_totalcost = cost;
+    _mpc_ctecost = Value(fg_eval.cost_cte);
+    _mpc_ethetacost = Value(fg_eval.cost_etheta);
+    _mpc_velcost = Value(fg_eval.cost_vel);
+
     this->mpc_x = {};
     this->mpc_y = {};
     this->mpc_theta = {};
