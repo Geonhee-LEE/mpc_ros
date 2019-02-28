@@ -44,6 +44,10 @@ include_directories(/usr/include)
 link_directories(/usr/lib)
 
 # MPC_Node
+ADD_EXECUTABLE( generate_ref src/MPC_gen.cpp src/MPC_genNode.cpp )
+TARGET_LINK_LIBRARIES(generate_ref ipopt ${catkin_LIBRARIES} )
+
+# MPC_Node
 ADD_EXECUTABLE( MPC_Node src/MPC.cpp src/MPC_Node.cpp )
 TARGET_LINK_LIBRARIES(MPC_Node ipopt ${catkin_LIBRARIES} )
 
@@ -52,12 +56,15 @@ ADD_EXECUTABLE( MPC_Node_last src/MPC_last.cpp src/MPC_Node_last.cpp )
 TARGET_LINK_LIBRARIES(MPC_Node_last ipopt ${catkin_LIBRARIES} )
 
 # MPC_Node
-ADD_EXECUTABLE( MPC_local_plan src/MPC_local.cpp src/MPC_local_planNode.cpp )
-TARGET_LINK_LIBRARIES(MPC_local_plan ipopt ${catkin_LIBRARIES} )
+ADD_EXECUTABLE( MPC_plan_local src/MPC_local.cpp src/MPC_local_planNode.cpp )
+TARGET_LINK_LIBRARIES(MPC_plan_local ipopt ${catkin_LIBRARIES} )
 
 # Pure Pursuit Node
 add_executable(Pure_Pursuit src/Pure_Pursuit.cpp)
 target_link_libraries(Pure_Pursuit ${catkin_LIBRARIES})
+
+# Ower Global planner for tracking desired trajectory
+ add_library(global_planner_lib src/global_planner/global_planner.cpp)
 
 #############
 ## Example ##

@@ -296,7 +296,7 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
 
         // Find the nearst point for robot position
         
-        int min_val = 100; // why double is wrong?        
+        int min_val = 0; // why double is wrong?        
         int N = totalPathMsg->poses.size(); // Number of waypoints        
         const double px = odom.pose.pose.position.x; //pose: odom frame
         const double py = odom.pose.pose.position.y;

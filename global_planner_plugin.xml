@@ -1,0 +1,5 @@
+ <library path="lib/libglobal_planner_lib">
+  <class name="global_planner/GeonPlanner" type="global_planner::GeonPlanner" base_class_type="nav_core::BaseGlobalPlanner">
+    <description>This is a global planner plugin by Geonhee project.</description>
+  </class>
+ </library>

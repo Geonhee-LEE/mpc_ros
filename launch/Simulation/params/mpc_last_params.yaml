@@ -9,14 +9,14 @@ goal_radius: 0.5 # unit: m
 controller_freq: 10
 
 # Parameter for MPC solver
-mpc_steps: 20.0
+mpc_steps: 100.0
 mpc_ref_cte: 0.0
 mpc_ref_vel: 1.0
 mpc_ref_etheta: 0.0
 mpc_w_cte: 1000.0
 mpc_w_etheta: 1000.0
-mpc_w_vel: 500.0
-mpc_w_angvel: 300.0
+mpc_w_vel: 300.0
+mpc_w_angvel: 500.0
 mpc_w_angvel_d: 10.0
 mpc_w_accel: 50.0
 mpc_w_accel_d: 10.0

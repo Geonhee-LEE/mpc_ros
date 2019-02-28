@@ -20,6 +20,7 @@ odom_count = 0
 sum_error = 0
 error_x = 0
 
+id = "map" #"odom"
 
 current_path_x, current_path_y, current_path_theta = 0, 0, 0
 
@@ -38,23 +39,23 @@ def odom_cb(data):
 
     if odom_count % 3 == 0:
         odom_path.header = data.header
-        odom_path.header.frame_id = "odom"
+        odom_path.header.frame_id = id
 
         pose = PoseStamped()
         pose.header = data.header
         pose.pose = data.pose.pose
-        pose.header.frame_id = "odom"
+        pose.header.frame_id = id
         odom_path.poses.append(pose)
 
         odom_path_pub.publish(odom_path)
         generation_desired_path()
 
 def generation_error_path():
-    error_path.header.frame_id = "odom"
+    error_path.header.frame_id = id
     error_path.header.seq = 1
 
     pose = PoseStamped()
-    pose.header.frame_id = "odom"
+    pose.header.frame_id = id
     pose.header.stamp = rospy.get_rostime()
     pose.pose.position.x = current_path_x
     pose.pose.position.y = current_path_y
@@ -63,7 +64,7 @@ def generation_error_path():
 
 
     pose = PoseStamped()
-    pose.header.frame_id = "odom"
+    pose.header.frame_id = id
     error_path.header.seq = 2
     pose.header.stamp = rospy.get_rostime()
     pose.pose.position.x = robot_odom.pose.pose.position.x
@@ -89,12 +90,12 @@ def generation_desired_path():
     period = 1000
     for t in range(0, iter):
         desired_path.header.stamp = rospy.get_rostime()
-        desired_path.header.frame_id = "odom"
+        desired_path.header.frame_id = id
         desired_path.header.seq = t
 
         pose = PoseStamped()
         #pose.header.seq = t 
-        pose.header.frame_id = "odom"
+        pose.header.frame_id = id
         #pose.header.stamp = rospy.get_rostime()
         pose.pose.position.x = 5 * cos(2 * pi* t / period) / (sin(2 * pi * t / period) ** 2 + 1)
         pose.pose.position.y = 5 * sin(2 * pi* t / period) * cos(2 * pi* t / period) / (sin(2 * pi * t / period) ** 2 + 1)
@@ -117,12 +118,12 @@ def generation_desired_path():
     period = 1000
     for t in range(0, iter):
         desired_path.header.stamp = rospy.get_rostime()
-        desired_path.header.frame_id = "odom"
+        desired_path.header.frame_id = id
         desired_path.header.seq = t
 
         pose = PoseStamped()
         pose.header.seq = t 
-        pose.header.frame_id = "odom"
+        pose.header.frame_id = id
         pose.header.stamp = rospy.get_rostime()
         pose.pose.position.x = radius * sin(2 * pi * t / period) #+ self.x_0
         pose.pose.position.y = -radius * cos(2 * pi * t / period) #+ self.y_0+
@@ -149,12 +150,12 @@ def generation_desired_path():
     scale_factor = 1  
     for t in range(0, iter):
         desired_path.header.stamp = rospy.get_rostime()
-        desired_path.header.frame_id = "odom"
+        desired_path.header.frame_id = id
         desired_path.header.seq = t
 
         pose = PoseStamped()
         pose.header.seq = t
-        pose.header.frame_id = "odom"
+        pose.header.frame_id = id
         pose.header.stamp = rospy.get_rostime()
         pose.pose.position.x = scale_factor * ((R + r) * cos(2 * pi * t/ period) - d * cos(((R + r) / r) * 2 * pi * t / period))
         pose.pose.position.y = scale_factor * ((R + r) * sin(2 * pi * t/ period) - d * sin(((R + r) / r) * 2 * pi * t / period))
@@ -178,12 +179,12 @@ def generation_desired_path():
     scale_factor = 1  
     for t in range(0, iter):
         desired_path.header.stamp = rospy.get_rostime()
-        desired_path.header.frame_id = "odom"
+        desired_path.header.frame_id = id
         desired_path.header.seq = t
 
         pose = PoseStamped()
         pose.header.seq = t
-        pose.header.frame_id = "odom"
+        pose.header.frame_id = id
         pose.header.stamp = rospy.get_rostime()
         pose.pose.position.x = 10 * cos(2 * pi* t / period) / (sin(2 * pi * t / period) ** 2 + 1)
         pose.pose.position.y = 10 * sin(2 * pi* t / period) * cos(2 * pi* t / period) / (sin(2 * pi * t / period) ** 2 + 1)
@@ -207,12 +208,12 @@ def generation_desired_path():
     y = 0.0
     for t in range(0, iter):
         desired_path.header.stamp = rospy.get_rostime()
-        desired_path.header.frame_id = "odom"
+        desired_path.header.frame_id = id
         desired_path.header.seq = t
 
         pose = PoseStamped()
         pose.header.seq = t
-        pose.header.frame_id = "odom"
+        pose.header.frame_id = id
         pose.header.stamp = rospy.get_rostime()
 
         if(t <= period * 0.25):
