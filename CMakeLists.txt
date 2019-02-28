@@ -26,19 +26,6 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 
-## Generate services in the 'srv' folder
-add_service_files(
-  FILES
-  TrajectoryPoint.srv
-)
-
-## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-  geometry_msgs
-)
-
 catkin_package(
    INCLUDE_DIRS include
 #  LIBRARIES mpc_ros
@@ -61,8 +48,8 @@ ADD_EXECUTABLE( MPC_Node src/MPC.cpp src/MPC_Node.cpp )
 TARGET_LINK_LIBRARIES(MPC_Node ipopt ${catkin_LIBRARIES} )
 
 # MPC_Node
-ADD_EXECUTABLE( MPC_Node_test src/MPC_test.cpp src/MPC_Node_test.cpp )
-TARGET_LINK_LIBRARIES(MPC_Node_test ipopt ${catkin_LIBRARIES} )
+ADD_EXECUTABLE( MPC_Node_last src/MPC_last.cpp src/MPC_Node_last.cpp )
+TARGET_LINK_LIBRARIES(MPC_Node_last ipopt ${catkin_LIBRARIES} )
 
 # MPC_Node
 ADD_EXECUTABLE( MPC_local_plan src/MPC_local.cpp src/MPC_local_planNode.cpp )

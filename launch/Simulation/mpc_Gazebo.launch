@@ -18,7 +18,7 @@
         <arg name="world_name" value="$(find zetabank_gazebo)/models/temp_world.world"/>
         <arg name="paused" value="false"/>
         <arg name="use_sim_time" value="true"/>
-        <arg name="gui" value="true"/>
+        <arg name="gui" value="false"/>
         <arg name="headless" value="false"/>
         <arg name="debug" value="false"/>
     </include>
@@ -49,10 +49,11 @@
         <rosparam file="$(find mpc_ros)/launch/Simulation/params/carlike/global_costmap_params.yaml" command="load" />        
         <!-- Global Planner -->
         <param name="base_global_planner" value="global_planner/GlobalPlanner" />
-        <param name="planner_frequency" value="0.0" />
+        <param name="planner_frequency" value="1.0" />
         <param name="planner_frequency" value="0.0" if="$(eval controller == 'pure_pursuit')"/>
         <param name="planner_patience" value="5.0" />
-        <rosparam file="$(find mpc_ros)/launch/Simulation/params/carlike/global_planner.yaml" command="load" />
+        <rosparam file="$(find zetabank_navigation)/simul_param/global_planner_params.yaml" command="load" />
+
         <!-- Local Planner -->
         <param name="base_local_planner" value="base_local_planner/TrajectoryPlannerROS" />
         <!-- Our carlike robot is not able to rotate in place -->
@@ -62,8 +63,8 @@
     </node>
     
     <!--  ************** MPC Node **************  -->
-    <node name="MPC_Node" pkg="mpc_ros" type="MPC_Node" output="screen" if="$(eval controller == 'mpc')" >
-        <rosparam file="$(find mpc_ros)/launch/Simulation/params/mpc_params.yaml" command="load" />
+    <node name="MPC_Node_last" pkg="mpc_ros" type="MPC_Node_last" output="screen" if="$(eval controller == 'mpc')" >
+        <rosparam file="$(find mpc_ros)/launch/Simulation/params/mpc_last_params.yaml" command="load" />
     </node>
 
     <!--  ************** Pure Pursuit **************  -->
@@ -76,6 +77,6 @@
     </node>
 
     <!--  ************** Visualisation **************  -->
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mpc_ros)/launch/Simulation/params/rviz_navigation.rviz"/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mpc_ros)/launch/Simulation/params/total_rviz_navigation.rviz"/>
 
 </launch>

@@ -31,7 +31,7 @@
 #include <ackermann_msgs/AckermannDriveStamped.h>
 #include <visualization_msgs/Marker.h>
 
-#include "MPC_test.h"
+#include "MPC_last.h"
 #include <Eigen/Core>
 #include <Eigen/QR>
 
@@ -685,7 +685,7 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
     {
         _twist_msg.linear.x  = _speed; 
         _twist_msg.angular.z = _w;
-        _pub_twist.publish(_twist_msg);
+        //_pub_twist.publish(_twist_msg);
     }
     
 }
