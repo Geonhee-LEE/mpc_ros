@@ -41,6 +41,7 @@ class MPC
         double _mpc_ethetacost;
         double _mpc_velcost;
 
+
         void LoadParams(const std::map<string, double> &params);
     
     private:

@@ -18,18 +18,37 @@
       _sub_odom   = _nh.subscribe("/odom", 1, &GeonPlanner::odomCB, this);
       _sub_get_path   = _nh.subscribe( "desired_path", 1, &GeonPlanner::desiredPathCB, this);   
       _sub_goal   = _nh.subscribe( "/move_base_simple/goal", 1, &GeonPlanner::goalCB, this); 
+      _sub_cmd   = _nh.subscribe("/cmd_vel", 5, &GeonPlanner::getCmdCB, this);
+    
       _pub_globalpath  = _nh.advertise<nav_msgs::Path>("/move_base/GlobalPlanner/plan", 1); // reference path for MPC ///mpc_reference 
               
+      // Nearst point
       min_idx = 0;
-      _pathLength = 5;
+
+      // A part of reference trajtory
+      _pathLength = 8;
+
+      // Distance betweeen points of trajecotry
       _waypointsDist = 0;
+
+      // Frequence 
       _controller_freq = 10;
+
+      // Starting time
       _goal_received = false;
 
-    //Timer
-    _errtimer = _nh.createTimer(ros::Duration((1.0)/_controller_freq), &GeonPlanner::CalError, this); // 10Hz //*****mpc
+      //Save the csv file
+      idx = 0;
+      file.open("/home/geonhee/catkin_ws/src/mpc_ros/dwa.csv");
+
+      //Timer
+      _errtimer = _nh.createTimer(ros::Duration((1.0)/_controller_freq), &GeonPlanner::CalError, this); // 10Hz //*****mpc
 
     }
+    GeonPlanner::~GeonPlanner()
+    {
+      file.close();
+    };
 
     GeonPlanner::GeonPlanner(std::string name, costmap_2d::Costmap2DROS* costmap_ros)
     {
@@ -192,6 +211,11 @@
             
           cout << "cte: " << cte << endl;
           cout << "etheta: " << etheta << endl;
+          cout << "linear_vel: " << _linear_vel << endl;
+          cout << "_angular_vel: " << _angular_vel << endl;
+              //writefile
+          idx++;
+          file << idx<< "," << cte << "," <<  etheta << "," << _linear_vel << "," << _angular_vel << ",";
       }
     }
     // CallBack: Update odometry
@@ -240,6 +264,13 @@
     {
         _goal_received = true;
         ROS_INFO("Goal Received :goalCB!");
+    }
+    // CallBack: Update goal status
+    void GeonPlanner::getCmdCB(const geometry_msgs::Twist& cmdMsg)
+    {
+      _linear_vel = cmdMsg.linear.x;
+      _angular_vel = cmdMsg.angular.z;
+
     }
 
  };

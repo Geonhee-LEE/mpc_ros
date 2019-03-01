@@ -20,7 +20,7 @@ odom_count = 0
 sum_error = 0
 error_x = 0
 
-id = "map" #"odom"
+id = "odom" #"odom"
 
 current_path_x, current_path_y, current_path_theta = 0, 0, 0
 
