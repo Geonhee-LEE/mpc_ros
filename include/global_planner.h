@@ -13,6 +13,11 @@
  #include <nav_msgs/Path.h>
 #include <tf/transform_listener.h>
 
+#include <Eigen/Core>
+#include <Eigen/QR>
+#include <vector>
+#include <map>
+
  using std::string;
 
  #ifndef GLOBAL_PLANNER_CPP
@@ -34,19 +39,30 @@
                );
   
     ros::NodeHandle _nh;
+    ros::Timer _errtimer;
     ros::Publisher _pub_globalpath;
-    ros::Subscriber _sub_odom, _sub_get_path;
-  
+    ros::Subscriber _sub_odom, _sub_get_path, _sub_goal;
     nav_msgs::Odometry _odom;
+    nav_msgs::Path _odom_path;
     nav_msgs::Path _desired_path;
     tf::TransformListener _tf_listener;
 
     double _waypointsDist;  //minimum distance between points of path
     int min_idx; //nearest point
     double _pathLength;
+    double _cte;
+    double _oreient;
+    int _controller_freq;
+    bool _goal_received;
 
     void odomCB(const nav_msgs::Odometry::ConstPtr& odomMsg);
     void desiredPathCB(const nav_msgs::Path::ConstPtr& pathMsg);
+    void goalCB(const geometry_msgs::PoseStamped::ConstPtr& goalMsg);
+    void CalError(const ros::TimerEvent&);
+
+    double polyeval(Eigen::VectorXd coeffs, double x);        
+    Eigen::VectorXd polyfit(Eigen::VectorXd xvals, Eigen::VectorXd yvals, int order);
+
 
   };
  };
