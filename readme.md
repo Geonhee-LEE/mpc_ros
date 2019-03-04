@@ -34,19 +34,24 @@ catkin_make
 ```
 
 ## Operation
-### Total navigation in simulation 
+
+### Total navigation in simulation: 
 ```
 roslaunch mpc_ros roslaunch mpc_ros mpc_Gazebo.launch 
 ```
 In the GAZEBO simulation, you can check the local planner as non-linear model predictive control. 
   
-### Tracking the trajectory such as infinity-shaped, epitrochoid, square using non-linear model predictive control.
+  
+
+### NMPC(local planner):
 ```
 roslaunch mpc_ros local_mpc_Gazebo.launch 
 ```
+Tracking the trajectory such as infinity-shaped, epitrochoid, square using non-linear model predictive control.
 
-### Tracking the trajectory such as infinity-shaped, epitrochoid, square using dynamic window approach.
+
+### DWA:
 ```
 roslaunch mpc_ros dwa_Gazebo.launch 
 ```
-
+Tracking the trajectory such as infinity-shaped, epitrochoid, square using dynamic window approach.
