@@ -20,33 +20,33 @@ License: Apache 2.0 (from HyphaROS MPC MiniCar)
 1. Install ROS Kinetic (Desktop-Full) (http://wiki.ros.org/kinetic/Installation/Ubuntu)  
 2. Install dependencies:  
 ```
-$ sudo apt-get install remmina synaptic gimp git ros-kinetic-navigation* ros-kinetic-gmapping ros-kinetic-hector-slam ros-kinetic-mrpt-icp-slam-2d ros-kinetic-slam-karto ros-kinetic-ackermann-msgs -y  
+sudo apt-get install remmina synaptic gimp git ros-kinetic-navigation* ros-kinetic-gmapping ros-kinetic-hector-slam ros-kinetic-mrpt-icp-slam-2d ros-kinetic-slam-karto ros-kinetic-ackermann-msgs -y  
 ```
 3. Install Ipopt: Please refer the tutorial in "document/ipopt_install".  
 4. create your own catkin_ws   
 (http://wiki.ros.org/ROS/Tutorials/InstallingandConfiguringROSEnvironment#Create_a_ROS_Workspace)  
 ```
-$ cd catkin_ws/src  
-$ git clone https://github.com/Geonhee-LEE/mpc_ros.git
-$ git clone https://github.com/Geonhee-LEE/zetabot-ros.git (private)
-$ cd ..  
-$ catkin_make  
+cd catkin_ws/src  
+git clone https://github.com/Geonhee-LEE/mpc_ros.git
+git clone https://github.com/Geonhee-LEE/zetabot-ros.git (private)
+cd ..  
+catkin_make  
 ```
 
 ## Operation
 ### Total navigation in simulation 
 ```
-$ roslaunch mpc_ros roslaunch mpc_ros mpc_Gazebo.launch 
+roslaunch mpc_ros roslaunch mpc_ros mpc_Gazebo.launch 
 ```
-In the GEZEBO simulation, you can check the local planner as non-linear model predictive control. 
+In the GAZEBO simulation, you can check the local planner as non-linear model predictive control. 
   
 ### Tracking the trajectory such as infinity-shaped, epitrochoid, square using non-linear model predictive control.
 ```
-$ roslaunch mpc_ros local_mpc_Gazebo.launch 
+roslaunch mpc_ros local_mpc_Gazebo.launch 
 ```
 
 ### Tracking the trajectory such as infinity-shaped, epitrochoid, square using dynamic window approach.
 ```
-$ roslaunch mpc_ros dwa_Gazebo.launch 
+roslaunch mpc_ros dwa_Gazebo.launch 
 ```
 
