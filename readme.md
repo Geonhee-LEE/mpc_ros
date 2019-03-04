@@ -37,7 +37,7 @@ catkin_make
 
 ### Total navigation in simulation: 
 ```
-roslaunch mpc_ros roslaunch mpc_ros mpc_Gazebo.launch 
+roslaunch mpc_ros mpc_Gazebo.launch 
 ```
 In the GAZEBO simulation, you can check the local planner as non-linear model predictive control. 
   
