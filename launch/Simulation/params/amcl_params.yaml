@@ -1,4 +1,4 @@
-use_map_topic: true
+use_map_topic: false
 
 odom_frame_id: "odom"
 base_frame_id: "base_footprint"
@@ -30,7 +30,7 @@ laser_likelihood_max_dist: 2.0
 update_min_d: 0.01
 update_min_a: 0.01
 
-resample_interval: 1000
+resample_interval: 100000000
 
 ## Increase tolerance because the computer can get quite busy 
 transform_tolerance: 1.0

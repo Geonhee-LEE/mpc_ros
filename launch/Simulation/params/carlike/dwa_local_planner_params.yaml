@@ -2,7 +2,7 @@ DWAPlannerROS:
 
 # Robot Configuration Parameters
   max_trans_vel:  1
-  min_trans_vel:  0.1
+  min_trans_vel:  0.01
   
   max_vel_x: 0.5
   min_vel_x: -0.05
@@ -13,11 +13,11 @@ DWAPlannerROS:
   # The velocity when robot is moving in a straight line
   trans_stopped_vel: 0.01
 
-  max_rot_vel: 2.5
+  max_rot_vel: 1.5
   min_rot_vel: 0.1
   rot_stopped_vel: 0.01
 
-  acc_lim_x: 1.0
+  acc_lim_x: 2.0
   acc_lim_theta: 3.0
   acc_lim_y: 0.0
 
@@ -30,7 +30,7 @@ DWAPlannerROS:
   sim_time: 4.0
   vx_samples: 20
   vy_samples: 0
-  vth_samples: 30
+  vth_samples: 20
 
 # Trajectory Scoring Parameters
   path_distance_bias: 32.0

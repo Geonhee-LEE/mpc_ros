@@ -20,14 +20,9 @@ odom_count = 0
 sum_error = 0
 error_x = 0
 
-id = "odom" #"odom"
+id = "odom"
 
 current_path_x, current_path_y, current_path_theta = 0, 0, 0
-
-#path_arr_x = [0, 1, -1, 1, -1, 1, -1, 1, -1, 1]
-#path_arr_y = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-path_arr_yy = [0, 0.1, 1, 1, 0, 1, -1, -1, 2, 0]
-path_arr_xx = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 def odom_cb(data):
     global odom_path
@@ -86,6 +81,8 @@ def generation_desired_path():
     
     #lemniscate
     '''
+    '''
+    '''
     
     period = 1000
     for t in range(0, iter):
@@ -108,6 +105,8 @@ def generation_desired_path():
         pose.pose.orientation.w = q[3]
 
         desired_path.poses.append(pose)
+    '''
+    '''
     '''
     
 
@@ -141,8 +140,6 @@ def generation_desired_path():
     #epitrochoid
     
     '''
-    '''
-    '''
     
     R = 5
     r = 1
@@ -170,8 +167,6 @@ def generation_desired_path():
         
         desired_path.poses.append(pose)
     
-    '''
-    '''
     '''
 
     #ifinite
@@ -204,8 +199,6 @@ def generation_desired_path():
     '''
 
     #square
-    '''
-    '''
     '''
     period = 1000
     l = 10
@@ -260,8 +253,6 @@ def generation_desired_path():
             pose.pose.orientation.z = q[2]
             pose.pose.orientation.w = q[3]
         desired_path.poses.append(pose)
-    '''
-    '''
     '''
 
     desired_path_pub.publish(desired_path) 

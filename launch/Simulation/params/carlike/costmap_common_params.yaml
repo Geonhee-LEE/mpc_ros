@@ -28,5 +28,5 @@ inflation_layer:
   inflation_radius:     0.5  # max. distance from an obstacle at which costs are incurred for planning paths.
 
 static_layer:
-  enabled:              true
+  enabled:              false
   map_topic:            "/map"

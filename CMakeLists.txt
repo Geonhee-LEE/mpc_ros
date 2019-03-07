@@ -43,19 +43,16 @@ include_directories( ${catkin_INCLUDE_DIRS} include )
 include_directories(/usr/include)
 link_directories(/usr/lib)
 
-# MPC_Node
-ADD_EXECUTABLE( generate_ref src/MPC_gen.cpp src/MPC_genNode.cpp )
-TARGET_LINK_LIBRARIES(generate_ref ipopt ${catkin_LIBRARIES} )
 
-# MPC_Node
+# General MPC_Node 
 ADD_EXECUTABLE( MPC_Node src/MPC.cpp src/MPC_Node.cpp )
 TARGET_LINK_LIBRARIES(MPC_Node ipopt ${catkin_LIBRARIES} )
 
-# MPC_Node
-ADD_EXECUTABLE( MPC_Node_last src/MPC_last.cpp src/MPC_Node_last.cpp )
+# Total navigation with MPC_Node
+ADD_EXECUTABLE( MPC_Node_last src/MPC_last.cpp src/MPC_lastNode.cpp )
 TARGET_LINK_LIBRARIES(MPC_Node_last ipopt ${catkin_LIBRARIES} )
 
-# MPC_Node
+# Local planner with MPC_Node for tracking
 ADD_EXECUTABLE( MPC_local_plan src/MPC_local.cpp src/MPC_local_planNode.cpp )
 TARGET_LINK_LIBRARIES(MPC_local_plan ipopt ${catkin_LIBRARIES} )
 

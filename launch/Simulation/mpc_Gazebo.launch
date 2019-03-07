@@ -18,7 +18,7 @@
         <arg name="world_name" value="$(find zetabank_gazebo)/models/temp_world.world"/>
         <arg name="paused" value="false"/>
         <arg name="use_sim_time" value="true"/>
-        <arg name="gui" value="false"/>
+        <arg name="gui" value="true"/>
         <arg name="headless" value="false"/>
         <arg name="debug" value="false"/>
     </include>

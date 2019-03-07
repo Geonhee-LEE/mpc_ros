@@ -7,6 +7,8 @@ Panels:
         - /Global Options1
         - /Local Planner1/Local costmap1
         - /MPC_Reference1
+        - /RobotModel1
+        - /Recorded Path1
       Splitter Ratio: 0.605095983
     Tree Height: 744
   - Class: rviz/Selection
@@ -295,13 +297,13 @@ Visualization Manager:
     - Alpha: 1
       Buffer Length: 1
       Class: rviz/Path
-      Color: 85; 0; 255
-      Enabled: true
+      Color: 255; 255; 0
+      Enabled: false
       Head Diameter: 0.300000012
       Head Length: 0.200000003
       Length: 0.300000012
       Line Style: Billboards
-      Line Width: 0.100000001
+      Line Width: 1.5
       Name: MPC_Reference
       Offset:
         X: 0
@@ -314,7 +316,7 @@ Visualization Manager:
       Shaft Length: 0.100000001
       Topic: /mpc_reference
       Unreliable: false
-      Value: true
+      Value: false
     - Alpha: 1
       Buffer Length: 1
       Class: rviz/Path
@@ -346,7 +348,7 @@ Visualization Manager:
         {}
       Queue Size: 100
       Value: false
-    - Alpha: 0.300000012
+    - Alpha: 1
       Class: rviz/RobotModel
       Collision Enabled: false
       Enabled: true
@@ -471,7 +473,7 @@ Visualization Manager:
       Offset:
         X: 0
         Y: 0
-        Z: 0
+        Z: 0.200000003
       Pose Color: 255; 85; 255
       Pose Style: Axes
       Radius: 0.100000001
@@ -505,25 +507,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 28.0763226
+      Distance: 29.0089779
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.14032504
-        Y: 1.88606083
-        Z: -1.87970996
+        X: 0.0619361959
+        Y: 0.856609464
+        Z: -1.68519497
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 1.54479635
+      Pitch: 1.50479639
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.7004137
+      Yaw: 4.70542049
     Saved: ~
 Window Geometry:
   Displays:
@@ -541,5 +543,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 933
-  X: 987
+  X: 518
   Y: 159

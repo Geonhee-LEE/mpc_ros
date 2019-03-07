@@ -26,7 +26,10 @@
       min_idx = 0;
 
       // A part of reference trajtory
-      _pathLength = 8;
+      // epitrochoid,square:
+      _pathLength = 3;
+      // infinity:
+      //_pathLength = 6;
 
       // Distance betweeen points of trajecotry
       _waypointsDist = 0;

@@ -52,8 +52,9 @@
     
     <!--  ************** MPC Node **************  -->
     <node name="MPC_local_plan" pkg="mpc_ros" type="MPC_local_plan" output="screen" if="$(eval controller == 'mpc')" >
-        <rosparam file="$(find mpc_ros)/launch/Simulation/params/mpc_local_params.yaml" command="load" />
-        <!-- rosparam file="$(find mpc_ros)/launch/Simulation/params/mpc_local_epitrochoid_params.yaml" command="load" /-->
+        <rosparam file="$(find mpc_ros)/launch/Simulation/params/mpc_local_square_params.yaml" command="load" />
+        <!--rosparam file="$(find mpc_ros)/launch/Simulation/params/mpc_local_params.yaml" command="load" /-->
+        <!--rosparam file="$(find mpc_ros)/launch/Simulation/params/mpc_local_epitrochoid_params.yaml" command="load" /-->
     </node>
 
 
