@@ -1,7 +1,5 @@
 # Model Predictive Control implementation about ROS 
 
-[![Video Label](https://i9.ytimg.com/vi/5IqFGBmDGjU/mqdefault.jpg?sqp=CLCmhuYF&rs=AOn4CLCB8vfISntxgjR0nb9H3YGEjjydMw&time=1556190116601)](https://www.youtube.com/watch?v=5IqFGBmDGjU)
-
 
 
 ## Abstract
