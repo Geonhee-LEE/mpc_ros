@@ -44,7 +44,7 @@ catkin_make
 roslaunch mpc_ros mpc_Gazebo.launch 
 ```
 In the GAZEBO simulation, you can check the local planner as non-linear model predictive control. 
-  
+I made the new planner using pluglib.  
   
 
 ### NMPC(local planner):
@@ -59,3 +59,6 @@ Tracking the trajectory such as infinity-shaped, epitrochoid, square using non-l
 roslaunch mpc_ros dwa_Gazebo.launch 
 ```
 Tracking the trajectory such as infinity-shaped, epitrochoid, square using dynamic window approach.
+
+
+
