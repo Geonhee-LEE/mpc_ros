@@ -3,7 +3,6 @@
 
 
 ## Abstract
-I Strongly refered to the HyphaROS MPC MiniCar(https://hypharosworkshop.wordpress.com/) (Thanks for great source).
 
 I changed the mobile robot model from bycycle to the unicycle which means differential drive wheeled mobile robot for implementing service mobile robot.
 
@@ -61,4 +60,6 @@ roslaunch mpc_ros dwa_Gazebo.launch
 Tracking the trajectory such as infinity-shaped, epitrochoid, square using dynamic window approach.
 
 
+### Reference
 
+HyphaROS MPC MiniCar(https://hypharosworkshop.wordpress.com/)
