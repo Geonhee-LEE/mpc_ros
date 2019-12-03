@@ -15,7 +15,7 @@ Date: 2019/02/16
 License: Apache 2.0 (from HyphaROS MPC MiniCar) 
 
 ## Features
-* Nonlinear Bicycle Model Based MPC (through ipopt solver)  
+* Nonlinear Unicycle Model Based MPC (through ipopt solver)  
 * AMCL localization (encoder-odometry based)  
 * GAZEBO Simulation (supports: MPC)  
 
