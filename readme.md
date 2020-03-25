@@ -31,8 +31,7 @@ sudo apt-get install remmina synaptic gimp git ros-kinetic-navigation* ros-kinet
 ```
 cd catkin_ws/src  
 git clone https://github.com/Geonhee-LEE/mpc_ros.git
-git clone https://github.com/Geonhee-LEE/zetabot-ros.git (private)
-cd ..  
+git clone https://github.com/CzJaewan/servingbot.git
 catkin_make  
 ```
 
