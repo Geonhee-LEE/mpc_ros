@@ -3,11 +3,9 @@
 # define CPPAD_IPOPT_SOLVE_HPP
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-16 Bradley M. Bell
-
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the
                     GNU General Public License Version 3.
-
 A copy of this license is included in the COPYING file of this distribution.
 Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
@@ -46,16 +44,13 @@ $spell
 	zl
 	zu
 $$
-
 $section Use Ipopt to Solve a Nonlinear Programming Problem$$
-
 $head Syntax$$
 $codei%# include <cppad/ipopt/solve.hpp>
 %$$
 $codei%ipopt::solve(
 	%options%, %xi%, %xl%, %xu%, %gl%, %gu%, %fg_eval%, %solution%
 )%$$
-
 $head Purpose$$
 The function $code ipopt::solve$$ solves nonlinear programming
 problems of the form
@@ -74,7 +69,6 @@ $href%
 	Ipopt
 %$$
 optimizer and CppAD for the derivative and sparsity calculations.
-
 $head Include File$$
 Currently, this routine
 $cref/ipopt::solve/ipopt_solve/$$ is not included by the command
@@ -89,17 +83,14 @@ $codei%
 	# include <cppad/ipopt/solve.hpp>
 %$$
 which in turn will also include $code <cppad/cppad.hpp>$$.
-
 $head Bvector$$
 The type $icode Bvector$$ must be a $cref SimpleVector$$ class with
 $cref/elements of type/SimpleVector/Elements of Specified Type/$$
 $code bool$$.
-
 $head Dvector$$
 The type $icode DVector$$ must be a $cref SimpleVector$$ class with
 $cref/elements of type/SimpleVector/Elements of Specified Type/$$
 $code double$$.
-
 $head options$$
 The argument $icode options$$ has prototype
 $codei%
@@ -109,7 +100,6 @@ It contains a list of options.
 Each option, including the last option,
 is terminated by the $code '\n'$$ character.
 Each line consists of two or three tokens separated by one or more spaces.
-
 $subhead Retape$$
 You can set the retape flag with the following syntax:
 $codei%
@@ -122,7 +112,6 @@ If the value is $code false$$, $code ipopt::solve$$
 will tape the operation sequence at the value
 of $icode xi$$ and use that sequence for the entire optimization process.
 The default value is $code false$$.
-
 $subhead Sparse$$
 You can set the sparse Jacobian and Hessian flag with the following syntax:
 $codei%
@@ -135,7 +124,6 @@ these calculations.
 The default for $icode value$$ is $code false$$.
 If sparse is true, retape must be false.
 $pre
-
 $$
 It is unclear if $cref sparse_jacobian$$ would be faster user
 forward or reverse mode so you are able to choose the direction.
@@ -149,7 +137,6 @@ $codei%
 	%value% == true && %direction% == reverse
 %$$
 the Jacobians will be calculated using $code SparseJacobianReverse$$.
-
 $subhead String$$
 You can set any Ipopt string option using a line with the following syntax:
 $codei%
@@ -157,7 +144,6 @@ $codei%
 %$$
 Here $icode name$$ is any valid Ipopt string option
 and $icode value$$ is its setting.
-
 $subhead Numeric$$
 You can set any Ipopt numeric option using a line with the following syntax:
 $codei%
@@ -165,7 +151,6 @@ $codei%
 %$$
 Here $icode name$$ is any valid Ipopt numeric option
 and $icode value$$ is its setting.
-
 $subhead Integer$$
 You can set any Ipopt integer option using a line with the following syntax:
 $codei%
@@ -173,7 +158,6 @@ $codei%
 %$$
 Here $icode name$$ is any valid Ipopt integer option
 and $icode value$$ is its setting.
-
 $head xi$$
 The argument $icode xi$$ has prototype
 $codei%
@@ -181,7 +165,6 @@ $codei%
 %$$
 and its size is equal to $icode nx$$.
 It specifies the initial point where Ipopt starts the optimization process.
-
 $head xl$$
 The argument $icode xl$$ has prototype
 $codei%
@@ -189,7 +172,6 @@ $codei%
 %$$
 and its size is equal to $icode nx$$.
 It specifies the lower limits for the argument in the optimization problem.
-
 $head xu$$
 The argument $icode xu$$ has prototype
 $codei%
@@ -197,7 +179,6 @@ $codei%
 %$$
 and its size is equal to $icode nx$$.
 It specifies the upper limits for the argument in the optimization problem.
-
 $head gl$$
 The argument $icode gl$$ has prototype
 $codei%
@@ -205,7 +186,6 @@ $codei%
 %$$
 and its size is equal to $icode ng$$.
 It specifies the lower limits for the constraints in the optimization problem.
-
 $head gu$$
 The argument $icode gu$$ has prototype
 $codei%
@@ -213,7 +193,6 @@ $codei%
 %$$
 and its size is equal to $icode ng$$.
 It specifies the upper limits for the constraints in the optimization problem.
-
 $head fg_eval$$
 The argument $icode fg_eval$$ has prototype
 $codei%
@@ -227,19 +206,16 @@ $codei%
 %$$
 The type $icode ADvector$$
 and the arguments to $icode fg$$, $icode x$$ have the following meaning:
-
 $subhead ADvector$$
 The type $icode%FG_eval%::ADvector%$$ must be a $cref SimpleVector$$ class with
 $cref/elements of type/SimpleVector/Elements of Specified Type/$$
 $code AD<double>$$.
-
 $subhead x$$
 The $icode fg_eval$$ argument $icode x$$ has prototype
 $codei%
 	const %ADvector%& %x%
 %$$
 where $icode%nx% = %x%.size()%$$.
-
 $subhead fg$$
 The $icode fg_eval$$ argument $icode fg$$ has prototype
 $codei%
@@ -254,7 +230,6 @@ $codei%
 and   for $latex i = 0, \ldots , ng-1$$,
 $codei%
 	%fg%[1 + %i%] =%$$ $latex g_i (x)$$
-
 $head solution$$
 The argument $icode solution$$ has prototype
 $codei%
@@ -262,7 +237,6 @@ $codei%
 %$$
 After the optimization process is completed, $icode solution$$ contains
 the following information:
-
 $subhead status$$
 The $icode status$$ field of $icode solution$$ has prototype
 $codei%
@@ -270,7 +244,6 @@ $codei%
 %$$
 It is the final Ipopt status for the optimizer.
 Here is a list of the possible values for the status:
-
 $table
 $icode status$$ $cnext Meaning
 $rnext
@@ -323,7 +296,6 @@ internal_error $cnext
 An unknown Ipopt internal error occurred.
 Contact the Ipopt authors through the mailing list.
 $tend
-
 $subhead x$$
 The $code x$$ field of $icode solution$$ has prototype
 $codei%
@@ -331,7 +303,6 @@ $codei%
 %$$
 and its size is equal to $icode nx$$.
 It is the final $latex x$$ value for the optimizer.
-
 $subhead zl$$
 The $code zl$$ field of $icode solution$$ has prototype
 $codei%
@@ -340,7 +311,6 @@ $codei%
 and its size is equal to $icode nx$$.
 It is the final Lagrange multipliers for the
 lower bounds on $latex x$$.
-
 $subhead zu$$
 The $code zu$$ field of $icode solution$$ has prototype
 $codei%
@@ -349,7 +319,6 @@ $codei%
 and its size is equal to $icode nx$$.
 It is the final Lagrange multipliers for the
 upper bounds on $latex x$$.
-
 $subhead g$$
 The $code g$$ field of $icode solution$$ has prototype
 $codei%
@@ -357,7 +326,6 @@ $codei%
 %$$
 and its size is equal to $icode ng$$.
 It is the final value for the constraint function $latex g(x)$$.
-
 $subhead lambda$$
 The $code lambda$$ field of $icode solution$$ has prototype
 $codei%
@@ -366,14 +334,12 @@ $codei%
 and its size is equal to $icode ng$$.
 It is the final value for the
 Lagrange multipliers corresponding to the constraint function.
-
 $subhead obj_value$$
 The $code obj_value$$ field of $icode solution$$ has prototype
 $codei%
 	double %solution%.obj_value
 %$$
 It is the final value of the objective function $latex f(x)$$.
-
 $children%
 	example/ipopt_solve/get_started.cpp%
 	example/ipopt_solve/retape.cpp%
@@ -381,24 +347,20 @@ $children%
 %$$
 $head Example$$
 All the examples return true if it succeeds and false otherwise.
-
 $subhead get_started$$
 The file
 $cref%example/ipopt_solve/get_started.cpp%ipopt_solve_get_started.cpp%$$
 is an example and test of $code ipopt::solve$$
 taken from the Ipopt manual.
-
 $subhead retape$$
 The file
 $cref%example/ipopt_solve/retape.cpp%ipopt_solve_retape.cpp%$$
 demonstrates when it is necessary to specify
 $cref/retape/ipopt_solve/options/Retape/$$ as true.
-
 $subhead ode_inverse$$
 The file
 $cref%example/ipopt_solve/ode_inverse.cpp%ipopt_solve_ode_inverse.cpp%$$
 demonstrates using Ipopt to solve for parameters in an ODE model.
-
 $end
 -------------------------------------------------------------------------------
 */
@@ -413,13 +375,10 @@ namespace ipopt {
 
 /*!
 Use Ipopt to Solve a Nonlinear Programming Problem
-
 \tparam Bvector
 simple vector class with elements of type bool.
-
 \tparam Dvector
 simple vector class with elements of type double.
-
 \tparam FG_eval
 function object used to evaluate f(x) and g(x); see fg_eval below.
 It must also support
@@ -427,7 +386,6 @@ It must also support
 	FG_eval::ADvector
 \endcode
 to dentify the type used for the arguments to fg_eval.
-
 \param options
 list of options, one for each line.
 Ipopt options (are optional) and have one of the following forms
@@ -440,29 +398,21 @@ The following other possible options are listed below:
 \code
 	Retape   value
 \endcode
-
-
 \param xi
 initial argument value to start optimization procedure at.
-
 \param xl
 lower limit for argument during optimization
-
 \param xu
 upper limit for argument during optimization
-
 \param gl
 lower limit for g(x) during optimization.
-
 \param gu
 upper limit for g(x) during optimization.
-
 \param fg_eval
 function that evaluates the objective and constraints using the syntax
 \code
 	fg_eval(fg, x)
 \endcode
-
 \param solution
 structure that holds the solution of the optimization.
 */

@@ -381,6 +381,9 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
     // Cost
     auto cost = solution.obj_value;
     std::cout << "------------ Total Cost(solution): " << cost << "------------" << std::endl;
+    cout << "max_angvel:" << _max_angvel <<endl;
+    cout << "max_throttle:" << _max_throttle <<endl;
+ 
     cout << "-----------------------------------------------" <<endl;
 
     this->mpc_x = {};

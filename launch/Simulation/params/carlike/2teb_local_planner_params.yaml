@@ -3,8 +3,7 @@ TebLocalPlannerROS:
  odom_topic: odom
     
  # Trajectory
- meter_scoring: True
-
+  
  teb_autosize: True
  dt_ref: 0.3
  dt_hysteresis: 0.1

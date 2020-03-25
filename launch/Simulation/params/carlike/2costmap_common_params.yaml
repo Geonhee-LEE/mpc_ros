@@ -4,8 +4,7 @@
 #footprint: [ [0.254, -0.0508], [0.1778, -0.0508], [0.1778, -0.1778], [-0.1905, -0.1778], [-0.254, 0], [-0.1905, 0.1778], [0.1778, 0.1778], [0.1778, 0.0508], [0.254, 0.0508] ]
 #footprint: [ [-0.1,-0.125], [0.5,-0.125], [0.5,0.125], [-0.1,0.125] ]
 #footprint: [ [-0.6,-0.125], [0.0,-0.125], [0.0,0.125], [-0.6,0.125] ]
-footprint: [[-0.4, -0.4], [-0.4, 0.4], [0.4, 0.4], [0.4, -0.4]]
-
+footprint: [[-0.350, -0.350], [-0.350, 0.350], [0.300, 0.350], [0.300, -0.350]]
 
 transform_tolerance: 0.2
 map_type: costmap
@@ -14,15 +13,13 @@ obstacle_layer:
  enabled: true
  obstacle_range: 3.0
  raytrace_range: 3.5
- inflation_radius: 1
+ inflation_radius: 0.2
  track_unknown_space: false
  combination_method: 1
 
-#observation_sources: laser_scan_sensor
-#laser_scan_sensor: {data_type: LaserScan, topic: scan, marking: true, clearing: true}
+ observation_sources: laser_scan_sensor
+ laser_scan_sensor: {data_type: LaserScan, topic: scan, marking: true, clearing: true}
 
- observation_sources: scan
- scan: {sensor_frame: base_scan, data_type: LaserScan, topic: scan, marking: true, clearing: true}
 
 inflation_layer:
   enabled:              true
@@ -30,5 +27,5 @@ inflation_layer:
   inflation_radius:     0.5  # max. distance from an obstacle at which costs are incurred for planning paths.
 
 static_layer:
-  enabled:              false
+  enabled:              true
   map_topic:            "/map"

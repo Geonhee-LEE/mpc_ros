@@ -17,6 +17,8 @@
 */
 
 #include <iostream>
+#include <map>
+#include <math.h>
 #include "ros/ros.h"
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -27,6 +29,16 @@
 #include <nav_msgs/Odometry.h>
 #include <ackermann_msgs/AckermannDriveStamped.h>
 #include <visualization_msgs/Marker.h>
+
+#include <Eigen/Core>
+#include <Eigen/QR>
+#include <vector>
+
+#include <string>
+#include <fstream>
+
+using namespace std;
+using std::string;
 
 /********************/
 /* CLASS DEFINITION */
@@ -39,27 +51,57 @@ class PurePursuit
         bool isForwardWayPt(const geometry_msgs::Point& wayPt, const geometry_msgs::Pose& carPose);
         bool isWayPtAwayFromLfwDist(const geometry_msgs::Point& wayPt, const geometry_msgs::Point& car_pos);
         double getYawFromPose(const geometry_msgs::Pose& carPose);        
-        double getEta(const geometry_msgs::Pose& carPose);
+
+        double polyeval(Eigen::VectorXd coeffs, double x);        
+        Eigen::VectorXd polyfit(Eigen::VectorXd xvals, Eigen::VectorXd yvals, int order);
+        
         double getCar2GoalDist();
-        double getSteering(double eta);
-        geometry_msgs::Point get_odom_car2WayPtVec(const geometry_msgs::Pose& carPose);
+
+	double getW(double _alpha);	
+		
+        double get_alpha(const geometry_msgs::Pose& carPose);
 
     private:
+        
+
         ros::NodeHandle n_;
         ros::Subscriber odom_sub, path_sub, goal_sub, amcl_sub;
         ros::Publisher ackermann_pub, cmdvel_pub, marker_pub;
         ros::Timer timer1, timer2;
         tf::TransformListener tf_listener;
 
+        ros::Time tracking_stime;
+        ros::Time tracking_etime;
+        ros::Time tracking_time;
+        int tracking_time_sec;
+        int tracking_time_nsec;
+        
+        //time flag
+        bool start_timef = false;
+        bool end_timef = false;
+
+        std::ofstream file;
+    
+        double _waypointsDist = -1.0;
+        double _pathLength = 8.0;
+        bool _path_computed = false;
+
+        string _map_frame, _odom_frame, _car_frame;
+       
+        unsigned int idx = 0;
+
         visualization_msgs::Marker points, line_strip, goal_circle;
         geometry_msgs::Point odom_goal_pos, goal_pos;
         geometry_msgs::Twist cmd_vel;
         ackermann_msgs::AckermannDriveStamped ackermann_cmd;
         nav_msgs::Odometry odom;
-        nav_msgs::Path map_path, odom_path;
+        nav_msgs::Path map_path, odom_path, odom_path_w, _odom_path;
+
+        int _downSampling;
 
         double L, Lfw, Vcmd, lfw, steering, velocity;
-        double steering_gain, base_angle, goal_radius, speed_incremental;
+        double w;
+        double steering_gain, max_w, base_angle, goal_radius, speed_incremental;
         int controller_freq;
         bool foundForwardPt, goal_received, goal_reached, cmd_vel_mode, debug_mode, smooth_accel;
 
@@ -80,12 +122,13 @@ PurePursuit::PurePursuit()
     //Car parameter
     pn.param("L", L, 0.26); // length of car
     pn.param("Vcmd", Vcmd, 1.0);// reference speed (m/s)
-    pn.param("Lfw", Lfw, 3.0); // forward look ahead distance (m)
+    pn.param("Lfw", Lfw, 0.5); // forward look ahead distance (m)
     pn.param("lfw", lfw, 0.13); // distance between front the center of car
 
     //Controller parameter
     pn.param("controller_freq", controller_freq, 20);
     pn.param("steering_gain", steering_gain, 1.0);
+    pn.param("max_w", max_w, 1.0);
     pn.param("goal_radius", goal_radius, 0.5); // goal radius (m)
     pn.param("base_angle", base_angle, 0.0); // neutral point of servo (rad) 
     pn.param("cmd_vel_mode", cmd_vel_mode, false); // whether or not publishing cmd_vel
@@ -93,14 +136,21 @@ PurePursuit::PurePursuit()
     pn.param("smooth_accel", smooth_accel, true); // smooth the acceleration of car
     pn.param("speed_incremental", speed_incremental, 0.5); // speed incremental value (discrete acceleraton), unit: m/s
 
+    //Parameter for topics & Frame name
+    pn.param<std::string>("map_frame", _map_frame, "map" ); //*****for mpc, "odom"
+    pn.param<std::string>("odom_frame", _odom_frame, "odom");
+    pn.param<std::string>("car_frame", _car_frame, "base_footprint" );
+
     //Publishers and Subscribers
-    odom_sub = n_.subscribe("/pure_pursuit/odom", 1, &PurePursuit::odomCB, this);
-    path_sub = n_.subscribe("/pure_pursuit/global_planner", 1, &PurePursuit::pathCB, this);
-    goal_sub = n_.subscribe("/pure_pursuit/goal", 1, &PurePursuit::goalCB, this);
+    odom_sub = n_.subscribe("/odom", 1, &PurePursuit::odomCB, this);
+    //path_sub = n_.subscribe("/pure_pursuit/global_planner", 1, &PurePursuit::pathCB, this);
+    //goal_sub = n_.subscribe("/pure_pursuit/goal", 1, &PurePursuit::goalCB, this);
+    path_sub = n_.subscribe("/move_base/TrajectoryPlannerROS/global_plan", 1, &PurePursuit::pathCB, this);
+    goal_sub = n_.subscribe("/move_base_simple/goal", 1, &PurePursuit::goalCB, this);
     amcl_sub = n_.subscribe("/amcl_pose", 5, &PurePursuit::amclCB, this);
     marker_pub = n_.advertise<visualization_msgs::Marker>("/pure_pursuit/path_marker", 10);
     ackermann_pub = n_.advertise<ackermann_msgs::AckermannDriveStamped>("/pure_pursuit/ackermann_cmd", 1);
-    if(cmd_vel_mode) cmdvel_pub = n_.advertise<geometry_msgs::Twist>("/pure_pursuit/cmd_vel", 1);    
+    if(cmd_vel_mode) cmdvel_pub = n_.advertise<geometry_msgs::Twist>("/cmd_vel", 1);    
 
     //Timer
     timer1 = n_.createTimer(ros::Duration((1.0)/controller_freq), &PurePursuit::controlLoopCB, this); // Duration(0.05) -> 20Hz
@@ -111,7 +161,12 @@ PurePursuit::PurePursuit()
     goal_received = false;
     goal_reached = false;
     velocity = 0.0;
+    w = 0.0;
     steering = base_angle;
+
+    idx = 0;
+    file.open("/home/nscl1016/catkin_ws/src/mpc_ros/pure_pursuit.csv");
+
 
     //Show info
     ROS_INFO("[param] base_angle: %f", base_angle);
@@ -123,9 +178,9 @@ PurePursuit::PurePursuit()
 
     cmd_vel = geometry_msgs::Twist();
     ackermann_cmd = ackermann_msgs::AckermannDriveStamped();
+	
+	
 }
-
-
 
 void PurePursuit::initMarker()
 {
@@ -173,9 +228,70 @@ void PurePursuit::odomCB(const nav_msgs::Odometry::ConstPtr& odomMsg)
 }
 
 
-void PurePursuit::pathCB(const nav_msgs::Path::ConstPtr& pathMsg)
+
+void PurePursuit::pathCB(const nav_msgs::Path::ConstPtr& pathMsg) //jaewan
 {
     this->map_path = *pathMsg;
+
+    if(goal_received && !goal_reached)
+    {    
+        nav_msgs::Path odom_path = nav_msgs::Path();
+        try
+        {
+            double total_length = 0.0;
+            int sampling = _downSampling;
+
+            //find waypoints distance
+            if(_waypointsDist <=0.0)
+            {        
+                double dx = pathMsg->poses[1].pose.position.x - pathMsg->poses[0].pose.position.x;
+                double dy = pathMsg->poses[1].pose.position.y - pathMsg->poses[0].pose.position.y;
+                _waypointsDist = sqrt(dx*dx + dy*dy);
+                _downSampling = int(_pathLength/10.0/_waypointsDist);
+            }            
+
+            // Cut and downsampling the path
+            for(int i =0; i< pathMsg->poses.size(); i++)
+            {
+                if(total_length > _pathLength)
+                    break;
+
+                if(sampling == _downSampling)
+                {   
+                    geometry_msgs::PoseStamped tempPose;
+                    tf_listener.transformPose(_odom_frame, ros::Time(0) , pathMsg->poses[i], _map_frame, tempPose);                     
+                    odom_path.poses.push_back(tempPose);  
+                    sampling = 0;
+                }
+                total_length = total_length + _waypointsDist; 
+                sampling = sampling + 1;  
+            }
+           
+            if(odom_path.poses.size() >= 6 )
+            {
+                _odom_path = odom_path; // Path waypoints in odom frame
+                _path_computed = true;
+                // publish odom path
+                odom_path.header.frame_id = _odom_frame;
+                odom_path.header.stamp = ros::Time::now();
+            }
+            else
+            {
+                cout << "Failed to path generation" << endl;
+                _waypointsDist = -1;
+            }
+            //DEBUG            
+            //cout << endl << "N: " << odom_path.poses.size() << endl 
+            //<<  "Car path[0]: " << odom_path.poses[0];
+            // << ", path[N]: " << _odom_path.poses[_odom_path.poses.size()-1] << endl;
+        }
+        catch(tf::TransformException &ex)
+        {
+            ROS_ERROR("%s",ex.what());
+            ros::Duration(1.0).sleep();
+        }
+    }
+    
 }
 
 
@@ -244,24 +360,26 @@ bool PurePursuit::isWayPtAwayFromLfwDist(const geometry_msgs::Point& wayPt, cons
         return true;
 }
 
-geometry_msgs::Point PurePursuit::get_odom_car2WayPtVec(const geometry_msgs::Pose& carPose)
+double PurePursuit::get_alpha(const geometry_msgs::Pose& carPose)
 {
     geometry_msgs::Point carPose_pos = carPose.position;
     double carPose_yaw = getYawFromPose(carPose);
+    geometry_msgs::Point odom_path_wayPt;
     geometry_msgs::Point forwardPt;
     geometry_msgs::Point odom_car2WayPtVec;
     foundForwardPt = false;
 
     if(!goal_reached){
-        for(int i =0; i< map_path.poses.size(); i++)
+
+        for(int i =0; i< _odom_path.poses.size(); i++)
         {
-            geometry_msgs::PoseStamped map_path_pose = map_path.poses[i];
+            geometry_msgs::PoseStamped map_path_pose = _odom_path.poses[i];
             geometry_msgs::PoseStamped odom_path_pose;
 
             try
             {
                 tf_listener.transformPose("odom", ros::Time(0) , map_path_pose, "map" ,odom_path_pose);
-                geometry_msgs::Point odom_path_wayPt = odom_path_pose.pose.position;
+                odom_path_wayPt = odom_path_pose.pose.position;
                 bool _isForwardWayPt = isForwardWayPt(odom_path_wayPt,carPose);
 
                 if(_isForwardWayPt)
@@ -298,26 +416,18 @@ geometry_msgs::Point PurePursuit::get_odom_car2WayPtVec(const geometry_msgs::Pos
     if(foundForwardPt && !goal_reached)
     {
         points.points.push_back(carPose_pos);
-        points.points.push_back(forwardPt);
+        points.points.push_back(odom_path_wayPt);
         line_strip.points.push_back(carPose_pos);
-        line_strip.points.push_back(forwardPt);
+        line_strip.points.push_back(odom_path_wayPt);
     }
 
     marker_pub.publish(points);
     marker_pub.publish(line_strip);
-    
-    odom_car2WayPtVec.x = cos(carPose_yaw)*(forwardPt.x - carPose_pos.x) + sin(carPose_yaw)*(forwardPt.y - carPose_pos.y);
-    odom_car2WayPtVec.y = -sin(carPose_yaw)*(forwardPt.x - carPose_pos.x) + cos(carPose_yaw)*(forwardPt.y - carPose_pos.y);
-    return odom_car2WayPtVec;
+ 
+    double alpha_t = atan2(odom_path_wayPt.y - carPose_pos.y,odom_path_wayPt.x - carPose_pos.x) - carPose_yaw;
+	
+    return alpha_t;
 }
-
-
-double PurePursuit::getEta(const geometry_msgs::Pose& carPose)
-{
-    geometry_msgs::Point odom_car2WayPtVec = get_odom_car2WayPtVec(carPose);
-    return atan2(odom_car2WayPtVec.y,odom_car2WayPtVec.x);
-}
-
 
 double PurePursuit::getCar2GoalDist()
 {
@@ -328,13 +438,40 @@ double PurePursuit::getCar2GoalDist()
     return sqrt(car2goal_x*car2goal_x + car2goal_y*car2goal_y);
 }
 
-
-double PurePursuit::getSteering(double eta)
+double PurePursuit::getW(double _alpha)
 {
-    return atan2((this->L*sin(eta)),(this->Lfw/2 + this->lfw*cos(eta)));
+    return 2*sin(_alpha)/Lfw;
 }
 
+double PurePursuit::polyeval(Eigen::VectorXd coeffs, double x) 
+{
+    double result = 0.0;
+    for (int i = 0; i < coeffs.size(); i++) 
+    {
+        result += coeffs[i] * pow(x, i);
+    }
+    return result;
+}
 
+Eigen::VectorXd PurePursuit::polyfit(Eigen::VectorXd xvals, Eigen::VectorXd yvals, int order) 
+{
+    assert(xvals.size() == yvals.size());
+    assert(order >= 1 && order <= xvals.size() - 1);
+    Eigen::MatrixXd A(xvals.size(), order + 1);
+
+    for (int i = 0; i < xvals.size(); i++)
+        A(i, 0) = 1.0;
+
+    for (int j = 0; j < xvals.size(); j++) 
+    {
+        for (int i = 0; i < order; i++) 
+            A(j, i + 1) = A(j, i) * xvals(j);
+    }
+
+    auto Q = A.householderQr();
+    auto result = Q.solve(yvals);
+    return result;
+}
 void PurePursuit::amclCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& amclMsg)
 {
 
@@ -345,9 +482,25 @@ void PurePursuit::amclCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPt
         double dist2goal = sqrt(car2goal_x*car2goal_x + car2goal_y*car2goal_y);
         if(dist2goal < this->goal_radius)
         {
+            if(start_timef)
+            {
+                tracking_etime = ros::Time::now();
+                tracking_time_sec = tracking_etime.sec - tracking_stime.sec; 
+                tracking_time_nsec = tracking_etime.nsec - tracking_stime.nsec; 
+                
+                file << "tracking time"<< "," << tracking_time_sec << "," <<  tracking_time_nsec << "\n";
+
+                file.close();
+
+                start_timef = false;
+            }
             this->goal_reached = true;
             this->goal_received = false;
+            this->_path_computed = false;
+
             ROS_INFO("Goal Reached !");
+            cout << "tracking time: " << tracking_time_sec << "." << tracking_time_nsec << endl;
+
         }
     }
 }
@@ -359,40 +512,98 @@ void PurePursuit::controlLoopCB(const ros::TimerEvent&)
     geometry_msgs::Pose carPose = this->odom.pose.pose;
     geometry_msgs::Twist carVel = this->odom.twist.twist;
 
-    if(this->goal_received)
+    tf::Pose pose;
+    tf::poseMsgToTF(carPose, pose);
+    double alpha = tf::getYaw(pose.getRotation());
+
+
+    if(this->goal_received && !this->goal_reached && this->_path_computed)
     {
-        /*Estimate Steering Angle*/
-        double eta = getEta(carPose);  
-        if(foundForwardPt)
+        if(!start_timef)
         {
-            this->steering = this->base_angle + getSteering(eta)*this->steering_gain;
-            /*Estimate Gas Input*/
-            if(!this->goal_reached)
-            {
-                if(this->smooth_accel) 
-                    this->velocity = std::min(this->velocity + this->speed_incremental, this->Vcmd);
-                else
-                    this->velocity = this->Vcmd;
-                if(debug_mode) ROS_INFO("Velocity = %.2f, Steering = %.2f", this->velocity, this->steering);
-            }
+            tracking_stime == ros::Time::now();
+
+
+            start_timef = true;
         }
+
+        double alpha = get_alpha(carPose);  
+
+	    this->w = this->base_angle + getW(alpha)*this->steering_gain;
+        
+        if(this->w > max_w)
+        {
+            this->w = max_w;
+        }
+        else if(this->w < -max_w)
+        {
+            this->w = -max_w;
+        }
+
+        nav_msgs::Odometry odom_w = odom; 
+        nav_msgs::Path odom_path_w = _odom_path;   
+
+        // Update system states: X=[x, y, theta, v]
+        const double px = odom_w.pose.pose.position.x; //pose: odom frame
+        const double py = odom_w.pose.pose.position.y;
+        tf::Pose pose;
+        tf::poseMsgToTF(odom_w.pose.pose, pose);
+        const double theta = tf::getYaw(pose.getRotation());
+
+        // Waypoints related parameters
+        const int N = odom_path_w.poses.size(); // Number of waypoints
+        const double costheta = cos(theta);
+        const double sintheta = sin(theta);
+
+        // Convert to the vehicle coordinate system
+        Eigen::VectorXd x_veh(N);
+        Eigen::VectorXd y_veh(N);
+        for(int i = 0; i < N; i++) 
+        {
+            const double dx = odom_path_w.poses[i].pose.position.x - px;
+            const double dy = odom_path_w.poses[i].pose.position.y - py;
+            x_veh[i] = dx * costheta + dy * sintheta;
+            y_veh[i] = dy * costheta - dx * sintheta;
+        }
+          
+        // Fit waypoints
+        auto coeffs = polyfit(x_veh, y_veh, 3); 
+
+        const double cte  = polyeval(coeffs, 0.0);
+        const double etheta = atan(coeffs[1]);
+            
+        cout << "cte: " << cte << endl;
+        cout << "etheta: " << etheta << endl;
+        cout << "v : " << cmd_vel.linear.x  << endl;
+        cout << "w : " << cmd_vel.angular.z  << endl;
+        
+        idx++;
+        file << idx<< "," << cte << "," <<  etheta << "," << cmd_vel.linear.x << "," << cmd_vel.angular.z << "\n";
+        
+            /*Estimate Gas Input*/
+        if(!this->goal_reached)
+        {
+            if(this->smooth_accel) 
+                this->velocity = std::min(this->velocity + this->speed_incremental, this->Vcmd);
+            else
+                this->velocity = this->Vcmd;
+            if(debug_mode) ROS_INFO("Velocity = %.2f, w = %.2f", this->velocity, this->w);
+        }
+        
     }
 
-    if(this->goal_reached)
+    else
     {
         this->velocity = 0.0;
-        this->steering = this->base_angle;
+		this->w = 0;
     }
     
-    this->ackermann_cmd.drive.steering_angle = this->steering;
-    this->ackermann_cmd.drive.speed = this->velocity;
-    this->ackermann_pub.publish(this->ackermann_cmd);
 
     if(this->cmd_vel_mode)
     {
         this->cmd_vel.linear.x = this->velocity;
-        this->cmd_vel.angular.z = this->steering;
-        this->cmdvel_pub.publish(this->cmd_vel);
+        this->cmd_vel.angular.z = this->w;
+	    this->cmdvel_pub.publish(this->cmd_vel);
     }   
 }
 

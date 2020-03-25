@@ -29,6 +29,8 @@
 #include <ackermann_msgs/AckermannDriveStamped.h>
 #include <visualization_msgs/Marker.h>
 
+#include <fstream>
+
 #include "MPC_last.h"
 #include <Eigen/Core>
 #include <Eigen/QR>
@@ -51,6 +53,19 @@ class MPCNode
         ros::Publisher _pub_globalpath,_pub_odompath, _pub_twist, _pub_mpctraj;
         ros::Timer _timer1;
         tf::TransformListener _tf_listener;
+        ros::Time tracking_stime;
+        ros::Time tracking_etime;
+        ros::Time tracking_time;
+        int tracking_time_sec;
+        int tracking_time_nsec;
+        
+
+        std::ofstream file;
+        unsigned int idx = 0;
+
+        //time flag
+        bool start_timef = false;
+        bool end_timef = false;
 
         geometry_msgs::Point _goal_pos;
         nav_msgs::Odometry _odom;
@@ -162,6 +177,13 @@ MPCNode::MPCNode()
     _ackermann_msg = ackermann_msgs::AckermannDriveStamped();
     _twist_msg = geometry_msgs::Twist();
     _mpc_traj = nav_msgs::Path();
+
+
+
+    idx = 0;
+    file.open("/home/nscl1016/catkin_ws/src/mpc_ros/mpc.csv");
+    file << "idx"<< "," << "cte" << "," <<  "etheta" << "," << "cmd_vel.linear.x" << "," << "cmd_vel.angular.z" << "\n";
+
 
     //Init parameters for MPC object
     _mpc_params["DT"] = _dt;
@@ -312,10 +334,27 @@ void MPCNode::amclCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& a
         double dist2goal = sqrt(car2goal_x*car2goal_x + car2goal_y*car2goal_y);
         if(dist2goal < _goalRadius)
         {
+            if(start_timef)
+            {
+                tracking_etime = ros::Time::now();
+                tracking_time_sec = tracking_etime.sec - tracking_stime.sec; 
+                tracking_time_nsec = tracking_etime.nsec - tracking_stime.nsec; 
+                
+                                
+                file << "tracking time"<< "," << tracking_time_sec << "," <<  tracking_time_nsec << "\n";
+
+                file.close();
+
+                
+                start_timef = false;
+                
+            }
             _goal_received = false;
             _goal_reached = true;
             _path_computed = false;
             ROS_INFO("Goal Reached !");
+            cout << "tracking time: " << tracking_time_sec << "." << tracking_time_nsec << endl;
+
         }
     }
 }
@@ -325,7 +364,12 @@ void MPCNode::amclCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& a
 void MPCNode::controlLoopCB(const ros::TimerEvent&)
 {          
     if(_goal_received && !_goal_reached && _path_computed ) //received goal & goal not reached    
-    {    
+    {
+        if(!start_timef)
+        {
+            tracking_stime == ros::Time::now();
+            start_timef = true;
+        }
         nav_msgs::Odometry odom = _odom; 
         nav_msgs::Path odom_path = _odom_path;   
         geometry_msgs::Point goal_pos = _goal_pos;
@@ -363,6 +407,9 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         // Fit waypoints
         auto coeffs = polyfit(x_veh, y_veh, 3); 
         const double cte  = polyeval(coeffs, 0.0);
+        cout << "coeffs : " << coeffs[0] << endl;
+        cout << "pow : " << pow(0.0 ,0) << endl;
+        cout << "cte : " << cte << endl;
         double etheta = atan(coeffs[1]);
 
         // Global coordinate system about theta
@@ -390,6 +437,13 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
             etheta = 0;
 
         cout << "etheta: "<< etheta << ", atan2(gy,gx): " << atan2(gy,gx) << ", temp_theta:" << traj_deg << endl;
+
+
+        
+        idx++;
+        file << idx<< "," << cte << "," <<  etheta << "," << _twist_msg.linear.x << "," << _twist_msg.angular.z << "\n";
+        
+
 
         // Difference bewteen current position and goal position
         const double x_err = goal_pos.x -  odom.pose.pose.position.x;
@@ -478,7 +532,9 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         _speed = 0.0;
         _w = 0;
         if(_goal_reached && _goal_received)
+        {
             cout << "Goal Reached: control loop !" << endl;
+        }
     }
     // publish general cmd_vel 
     if(_pub_twist_flag)
@@ -504,4 +560,3 @@ int main(int argc, char **argv)
     ros::waitForShutdown();
     return 0;
 }
-

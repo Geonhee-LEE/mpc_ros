@@ -42,7 +42,7 @@
 
       //Save the csv file
       idx = 0;
-      file.open("/home/geonhee/catkin_ws/src/mpc_ros/dwa.csv");
+      file.open("/home/nscl1016/catkin_ws/src/mpc_ros/pure_pursuit.csv");
 
       //Timer
       _errtimer = _nh.createTimer(ros::Duration((1.0)/_controller_freq), &GeonPlanner::CalError, this); // 10Hz //*****mpc
