@@ -30,8 +30,9 @@ sudo apt-get install remmina synaptic gimp git ros-kinetic-navigation* ros-kinet
 (http://wiki.ros.org/ROS/Tutorials/InstallingandConfiguringROSEnvironment#Create_a_ROS_Workspace)  
 ```
 cd catkin_ws/src  
-git clone https://github.com/Geonhee-LEE/mpc_ros.git
+git clone https://github.com/Geonhee-LEE/mpc_ros.git (branch : servingbot)
 git clone https://github.com/CzJaewan/servingbot.git
+git clone https://github.com/Geonhee-LEE/zetabot_ros.git (branch : servingbot)
 catkin_make  
 ```
 
@@ -49,6 +50,17 @@ I made the new planner using pluglib.
 ```
 roslaunch mpc_ros local_mpc_Gazebo.launch 
 ```
+
+```
+roslaunch zetabank_gazebo servingbot_sq_world.launch
+roslaunch mpc_ros servingbot_mpc.launch 
+```
+### Pure Pursuit(local planner):
+```
+roslaunch zetabank_gazebo servingbot_sq_world.launch
+roslaunch mpc_ros servingbot_mpc.launch controller:=pure_pursuit
+```
+
 Tracking the trajectory such as infinity-shaped, epitrochoid, square using non-linear model predictive control.
 
 
