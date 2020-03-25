@@ -11,11 +11,7 @@
     <arg name="roll" default="0"/>
     <arg name="pitch" default="0"/>
     <arg name="yaw" default="0"/>
-<<<<<<< HEAD
     <arg name="gui" default="false"/>
-=======
-    <arg name="gui" default="true"/>
->>>>>>> 01b649da21dd7f281b5e1753af6bef53547757bd
 
     <param name="robot_description" command="$(find xacro)/xacro.py $(find zetabank_description)/urdf/zetabank.urdf.xacro" />
 

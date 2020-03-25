@@ -6,29 +6,17 @@
 
     <!--  ************** GAZEBO Simulator ***************  -->
     <arg name="x_pos" default="0.0"/>
-<<<<<<< HEAD
     <arg name="y_pos" default="0.0"/>
     <arg name="z_pos" default="0.0"/>
     <arg name="roll" default="0"/>
     <arg name="pitch" default="0"/>
     <arg name="yaw" default="-1.507"/>
-=======
-    <arg name="y_pos" default="-5.0"/>
-    <arg name="z_pos" default="0.0"/>
-    <arg name="roll" default="0"/>
-    <arg name="pitch" default="0"/>
-    <arg name="yaw" default="0"/>
->>>>>>> 01b649da21dd7f281b5e1753af6bef53547757bd
     <arg name="gui" default="true"/>
 
     <param name="robot_description" command="$(find xacro)/xacro.py $(find servingbot_description)/urdf/servingbot.urdf.xacro" />
 
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
-<<<<<<< HEAD
         <arg name="world_name" value="$(find zetabank_gazebo)/models/sq_world.world"/>
-=======
-        <arg name="world_name" value="$(find zetabank_gazebo)/models/temp_world.world"/>
->>>>>>> 01b649da21dd7f281b5e1753af6bef53547757bd
         <arg name="paused" value="false"/>
         <arg name="use_sim_time" value="true"/>
         <arg name="gui" value="$(arg gui)"/>
@@ -43,11 +31,7 @@
 
 
     <!--  ************** Map Server **************  -->
-<<<<<<< HEAD
     <node name="map_server" pkg="map_server" type="map_server" args="$(find zetabank_gazebo)/map/sq_world.yaml" output="screen">
-=======
-    <node name="map_server" pkg="map_server" type="map_server" args="$(find zetabank_gazebo)/map/simul_map.yaml" output="screen">
->>>>>>> 01b649da21dd7f281b5e1753af6bef53547757bd
         <param name="frame_id" value="/map"/>
     </node>
 
@@ -55,11 +39,7 @@
     <!--  ************** Localization **************  -->
     
     <node pkg="amcl" type="amcl" name="amcl" output="screen">
-<<<<<<< HEAD
         <rosparam file="$(find mpc_ros)/launch/Simulation/params/2amcl_params.yaml" command="load" />
-=======
-        <rosparam file="$(find mpc_ros)/launch/Simulation/params/amcl_params.yaml" command="load" />
->>>>>>> 01b649da21dd7f281b5e1753af6bef53547757bd
         <param name="initial_pose_x"            value="$(arg x_pos)"/>
         <param name="initial_pose_y"            value="$(arg y_pos)"/>
         <param name="initial_pose_a"            value="$(arg yaw)"/>
@@ -68,15 +48,9 @@
     <!--  ************** Navigation ***************  -->
     
     <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
-<<<<<<< HEAD
         <rosparam file="$(find mpc_ros)/launch/Simulation/params/carlike/2costmap_common_params.yaml" command="load" ns="global_costmap" />
         <rosparam file="$(find mpc_ros)/launch/Simulation/params/carlike/2costmap_common_params.yaml" command="load" ns="local_costmap" />
         <rosparam file="$(find mpc_ros)/launch/Simulation/params/carlike/2local_costmap_params.yaml" command="load" />
-=======
-        <rosparam file="$(find mpc_ros)/launch/Simulation/params/carlike/costmap_common_params.yaml" command="load" ns="global_costmap" />
-        <rosparam file="$(find mpc_ros)/launch/Simulation/params/carlike/costmap_common_params.yaml" command="load" ns="local_costmap" />
-        <rosparam file="$(find mpc_ros)/launch/Simulation/params/carlike/local_costmap_params.yaml" command="load" />
->>>>>>> 01b649da21dd7f281b5e1753af6bef53547757bd
         <rosparam file="$(find mpc_ros)/launch/Simulation/params/carlike/global_costmap_params.yaml" command="load" />        
         
 <!-- Global Planner -->

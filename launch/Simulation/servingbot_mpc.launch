@@ -3,17 +3,10 @@
     <!--  ************** Global Parameters ***************  -->
 
     <arg name="controller"  default="mpc" doc="opt: dwa, mpc, pure_pursuit"/> 
-<<<<<<< HEAD
 
 
     <arg name="x_pos" default="0.0"/>
     <arg name="y_pos" default="0.0"/>
-=======
-    <arg name="map_file" default="$(find servingbot_navigation)/maps/map.yaml"/>
-
-    <arg name="x_pos" default="0.0"/>
-    <arg name="y_pos" default="-5.0"/>
->>>>>>> 01b649da21dd7f281b5e1753af6bef53547757bd
     <arg name="z_pos" default="0.0"/>
     <arg name="roll" default="0"/>
     <arg name="pitch" default="0"/>
@@ -25,23 +18,15 @@
 
     <!--  ************** Map Server **************  -->
 
-<<<<<<< HEAD
     <node name="map_server" pkg="map_server" type="map_server" args="$(find zetabank_gazebo)/map/xl_s_world.yaml" output="screen">
         <param name="frame_id" value="/map"/>
     </node>
-=======
-    <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)"/>
->>>>>>> 01b649da21dd7f281b5e1753af6bef53547757bd
 
 
     <!--  ************** Localization **************  -->
     
     <node pkg="amcl" type="amcl" name="amcl" output="screen">
-<<<<<<< HEAD
         <rosparam file="$(find mpc_ros)/launch/Simulation/params/2amcl_params.yaml" command="load" />
-=======
-        <rosparam file="$(find mpc_ros)/launch/Simulation/params/amcl_params.yaml" command="load" />
->>>>>>> 01b649da21dd7f281b5e1753af6bef53547757bd
         <param name="initial_pose_x"            value="$(arg x_pos)"/>
         <param name="initial_pose_y"            value="$(arg y_pos)"/>
         <param name="initial_pose_a"            value="$(arg yaw)"/>
@@ -50,36 +35,21 @@
     <!--  ************** Navigation ***************  -->
     
     <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
-<<<<<<< HEAD
         <rosparam file="$(find mpc_ros)/launch/Simulation/params/carlike/2costmap_common_params.yaml" command="load" ns="global_costmap" />
         <rosparam file="$(find mpc_ros)/launch/Simulation/params/carlike/2costmap_common_params.yaml" command="load" ns="local_costmap" />
         <rosparam file="$(find mpc_ros)/launch/Simulation/params/carlike/2local_costmap_params.yaml" command="load" />
         <rosparam file="$(find mpc_ros)/launch/Simulation/params/carlike/2global_costmap_params.yaml" command="load" />        
-=======
-        <rosparam file="$(find mpc_ros)/launch/Simulation/params/carlike/costmap_common_params.yaml" command="load" ns="global_costmap" />
-        <rosparam file="$(find mpc_ros)/launch/Simulation/params/carlike/costmap_common_params.yaml" command="load" ns="local_costmap" />
-        <rosparam file="$(find mpc_ros)/launch/Simulation/params/carlike/local_costmap_params.yaml" command="load" />
-        <rosparam file="$(find mpc_ros)/launch/Simulation/params/carlike/global_costmap_params.yaml" command="load" />        
->>>>>>> 01b649da21dd7f281b5e1753af6bef53547757bd
         
 	<!-- Global Planner -->
         <param name="base_global_planner" value="global_planner/GlobalPlanner" />
         <param name="planner_frequency" value="1.0" />
-<<<<<<< HEAD
-=======
-        <param name="planner_frequency" value="0.0" if="$(eval controller == 'pure_pursuit')"/>
->>>>>>> 01b649da21dd7f281b5e1753af6bef53547757bd
         <param name="planner_patience" value="5.0" />
         <rosparam file="$(find zetabank_navigation)/simul_param/global_planner_params.yaml" command="load" />
 
         <!-- Local Planner -->
-<<<<<<< HEAD
 
         <param name="base_local_planner" value="base_local_planner/TrajectoryPlannerROS" />
 
-=======
-        <param name="base_local_planner" value="base_local_planner/TrajectoryPlannerROS" />
->>>>>>> 01b649da21dd7f281b5e1753af6bef53547757bd
         <!-- Our carlike robot is not able to rotate in place -->
         <param name="clearing_rotation_allowed" value="false" /> 
         <!-- external controller -->
@@ -88,11 +58,7 @@
     
     <!--  ************** MPC Node **************  -->
     <node name="MPC_Node_last" pkg="mpc_ros" type="MPC_Node_last" output="screen" if="$(eval controller == 'mpc')" >
-<<<<<<< HEAD
         <rosparam file="$(find mpc_ros)/launch/Simulation/params/mpc_local_square_params.yaml" command="load" />
-=======
-        <rosparam file="$(find mpc_ros)/launch/Simulation/params/mpc_last_params.yaml" command="load" />
->>>>>>> 01b649da21dd7f281b5e1753af6bef53547757bd
     </node>
 
     <!--  ************** Pure Pursuit **************  -->
