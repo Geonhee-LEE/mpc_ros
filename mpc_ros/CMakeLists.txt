@@ -15,7 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   dynamic_reconfigure
   geometry_msgs
   nav_msgs
-  ackermann_msgs
+  #ackermann_msgs
   message_generation
   move_base
   roscpp
@@ -57,8 +57,8 @@ ADD_EXECUTABLE( MPC_local_plan src/MPC_local.cpp src/MPC_local_planNode.cpp )
 TARGET_LINK_LIBRARIES(MPC_local_plan ipopt ${catkin_LIBRARIES} )
 
 # Pure Pursuit Node
-add_executable(Pure_Pursuit src/Pure_Pursuit.cpp)
-target_link_libraries(Pure_Pursuit ${catkin_LIBRARIES})
+#add_executable(Pure_Pursuit src/Pure_Pursuit.cpp)
+#target_link_libraries(Pure_Pursuit ${catkin_LIBRARIES})
 
 # Own Global planner for tracking desired trajectory
  add_library(global_planner_lib src/global_planner/global_planner.cpp)
