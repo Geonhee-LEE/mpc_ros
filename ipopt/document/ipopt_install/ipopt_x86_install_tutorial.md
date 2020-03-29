@@ -1,6 +1,6 @@
 # How to install Ipopt on x86 environment  
 
-## Inatall CPPAD & Fortran  
+## Install CPPAD & Fortran  
 $ sudo apt-get install cppad gfortran  
     
 ## Get ipopt source code    
