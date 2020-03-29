@@ -27,7 +27,7 @@
 // #include <tf/transform_datatypes.h>
 #include <nav_msgs/Path.h>
 #include <nav_msgs/Odometry.h>
-#include <ackermann_msgs/AckermannDriveStamped.h>
+//#include <ackermann_msgs/AckermannDriveStamped.h>
 #include <visualization_msgs/Marker.h>
 
 #include "MPC.h"
@@ -49,14 +49,15 @@ class MPCNode
     private:
         ros::NodeHandle _nh;
         ros::Subscriber _sub_odom, _sub_gen_path, _sub_path, _sub_goal, _sub_amcl;
-        ros::Publisher _pub_globalpath,_pub_odompath, _pub_twist, _pub_ackermann, _pub_mpctraj;
+        ros::Publisher _pub_globalpath,_pub_odompath, _pub_twist, _pub_mpctraj;
+        ros::Publisher _pub_ackermann;
         ros::Timer _timer1;
         tf::TransformListener _tf_listener;
 
         geometry_msgs::Point _goal_pos;
         nav_msgs::Odometry _odom;
         nav_msgs::Path _odom_path, _mpc_traj; 
-        ackermann_msgs::AckermannDriveStamped _ackermann_msg;
+        //ackermann_msgs::AckermannDriveStamped _ackermann_msg;
         geometry_msgs::Twist _twist_msg;
 
         string _globalPath_topic, _goal_topic;
@@ -153,7 +154,7 @@ MPCNode::MPCNode()
     _pub_globalpath  = _nh.advertise<nav_msgs::Path>("/global_path", 1); // Global path generated from another source
     _pub_odompath  = _nh.advertise<nav_msgs::Path>("/mpc_reference", 1); // reference path for MPC ///mpc_reference 
     _pub_mpctraj   = _nh.advertise<nav_msgs::Path>("/mpc_trajectory", 1);// MPC trajectory output
-    _pub_ackermann = _nh.advertise<ackermann_msgs::AckermannDriveStamped>("/ackermann_cmd", 1);
+    //_pub_ackermann = _nh.advertise<ackermann_msgs::AckermannDriveStamped>("/ackermann_cmd", 1);
     if(_pub_twist_flag)
         _pub_twist = _nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1); //for stage (Ackermann msg non-supported)
     
@@ -168,7 +169,7 @@ MPCNode::MPCNode()
     _w = 0.0;
     _speed = 0.0;
 
-    _ackermann_msg = ackermann_msgs::AckermannDriveStamped();
+    //_ackermann_msg = ackermann_msgs::AckermannDriveStamped();
     _twist_msg = geometry_msgs::Twist();
     _mpc_traj = nav_msgs::Path();
 

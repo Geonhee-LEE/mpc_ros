@@ -26,7 +26,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <nav_msgs/Path.h>
 #include <nav_msgs/Odometry.h>
-#include <ackermann_msgs/AckermannDriveStamped.h>
+//#include <ackermann_msgs/AckermannDriveStamped.h>
 #include <visualization_msgs/Marker.h>
 
 #include <fstream>
@@ -70,7 +70,7 @@ class MPCNode
         geometry_msgs::Point _goal_pos;
         nav_msgs::Odometry _odom;
         nav_msgs::Path _odom_path, _mpc_traj; 
-        ackermann_msgs::AckermannDriveStamped _ackermann_msg;
+        //ackermann_msgs::AckermannDriveStamped _ackermann_msg;
         geometry_msgs::Twist _twist_msg;
 
         string _globalPath_topic, _goal_topic;
@@ -174,7 +174,7 @@ MPCNode::MPCNode()
     _w = 0.0;
     _speed = 0.0;
 
-    _ackermann_msg = ackermann_msgs::AckermannDriveStamped();
+    //_ackermann_msg = ackermann_msgs::AckermannDriveStamped();
     _twist_msg = geometry_msgs::Twist();
     _mpc_traj = nav_msgs::Path();
 

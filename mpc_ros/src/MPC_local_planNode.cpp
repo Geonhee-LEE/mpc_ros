@@ -29,7 +29,7 @@
 // #include <tf/transform_datatypes.h>
 #include <nav_msgs/Path.h>
 #include <nav_msgs/Odometry.h>
-#include <ackermann_msgs/AckermannDriveStamped.h>
+//#include <ackermann_msgs/AckermannDriveStamped.h>
 #include <visualization_msgs/Marker.h>
 
 #include "MPC_local.h"
@@ -69,7 +69,7 @@ class MPCNode
         geometry_msgs::Point _goal_pos;
         nav_msgs::Odometry _odom;
         nav_msgs::Path _odom_path, _mpc_traj; 
-        ackermann_msgs::AckermannDriveStamped _ackermann_msg;
+	//ackermann_msgs::AckermannDriveStamped _ackermann_msg;
         geometry_msgs::Twist _twist_msg;
 
         string _globalPath_topic, _goal_topic;
@@ -170,7 +170,7 @@ MPCNode::MPCNode()
     
     _pub_odompath  = _nh.advertise<nav_msgs::Path>("/mpc_reference", 1); // reference path for MPC ///mpc_reference 
     _pub_mpctraj   = _nh.advertise<nav_msgs::Path>("/mpc_trajectory", 1);// MPC trajectory output
-    _pub_ackermann = _nh.advertise<ackermann_msgs::AckermannDriveStamped>("/ackermann_cmd", 1);
+    //_pub_ackermann = _nh.advertise<ackermann_msgs::AckermannDriveStamped>("/ackermann_cmd", 1);
     if(_pub_twist_flag)
         _pub_twist = _nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1); //for stage (Ackermann msg non-supported)
     
@@ -189,7 +189,7 @@ MPCNode::MPCNode()
     _w = 0.0;
     _speed = 0.0;
 
-    _ackermann_msg = ackermann_msgs::AckermannDriveStamped();
+    //_ackermann_msg = ackermann_msgs::AckermannDriveStamped();
     _twist_msg = geometry_msgs::Twist();
     _mpc_traj = nav_msgs::Path();
 
@@ -329,7 +329,7 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
                 pre_yaw = yaw;
             }
        
-            if(min_val > sqrt(dx*dx + dy*dy) && abs(i - min_idx) < 50) 
+            if(min_val > sqrt(dx*dx + dy*dy) && abs((int)(i - min_idx)) < 50)
             {
                 min_val = sqrt(dx*dx + dy*dy);
                 min_idx = i;
