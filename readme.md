@@ -74,3 +74,14 @@ Tracking the trajectory such as infinity-shaped, epitrochoid, square using dynam
 ### Reference
 
 HyphaROS MPC MiniCar(https://hypharosworkshop.wordpress.com/)
+
+
+### ROS melodic
+
+#### Installation 
+
+```
+sudo apt install ros-melodic-costmap-2d  ros-melodic-move-base
+```
+
+Install IpOpt lib
