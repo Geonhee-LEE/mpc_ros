@@ -166,6 +166,8 @@ PurePursuit::PurePursuit()
 
     idx = 0;
     file.open("/home/nscl1016/catkin_ws/src/mpc_ros/pure_pursuit.csv");
+    file << "idx"<< "," << "car_position_x"<< "," << "car_position_y" << "," <<  "etheta" << "," << "cmd_vel.linear.x" << "," << "cmd_vel.angular.z" << "\n";
+
 
 
     //Show info
@@ -578,7 +580,7 @@ void PurePursuit::controlLoopCB(const ros::TimerEvent&)
         cout << "w : " << cmd_vel.angular.z  << endl;
         
         idx++;
-        file << idx<< "," << cte << "," <<  etheta << "," << cmd_vel.linear.x << "," << cmd_vel.angular.z << "\n";
+        file << idx << "," << odom_w.pose.pose.position.x << "," << odom_w.pose.pose.position.y << "," << cte << "," <<  etheta << "," << cmd_vel.linear.x << "," << cmd_vel.angular.z << "\n";
         
             /*Estimate Gas Input*/
         if(!this->goal_reached)

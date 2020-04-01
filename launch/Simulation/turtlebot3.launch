@@ -10,15 +10,15 @@
     <arg name="z_pos" default="0.0"/>
     <arg name="roll" default="0"/>
     <arg name="pitch" default="0"/>
-    <arg name="yaw" default="-1.5701"/>
+    <arg name="yaw" default="0"/>
 
     <!--  ************** servingbot ***************  -->
 
-    <include file="$(find servingbot_bringup)/launch/servingbot_remote.launch" />
+    <include file="$(find turtlebot3_bringup)/launch/turtlebot3_remote.launch" />
 
     <!--  ************** Map Server **************  -->
 
-    <node name="map_server" pkg="map_server" type="map_server" args="$(find servingbot_gazebo)/map/sq_world.yaml" output="screen">
+    <node name="map_server" pkg="map_server" type="map_server" args="$(find servingbot_gazebo)/map/xl_s_world.yaml" output="screen">
         <param name="frame_id" value="/map"/>
     </node>
 
