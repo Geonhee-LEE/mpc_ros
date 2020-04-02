@@ -20,7 +20,7 @@ mpc_w_angvel: 0.0 #100.0
 mpc_w_angvel_d: 50.0
 mpc_w_accel: 0.0
 mpc_w_accel_d: 50.0
-mpc_max_angvel: 1.5 #2.5 #1.0
+mpc_max_angvel: 1.25 #2.5 #1.0
 mpc_max_throttle: 1.0 # Maximal throttle accel
 mpc_bound_value: 1.0e3 # Bound value for other variables
 
