@@ -1,0 +1,26 @@
+# Parameters for control loop
+pub_twist_cmd: true
+debug_info: false
+delay_mode: true
+max_speed: 1.5 # unit: m/s 
+waypoints_dist: -1.0 # unit: m, set < 0 means computed by node
+path_length: 6.0 # unit: m
+goal_radius: 0.5 # unit: m
+controller_freq: 10
+meter_scoring: true
+
+# Parameter for MPC solver
+mpc_steps: 20.0
+mpc_ref_cte: 0.0
+mpc_ref_vel: 1.0
+mpc_ref_etheta: 0.0
+mpc_w_cte: 2000.0
+mpc_w_etheta: 500.0
+mpc_w_vel: 1000.0
+mpc_w_angvel: 0.0
+mpc_w_angvel_d: 10.0
+mpc_w_accel: 10.0
+mpc_w_accel_d: 10.0
+mpc_max_angvel: 1.5 
+mpc_max_throttle: 1.0 # Maximal throttle accel
+mpc_bound_value: 1.0e3 # Bound value for other variables
