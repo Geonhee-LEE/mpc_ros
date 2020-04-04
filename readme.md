@@ -80,8 +80,9 @@ HyphaROS MPC MiniCar(https://hypharosworkshop.wordpress.com/)
 
 #### Installation 
 
+1. Install ROS Libs
 ```
-sudo apt install ros-melodic-costmap-2d  ros-melodic-move-base
+sudo apt install ros-melodic-costmap-2d  ros-melodic-move-base ros-melodic-global-planner
 ```
 
-Install IpOpt lib
+2. Install IpOpt & build
