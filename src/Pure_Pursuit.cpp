@@ -80,6 +80,9 @@ class PurePursuit
         bool start_timef = false;
         bool end_timef = false;
 
+        ros::Time maxvel_check_time;
+        bool max_vel_check;
+
         std::ofstream file;
     
         double _waypointsDist = -1.0;
@@ -166,8 +169,9 @@ PurePursuit::PurePursuit()
 
     idx = 0;
     file.open("/home/nscl1016/catkin_ws/src/mpc_ros/pure_pursuit.csv");
-    file << "idx"<< "," << "car_position_x"<< "," << "car_position_y" << "," <<  "etheta" << "," << "cmd_vel.linear.x" << "," << "cmd_vel.angular.z" << "\n";
+    file << "idx"<< "," << "car_position_x"<< "," << "car_position_y" << "," << "cte" << ","<<  "etheta" << "," << "cmd_vel.linear.x" << "," << "cmd_vel.angular.z" << "\n";
 
+    max_vel_check = 0;
 
 
     //Show info
@@ -488,8 +492,14 @@ void PurePursuit::amclCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPt
             {
                 tracking_etime = ros::Time::now();
                 tracking_time_sec = tracking_etime.sec - tracking_stime.sec; 
-                tracking_time_nsec = tracking_etime.nsec - tracking_stime.nsec; 
+                tracking_time_nsec = tracking_etime.nsec - tracking_stime.nsec;
+
                 
+                int max_vel_time_sec = maxvel_check_time.sec - tracking_stime.sec;
+                int max_vel_time_nsec = maxvel_check_time.nsec - tracking_stime.nsec;
+              
+
+                file << "max_vel time"<< "," << max_vel_time_sec << "," <<  max_vel_time_nsec << "\n";
                 file << "tracking time"<< "," << tracking_time_sec << "," <<  tracking_time_nsec << "\n";
 
                 file.close();
@@ -523,7 +533,7 @@ void PurePursuit::controlLoopCB(const ros::TimerEvent&)
     {
         if(!start_timef)
         {
-            tracking_stime == ros::Time::now();
+            tracking_stime = ros::Time::now();
 
 
             start_timef = true;
@@ -604,8 +614,23 @@ void PurePursuit::controlLoopCB(const ros::TimerEvent&)
     if(this->cmd_vel_mode)
     {
         this->cmd_vel.linear.x = this->velocity;
+
+        if( max_vel_check == 0) 
+        {
+            if( cmd_vel.linear.x == this->Vcmd)
+            {
+
+            	cout << "max vel !" << endl;
+
+                maxvel_check_time = ros::Time::now();
+                max_vel_check = 1;
+
+            }
+
+        }
+
         this->cmd_vel.angular.z = this->w;
-	    this->cmdvel_pub.publish(this->cmd_vel);
+	this->cmdvel_pub.publish(this->cmd_vel);
     }   
 }
 

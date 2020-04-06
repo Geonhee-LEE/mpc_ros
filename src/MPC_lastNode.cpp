@@ -56,9 +56,11 @@ class MPCNode
         ros::Time tracking_stime;
         ros::Time tracking_etime;
         ros::Time tracking_time;
-        ros::Time check_time;
+        ros::Time maxvel_check_time;
         int tracking_time_sec;
         int tracking_time_nsec;
+        
+        bool max_vel_check;
         
 
         std::ofstream file;
@@ -175,15 +177,17 @@ MPCNode::MPCNode()
     _w = 0.0;
     _speed = 0.0;
 
+    max_vel_check = 0;
+
     _ackermann_msg = ackermann_msgs::AckermannDriveStamped();
     _twist_msg = geometry_msgs::Twist();
     _mpc_traj = nav_msgs::Path();
 
-
+    
 
     idx = 0;
     file.open("/home/nscl1016/catkin_ws/src/mpc_ros/mpc.csv");
-    file << "idx"<< "," << "cte" << "," <<  "etheta" << "," << "cmd_vel.linear.x" << "," << "cmd_vel.angular.z" << "\n";
+    file << "idx"<< "," << "car_position_x"<< "," << "car_position_y" << "," << "cte"<< "," <<  "etheta" << "," << "cmd_vel.linear.x" << "," << "cmd_vel.angular.z" << "\n";
 
 
     //Init parameters for MPC object
@@ -341,7 +345,11 @@ void MPCNode::amclCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& a
                 tracking_time_sec = tracking_etime.sec - tracking_stime.sec; 
                 tracking_time_nsec = tracking_etime.nsec - tracking_stime.nsec; 
                 
-                                
+                int max_vel_time_sec = maxvel_check_time.sec - tracking_stime.sec;
+                int max_vel_time_nsec = maxvel_check_time.nsec - tracking_stime.nsec;
+              
+                file << "max_vel time"<< "," << max_vel_time_sec << "," <<  max_vel_time_nsec << "\n";
+                                                
                 file << "tracking time"<< "," << tracking_time_sec << "," <<  tracking_time_nsec << "\n";
 
                 file.close();
@@ -368,7 +376,8 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
     {
         if(!start_timef)
         {
-            tracking_stime == ros::Time::now();
+            tracking_stime = ros::Time::now();
+            cout << "start time : " << tracking_stime.sec << "."<< tracking_stime.nsec <<endl;
             start_timef = true;
         }
         nav_msgs::Odometry odom = _odom; 
@@ -446,8 +455,8 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
 
         
         idx++;
-                
-        file << idx<< "," << cte << "," <<  etheta << "," << _twist_msg.linear.x << "," << _twist_msg.angular.z << "\n";
+
+        file << idx<< "," << odom.pose.pose.position.x << "," << odom.pose.pose.position.y << "," << cte << "," <<  etheta << "," << _twist_msg.linear.x << "," << _twist_msg.angular.z << "\n";
         
 
 
@@ -492,6 +501,7 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
             _speed = _max_speed;
         if(_speed <= 0.0)
             _speed = 0.0;
+
 
         if(_debug_info)
         {
@@ -546,6 +556,22 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
     if(_pub_twist_flag)
     {
         _twist_msg.linear.x  = _speed; 
+        if( max_vel_check == 0) 
+        {
+            if( _twist_msg.linear.x < (_ref_vel + 0.01))
+            {
+                if( _twist_msg.linear.x > (_ref_vel -0.01) )
+                {
+                    cout << "max vel !" << endl;
+
+                    maxvel_check_time = ros::Time::now();
+                    max_vel_check = 1;
+
+                }
+            }
+
+        }
+        
         _twist_msg.angular.z = _w;
         _pub_twist.publish(_twist_msg);
     }

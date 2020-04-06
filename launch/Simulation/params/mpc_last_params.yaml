@@ -6,12 +6,12 @@ max_speed: 2.0 # unit: m/s #0.8
 waypoints_dist: -1.0 # unit: m, set < 0 means computed by node
 path_length: 5.0 # unit: m
 goal_radius: 0.5 # unit: m
-controller_freq: 10
+controller_freq: 10 # 0.1
 
 # Parameter for MPC solver
 mpc_steps: 20.0
 mpc_ref_cte: 0.0
-mpc_ref_vel: 1.5 #1.0
+mpc_ref_vel: 0.8 #1.0
 mpc_ref_etheta: 0.0
 mpc_w_cte: 2000.0
 mpc_w_etheta: 1000.0
