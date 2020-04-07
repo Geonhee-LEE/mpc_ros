@@ -74,7 +74,7 @@
     </node>
 
     <!--  ************** Pure Pursuit **************  -->
-    <node name="Pure_Pursuit" pkg="mpc_ros" type="Pure_Pursuit" output="screen" if="$(eval controller == 'pure_pursuit')" >
+    <node name="Pure_Pursuit_Node" pkg="mpc_ros" type="Pure_Pursuit_Node" output="screen" if="$(eval controller == 'pure_pursuit')" >
         <rosparam file="$(find mpc_ros)/launch/Simulation/params/pure_pursuit_params.yaml" command="load" />
         <remap from="/pure_pursuit/odom" to="/odom" />
         <remap from="/pure_pursuit/global_planner" to="/move_base/GlobalPlanner/plan" />

@@ -102,8 +102,20 @@ class MPCNode
         
         double _mpc_etheta;
         double _mpc_cte;
-        fstream file;
+        std::ofstream file;
         unsigned int idx;
+
+
+        //time flag
+        bool start_timef = false;
+        bool end_timef = false;
+        ros::Time tracking_stime;
+        ros::Time tracking_etime;
+        ros::Time tracking_time;
+        ros::Time maxvel_check_time;
+        int tracking_time_sec;
+        int tracking_time_nsec;
+
 }; // end of class
 
 
@@ -216,7 +228,9 @@ MPCNode::MPCNode()
     idx = 0;
     _mpc_etheta = 0;
     _mpc_cte = 0;
-    file.open("/home/geonhee/catkin_ws/src/mpc_ros/mpc.csv");
+    file.open("/home/nscl1016/catkin_ws/src/mpc_ros/mpc_local.csv");
+    file << "idx"<< "," << "car_position_x"<< "," << "car_position_y" << "," << "cte"<< "," <<  "etheta" << "," << "cmd_vel.linear.x" << "," << "cmd_vel.angular.z" << "\n";
+
 }
 
 MPCNode::~MPCNode()
@@ -225,7 +239,7 @@ MPCNode::~MPCNode()
     
 };
 
-// Public: return _thread_numbers
+// Public: return _thread_numbersodom_checko
 int MPCNode::get_thread_numbers()
 {
     return _thread_numbers;
@@ -408,10 +422,24 @@ void MPCNode::amclCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& a
         double dist2goal = sqrt(car2goal_x*car2goal_x + car2goal_y*car2goal_y);
         if(dist2goal < _goalRadius)
         {
+            if(start_timef)
+            {
+                tracking_etime = ros::Time::now();
+                tracking_time_sec = tracking_etime.sec - tracking_stime.sec; 
+                tracking_time_nsec = tracking_etime.nsec - tracking_stime.nsec; 
+                                                   
+                file << "tracking time"<< "," << tracking_time_sec << "," <<  tracking_time_nsec << "\n";
+
+                file.close();
+                start_timef = false;
+                
+            }
             _goal_received = false;
             _goal_reached = true;
             _path_computed = false;
             ROS_INFO("Goal Reached !");
+            cout << "tracking time: " << tracking_time_sec << "." << tracking_time_nsec << endl;
+
         }
     }
 }
@@ -422,8 +450,19 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
 {          
     if(_goal_received && !_goal_reached && _path_computed ) //received goal & goal not reached    
     {    
+
+        if(!start_timef)
+        {
+            tracking_stime = ros::Time::now();
+            cout << "start time : " << tracking_stime.sec << "."<< tracking_stime.nsec <<endl;
+            start_timef = true;
+        }
         nav_msgs::Odometry odom = _odom; 
         nav_msgs::Path odom_path = _odom_path;   
+
+        //cout << "path _total : " << _odom_path.poses[0] << endl;
+        
+        cout << odom.pose.pose.position.y << endl; 
 
         // Update system states: X=[x, y, theta, v]
         const double px = odom.pose.pose.position.x; //pose: odom frame
@@ -455,6 +494,7 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
             y_veh[i] = dy * costheta - dx * sintheta;
         }
         
+
         // Fit waypoints
         auto coeffs = polyfit(x_veh, y_veh, 3); 
 
@@ -463,6 +503,11 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
 
         _mpc_cte = cte;
         _mpc_etheta = etheta;
+
+        
+        idx++;
+        file << idx<< "," << odom.pose.pose.position.x << "," << odom.pose.pose.position.y << "," << cte << "," <<  etheta << "," << _twist_msg.linear.x << "," << _twist_msg.angular.z << "\n";
+    
 
         VectorXd state(6);
         if(_delay_mode)
@@ -495,6 +540,7 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         if(_speed <= 0.0)
             _speed = 0.0;
 
+        /*
         if(_debug_info)
         {
             cout << "\n\nDEBUG" << endl;
@@ -508,6 +554,7 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
             cout << "_throttle: \n" << _throttle << endl;
             cout << "_speed: \n" << _speed << endl;
         }
+        */
 
         // Display the MPC predicted trajectory
         _mpc_traj = nav_msgs::Path();
@@ -560,9 +607,7 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         //cout << "_mpc_ethetacost: "<< _mpc._mpc_ethetacost << endl;
         //cout << "_mpc_velcost: "<< _mpc._mpc_velcost << endl;
         //writefile
-        idx++;
-        cout << "idx: "<< idx << endl;
-        file << idx<< "," << _mpc_cte<< "," <<  _mpc_etheta << "," << _twist_msg.linear.x<< "," << _twist_msg.angular.z  << ",";
+        //cout << "idx: "<< idx << endl;
 
     }
     else
@@ -596,7 +641,7 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
 int main(int argc, char **argv)
 {
     //Initiate ROS
-    ros::init(argc, argv, "MPC_Node");
+    ros::init(argc, argv, "check_MPC_Node");
     MPCNode mpc_node;
 
     ROS_INFO("Waiting for global path msgs ~");

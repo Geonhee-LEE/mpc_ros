@@ -57,12 +57,16 @@ ADD_EXECUTABLE( MPC_local_plan src/MPC_local.cpp src/MPC_local_planNode.cpp )
 TARGET_LINK_LIBRARIES(MPC_local_plan ipopt ${catkin_LIBRARIES} )
 
 # Pure Pursuit Node
-add_executable(Pure_Pursuit src/Pure_Pursuit.cpp)
-target_link_libraries(Pure_Pursuit ${catkin_LIBRARIES})
+ADD_EXECUTABLE( Pure_Pursuit_Node src/Pure_Pursuit.cpp)
+TARGET_LINK_LIBRARIES(Pure_Pursuit_Node ${catkin_LIBRARIES})
+
+# Local planner with Pure Pursuit for tracking
+ADD_EXECUTABLE( Pure_Pursuit_localplan src/Pure_Pursuit_local_plan.cpp )
+TARGET_LINK_LIBRARIES(Pure_Pursuit_localplan ${catkin_LIBRARIES})
 
 # Own Global planner for tracking desired trajectory
- add_library(global_planner_lib src/global_planner/global_planner.cpp)
- TARGET_LINK_LIBRARIES(global_planner_lib ipopt ${catkin_LIBRARIES} )
+add_library(global_planner_lib src/global_planner/global_planner.cpp)
+target_link_libraries(global_planner_lib ipopt ${catkin_LIBRARIES} )
 
 #############
 ## Example ##
