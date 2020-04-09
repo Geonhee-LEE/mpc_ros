@@ -316,6 +316,10 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
         int min_val = 100; 
 
         int N = totalPathMsg->poses.size(); // Number of waypoints        
+
+        cout << "desired N : " << N << endl;
+
+        
         const double px = odom.pose.pose.position.x; //pose: odom frame
         const double py = odom.pose.pose.position.y;
         const double ptheta = odom.pose.pose.position.y;
@@ -339,7 +343,7 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
 
             if(abs(pre_yaw - yaw) > 5)
             {
-                cout << "abs(pre_yaw - yaw)" << abs(pre_yaw - yaw) << endl;
+                //cout << "abs(pre_yaw - yaw)" << abs(pre_yaw - yaw) << endl;
                 pre_yaw = yaw;
             }
        
@@ -356,10 +360,13 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
             
             _tf_listener.transformPose(_odom_frame, ros::Time(0) , 
                                             totalPathMsg->poses[i], _odom_frame, tempPose);                     
-            mpc_path.poses.push_back(tempPose);                          
+            mpc_path.poses.push_back(tempPose);    
+
+            //cout << "temp pose : " << tempPose << endl;
+                      
             total_length = total_length + _waypointsDist;           
         }   
-        
+        cout << "if check : " << (total_length < _pathLength) << "total_length : " << total_length << "_path_length : " << _pathLength << endl;
         // Connect the end of path to the front
         if(total_length < _pathLength )
         {
@@ -369,14 +376,23 @@ void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
                     break;
                 _tf_listener.transformPose(_odom_frame, ros::Time(0) , 
                                                 totalPathMsg->poses[i], _odom_frame, tempPose);                     
-                mpc_path.poses.push_back(tempPose);                          
+                mpc_path.poses.push_back(tempPose);      
+
+                //cout << "temp pose : " << tempPose << endl;
+                    
                 total_length = total_length + _waypointsDist;    
             }
+
+            cout << "temp pose : " << tempPose.pose << endl;
+
         }  
 
         if(mpc_path.poses.size() >= _pathLength )
         {
             _odom_path = mpc_path; // Path waypoints in odom frame
+
+            //cout << "path [0] "<< mpc_path.poses[0] << endl;
+
             _path_computed = true;
             // publish odom path
             mpc_path.header.frame_id = _odom_frame;
@@ -460,9 +476,10 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         nav_msgs::Odometry odom = _odom; 
         nav_msgs::Path odom_path = _odom_path;   
 
+        //cout << "frame : " << _odom_frame << endl; 
         //cout << "path _total : " << _odom_path.poses[0] << endl;
         
-        cout << odom.pose.pose.position.y << endl; 
+        //cout << odom.pose.pose.position.y << endl; 
 
         // Update system states: X=[x, y, theta, v]
         const double px = odom.pose.pose.position.x; //pose: odom frame

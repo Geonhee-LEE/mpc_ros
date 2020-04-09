@@ -145,6 +145,7 @@ PurePursuit::PurePursuit()
     pn.param("controller_freq", controller_freq, 20);
     pn.param("steering_gain", steering_gain, 1.0);
     pn.param("max_w", max_w, 1.0);
+    pn.param("path_length", _pathLength, 4.0); // unit: m
     pn.param("goal_radius", goal_radius, 0.5); // goal radius (m)
     pn.param("base_angle", base_angle, 0.0); // neutral point of servo (rad) 
     pn.param("cmd_vel_mode", cmd_vel_mode, false); // whether or not publishing cmd_vel
@@ -187,11 +188,12 @@ PurePursuit::PurePursuit()
     steering = base_angle;
 
     idx = 0;
-    file.open("/home/nscl1016/catkin_ws/src/mpc_ros/pure_pursuit.csv");
+    file.open("/home/nscl1016/catkin_ws/src/mpc_ros/pure_pursuit_local.csv");
     file << "idx"<< "," << "car_position_x"<< "," << "car_position_y" << "," << "cte" << ","<<  "etheta" << "," << "cmd_vel.linear.x" << "," << "cmd_vel.angular.z" << "\n";
 
     max_vel_check = 0;
 
+    min_idx = 0;
 
     //Show info
     ROS_INFO("[param] base_angle: %f", base_angle);
@@ -265,7 +267,6 @@ void PurePursuit::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
 {
 
     this->map_path = *totalPathMsg;
-
     this->_gen_path = *totalPathMsg;
     
     this->goal_received = true;
@@ -280,18 +281,19 @@ void PurePursuit::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
     {
         double total_length = 0.0;
         //find waypoints distance
-        if(_waypointsDist <= 0.0)
+        if(this->_waypointsDist <= 0.0)
         {        
             double gap_x = totalPathMsg->poses[1].pose.position.x - totalPathMsg->poses[0].pose.position.x;
             double gap_y = totalPathMsg->poses[1].pose.position.y - totalPathMsg->poses[0].pose.position.y;
-            this->_waypointsDist = sqrt(gap_x*gap_x + gap_y*gap_y);             
+            this->_waypointsDist = sqrt(gap_x*gap_x + gap_y*gap_y);    
         }                       
 
         // Find the nearst point for robot position
         
         int min_val = 100; 
 
-        int N = totalPathMsg->poses.size(); // Number of waypoints        
+        int N = totalPathMsg->poses.size(); // Number of waypoints
+
         const double px = odom_check.pose.pose.position.x; //pose: odom frame
         const double py = odom_check.pose.pose.position.y;
         const double ptheta = odom_check.pose.pose.position.y;
@@ -332,10 +334,13 @@ void PurePursuit::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
             
             tf_listener.transformPose(this->_odom_frame, ros::Time(0) , 
                                             totalPathMsg->poses[i], this->_odom_frame, tempPose);                     
-            pure_pursuit_path.poses.push_back(tempPose);                          
+            pure_pursuit_path.poses.push_back(tempPose);   
+            
+           
             total_length = total_length + this->_waypointsDist;           
         }   
         
+
         // Connect the end of path to the front
         if(total_length < this->_pathLength )
         {
@@ -348,9 +353,11 @@ void PurePursuit::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
                                                 totalPathMsg->poses[i], this->_odom_frame, tempPose);                     
                 pure_pursuit_path.poses.push_back(tempPose);                          
                 total_length = total_length + this->_waypointsDist;    
-            }
-        }  
 
+            }
+            cout << "temp pose : " <<tempPose.pose << endl;
+        }  
+        
         if(pure_pursuit_path.poses.size() >= this->_pathLength )
         {
             this->_odom_path = pure_pursuit_path; // Path waypoints in odom frame
@@ -448,8 +455,8 @@ double PurePursuit::get_alpha(const geometry_msgs::Pose& carPose)
     geometry_msgs::Point odom_car2WayPtVec;
     foundForwardPt = false;
 
-    cout << " size :  " << _gen_path.poses.size() << endl; 
-
+    //cout << " size :  " << _odom_path.poses.size() << endl; 
+    /*
     if(!goal_reached){
 
         for(int i = save_count; i< _gen_path.poses.size(); i++)
@@ -475,6 +482,39 @@ double PurePursuit::get_alpha(const geometry_msgs::Pose& carPose)
                         forwardPt = odom_path_wayPt;
                         foundForwardPt = true;
                         cout << "i : " << i <<  endl;
+                        break;
+                    }
+                }
+            }
+            catch(tf::TransformException &ex)
+            {
+                ROS_ERROR("%s",ex.what());
+                ros::Duration(1.0).sleep();
+            }
+        }
+        
+    }
+    */
+    if(!goal_reached){
+
+        for(int i =0; i< _odom_path.poses.size(); i++)
+        {
+            geometry_msgs::PoseStamped map_path_pose = _odom_path.poses[i];
+            geometry_msgs::PoseStamped odom_path_pose;
+
+            try
+            {
+                tf_listener.transformPose("odom", ros::Time(0) , map_path_pose, "odom" ,odom_path_pose);
+                odom_path_wayPt = odom_path_pose.pose.position;
+                bool _isForwardWayPt = isForwardWayPt(odom_path_wayPt,carPose);
+
+                if(_isForwardWayPt)
+                {
+                    bool _isWayPtAwayFromLfwDist = isWayPtAwayFromLfwDist(odom_path_wayPt,carPose_pos);
+                    if(_isWayPtAwayFromLfwDist)
+                    {
+                        forwardPt = odom_path_wayPt;
+                        foundForwardPt = true;
                         break;
                     }
                 }
@@ -616,13 +656,13 @@ void PurePursuit::controlLoopCB(const ros::TimerEvent&)
 
     if(this->goal_received && !this->goal_reached && this->_path_computed)
     {
-       cout << _odom_path.poses[0] << endl;
+        cout << _odom_path.poses[0] << endl;
+
+        //cout << " frame :  " << _odom_frame << endl; 
 
         if(!start_timef)
         {
             tracking_stime = ros::Time::now();
-
-
             start_timef = true;
         }
 
@@ -640,10 +680,9 @@ void PurePursuit::controlLoopCB(const ros::TimerEvent&)
         }
 
 
-        nav_msgs::Odometry odom_w = odom_origin; 
-        nav_msgs::Path odom_path_w = _gen_path;   
-        cout << odom_w.pose.pose.position.y << endl; 
-
+        nav_msgs::Odometry odom_w = this->odom_origin; 
+        nav_msgs::Path odom_path_w = this->_odom_path;   
+      
         // Update system states: X=[x, y, theta, v]
         const double px = odom_w.pose.pose.position.x; //pose: odom frame
         const double py = odom_w.pose.pose.position.y;
@@ -657,28 +696,18 @@ void PurePursuit::controlLoopCB(const ros::TimerEvent&)
         const double sintheta = sin(theta);
 
         // Convert to the vehicle coordinate system
-        Eigen::VectorXd x_veh(200);
-        Eigen::VectorXd y_veh(200);
+        Eigen::VectorXd x_veh(N);
+        Eigen::VectorXd y_veh(N);
 
-        int cal_i = 0;
-        int num_i = 0;
-        for(int i = save_count; i < save_count + 200; i++) 
+        //
+        for(int i = 0; i < N; i++) 
         {
-            if(i >= 1000)
-            {
-                cal_i = i - 1000;
-            }
-            else
-            {
-                cal_i = i;
-            }
-            const double dx = odom_path_w.poses[cal_i].pose.position.x - px;
-            const double dy = odom_path_w.poses[cal_i].pose.position.y - py;
-            x_veh[num_i] = dx * costheta + dy * sintheta;
-            y_veh[num_i] = dy * costheta - dx * sintheta;
-            num_i++;
+            const double dx = odom_path_w.poses[i].pose.position.x - px;
+            const double dy = odom_path_w.poses[i].pose.position.y - py;
+            x_veh[i] = dx * costheta + dy * sintheta;
+            y_veh[i] = dy * costheta - dx * sintheta;
         }
-          
+
         // Fit waypoints
         auto coeffs = polyfit(x_veh, y_veh, 3); 
 
@@ -689,19 +718,32 @@ void PurePursuit::controlLoopCB(const ros::TimerEvent&)
         //cout << "etheta: " << etheta << endl;
         //cout << "v : " << cmd_vel.linear.x  << endl;
         //cout << "w : " << cmd_vel.angular.z  << endl;
-        
+
+        idx++;
         file << idx << "," << odom_w.pose.pose.position.x << "," << odom_w.pose.pose.position.y << "," << cte << "," <<  etheta << "," << cmd_vel.linear.x << "," << cmd_vel.angular.z << "\n";
         
-            /*Estimate Gas Input*/
+
+        /*Estimate Gas Input*/
+         /*
         if(!this->goal_reached)
         {
             if(this->smooth_accel) 
                 this->velocity = std::min(this->velocity + this->speed_incremental, this->Vcmd);
             else
                 this->velocity = this->Vcmd;
-            //if(debug_mode) ROS_INFO("Velocity = %.2f, w = %.2f", this->velocity, this->w);
+            if(debug_mode) ROS_INFO("Velocity = %.2f, w = %.2f", this->velocity, this->w);
         }
-        
+        */
+        if(!this->goal_reached)
+        {
+            if(this->smooth_accel) 
+                //this->velocity = std::min(this->velocity - 0.05*abs(w) + this->speed_incremental, this->Vcmd- 0.05*abs(w));
+                this->velocity = std::max(std::min(this->velocity - 0.03*abs(w) + this->speed_incremental, this->Vcmd - 0.03*abs(w)), this->speed_incremental);
+            else
+                //this->velocity = this->Vcmd - 0.05*abs(w);
+                this->velocity = std::max((this->Vcmd-0.03*abs(w)),this->speed_incremental);
+            if(debug_mode) ROS_INFO("Velocity = %.2f, w = %.2f", this->velocity, this->w);
+        }
     }
 
     else

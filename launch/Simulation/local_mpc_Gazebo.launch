@@ -5,27 +5,27 @@
     <arg name="controller"  default="pure_pursuit" doc="opt: dwa, mpc, pure_pursuit"/> 
 
     <!--  ************** GAZEBO Simulator ***************  -->
-    <!--  ************** circle ***************  -->
-    <!--arg name="x_pos" default="0.0"/>
+    <!--  ************** circle ***************  >
+    <arg name="x_pos" default="0.0"/>
     <arg name="y_pos" default="-5.0"/>
     <arg name="z_pos" default="0.0"/>
     <arg name="roll" default="0"/>
     <arg name="pitch" default="0"/>
     <arg name="yaw" default="0"/-->
-    <!--  ************** epitrochoid *************** >
+    <!--  ************** epitrochoid *************** -->
     <arg name="x_pos" default="3.0"/>
     <arg name="y_pos" default="0.0"/>
     <arg name="z_pos" default="0.0"/>
     <arg name="roll" default="0"/>
     <arg name="pitch" default="0"/>
-    <arg name="yaw" default="-1.57"/-->
-    <!--  ************** square ***************  -->
+    <arg name="yaw" default="-1.57"/>
+    <!--  ************** square ***************  >
     <arg name="x_pos" default="0.0"/>
     <arg name="y_pos" default="0.0"/>
     <arg name="z_pos" default="0.0"/>
     <arg name="roll" default="0"/>
     <arg name="pitch" default="0"/>
-    <arg name="yaw" default="1.57075"/>
+    <arg name="yaw" default="1.57075"/-->
     <!--  ************** Infinite ***************  >
     <arg name="x_pos" default="10.0"/>
     <arg name="y_pos" default="0.0"/>

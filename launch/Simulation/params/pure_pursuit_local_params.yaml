@@ -20,6 +20,7 @@ Lfw: 0.8 #default = 0.8 forward look ahead distance (m)
 goal_radius: 0.5 # unit: m
 controller_freq: 10 # unit: Hz
 steering_gain: 1.0
+pathLength: 4.0
 max_w: 100.0
 base_angle: 0.0 # neutral point of servo (rad) 
 cmd_vel_mode: true # whether or not publishing cmd_vel
