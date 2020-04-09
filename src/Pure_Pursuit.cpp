@@ -132,6 +132,7 @@ PurePursuit::PurePursuit()
     pn.param("controller_freq", controller_freq, 20);
     pn.param("steering_gain", steering_gain, 1.0);
     pn.param("max_w", max_w, 1.0);
+    pn.param("path_length", _pathLength, 4.0); // unit: m
     pn.param("goal_radius", goal_radius, 0.5); // goal radius (m)
     pn.param("base_angle", base_angle, 0.0); // neutral point of servo (rad) 
     pn.param("cmd_vel_mode", cmd_vel_mode, false); // whether or not publishing cmd_vel
@@ -593,12 +594,24 @@ void PurePursuit::controlLoopCB(const ros::TimerEvent&)
         file << idx << "," << odom_w.pose.pose.position.x << "," << odom_w.pose.pose.position.y << "," << cte << "," <<  etheta << "," << cmd_vel.linear.x << "," << cmd_vel.angular.z << "\n";
         
             /*Estimate Gas Input*/
+        /*
         if(!this->goal_reached)
         {
             if(this->smooth_accel) 
                 this->velocity = std::min(this->velocity + this->speed_incremental, this->Vcmd);
             else
                 this->velocity = this->Vcmd;
+            if(debug_mode) ROS_INFO("Velocity = %.2f, w = %.2f", this->velocity, this->w);
+        }
+        */
+        if(!this->goal_reached)
+        {
+            if(this->smooth_accel) 
+                //this->velocity = std::min(this->velocity - 0.05*abs(w) + this->speed_incremental, this->Vcmd- 0.05*abs(w));
+                this->velocity = std::max(std::min(this->velocity - 0.03*abs(w) + this->speed_incremental, this->Vcmd - 0.03*abs(w)), this->speed_incremental);
+            else
+                //this->velocity = this->Vcmd - 0.05*abs(w);
+                this->velocity = std::max((this->Vcmd-0.03*abs(w)),this->speed_incremental);
             if(debug_mode) ROS_INFO("Velocity = %.2f, w = %.2f", this->velocity, this->w);
         }
         
