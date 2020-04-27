@@ -49,7 +49,7 @@ ADD_EXECUTABLE( MPC_Node src/MPC.cpp src/MPC_Node.cpp )
 TARGET_LINK_LIBRARIES(MPC_Node ipopt ${catkin_LIBRARIES} )
 
 # Total navigation with MPC_Node
-ADD_EXECUTABLE( nav_mpc src/navMpc.cpp src/navMPCNode.cpp )
+ADD_EXECUTABLE( nav_mpc src/navMPC.cpp src/navMPCNode.cpp )
 TARGET_LINK_LIBRARIES(nav_mpc ipopt ${catkin_LIBRARIES} )
 
 # Local planner with MPC_Node for tracking
