@@ -49,12 +49,12 @@ ADD_EXECUTABLE( MPC_Node src/MPC.cpp src/MPC_Node.cpp )
 TARGET_LINK_LIBRARIES(MPC_Node ipopt ${catkin_LIBRARIES} )
 
 # Total navigation with MPC_Node
-ADD_EXECUTABLE( MPC_Node_last src/MPC_last.cpp src/MPC_lastNode.cpp )
-TARGET_LINK_LIBRARIES(MPC_Node_last ipopt ${catkin_LIBRARIES} )
+ADD_EXECUTABLE( nav_mpc src/navMpc.cpp src/navMPCNode.cpp )
+TARGET_LINK_LIBRARIES(nav_mpc ipopt ${catkin_LIBRARIES} )
 
 # Local planner with MPC_Node for tracking
-ADD_EXECUTABLE( MPC_local_plan src/MPC_local.cpp src/MPC_local_planNode.cpp )
-TARGET_LINK_LIBRARIES(MPC_local_plan ipopt ${catkin_LIBRARIES} )
+ADD_EXECUTABLE( tracking_reference_trajectory src/trackRefTraj.cpp src/trackRefTrajNode.cpp )
+TARGET_LINK_LIBRARIES(tracking_reference_trajectory ipopt ${catkin_LIBRARIES} )
 
 # Pure Pursuit Node
 #add_executable(Pure_Pursuit src/Pure_Pursuit.cpp)
