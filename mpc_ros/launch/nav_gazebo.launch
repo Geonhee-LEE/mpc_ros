@@ -73,7 +73,7 @@
     </node>
     
     <!--  ************** MPC Node **************  -->
-    <node name="MPC_Node_last" pkg="mpc_ros" type="MPC_Node_last" output="screen" if="$(eval controller == 'mpc')" >
+    <node name="nav_mpc" pkg="mpc_ros" type="nav_mpc" output="screen" if="$(eval controller == 'mpc')" >
         <rosparam file="$(find mpc_ros)/params/mpc_last_params.yaml" command="load" />
     </node>
 

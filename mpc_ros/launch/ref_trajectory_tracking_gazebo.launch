@@ -1,0 +1,68 @@
+<launch>
+    <!--  ************** Global Parameters ***************  -->
+    <param name="use_sim_time" value="true"/>
+    <arg name="controller"  default="mpc" doc="opt: dwa, mpc, pure_pursuit"/> 
+
+    <!--  ************** GAZEBO Simulator ***************  -->
+    <!--  ************** circle ***************  -->
+    <!--arg name="x_pos" default="0.0"/>
+    <arg name="y_pos" default="-5.0"/>
+    <arg name="z_pos" default="0.0"/>
+    <arg name="roll" default="0"/>
+    <arg name="pitch" default="0"/>
+    <arg name="yaw" default="0"/-->
+    <!--  ************** epitrochoid ***************>
+    <arg name="x_pos" default="3.0"/>
+    <arg name="y_pos" default="0.01"/>
+    <arg name="z_pos" default="0.0"/>
+    <arg name="roll" default="0"/>
+    <arg name="pitch" default="0"/>
+    <arg name="yaw" default="-1.57"/-->
+    <!--  ************** square *************** -->
+    <arg name="x_pos" default="0.0"/>
+    <arg name="y_pos" default="0.0"/>
+    <arg name="z_pos" default="0.0"/>
+    <arg name="roll" default="0"/>
+    <arg name="pitch" default="0"/>
+    <arg name="yaw" default="1.57075"/>
+    <!--  ************** Infinite ***************>
+    <arg name="x_pos" default="10.0"/>
+    <arg name="y_pos" default="0.0"/>
+    <arg name="z_pos" default="0.0"/>
+    <arg name="roll" default="0"/>
+    <arg name="pitch" default="0"/>
+    <arg name="yaw" default="1.57075"/-->
+
+    <!--  ************** Robot model ***************  -->
+    <param name="robot_description" command="$(find xacro)/xacro.py $(find servingbot_description)/urdf/servingbot.urdf.xacro" if="$(eval model == 'serving_bot')"/>
+
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" value="$(find gazebo_ros)/launch/empty_world.launch"/>
+        <arg name="paused" value="false"/>
+        <arg name="use_sim_time" value="true"/>
+        <arg name="gui" value="$(arg gui)"/>
+        <arg name="headless" value="false"/>
+        <arg name="debug" value="false"/>
+    </include>
+
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model servingbot -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -R $(arg roll) -P $(arg pitch) -Y $(arg yaw) -param robot_description" />
+     
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+        <param name="publish_frequency" type="double" value="50.0" />
+    </node>
+
+    <!--  ************** Reference trajectory generation **************  -->
+    <node name="mpc_trajectory_generation" pkg="mpc_ros" type="mpc_trajectory_generation.py"  if="$(eval controller == 'mpc')"/>
+    <node name="dwa_trajectory_generation" pkg="mpc_ros" type="dwa_trajectory_generation.py"  if="$(eval controller == 'dwa')"/>
+
+    <!--  ************** MPC Node **************  -->
+    <node name="MPC_tracking" pkg="mpc_ros" type="tracking_reference_trajectory" output="screen" if="$(eval controller == 'mpc')" >
+        <rosparam file="$(find mpc_ros)/params/mpc_local_square_params.yaml" command="load" />
+        <!--rosparam file="$(find mpc_ros)/params/mpc_local_params.yaml" command="load" /-->
+        <!--rosparam file="$(find mpc_ros)//params/mpc_local_epitrochoid_params.yaml" command="load" /-->
+    </node>
+
+    <!--  ************** Visualisation **************  -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mpc_ros)//params/rviz_navigation.rviz"/>
+
+</launch>
