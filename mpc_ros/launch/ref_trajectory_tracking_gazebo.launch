@@ -2,6 +2,8 @@
     <!--  ************** Global Parameters ***************  -->
     <param name="use_sim_time" value="true"/>
     <arg name="controller"  default="mpc" doc="opt: dwa, mpc, pure_pursuit"/> 
+    <arg name="model"  default="serving_bot" doc="opt: serving_bot"/> 
+    <arg name="gui" default="false"/>
 
     <!--  ************** GAZEBO Simulator ***************  -->
     <!--  ************** circle ***************  -->
@@ -63,6 +65,6 @@
     </node>
 
     <!--  ************** Visualisation **************  -->
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mpc_ros)//params/rviz_navigation.rviz"/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mpc_ros)/rviz/rviz_navigation.rviz"/>
 
 </launch>
