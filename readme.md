@@ -21,6 +21,9 @@ License: Apache 2.0
 1. Ubuntu 18.04
 2. Install ROS Melodic 
 3. Install ROS dependencies: 
+```
+sudo apt install ros-melodic-costmap-2d  ros-melodic-move-base ros-melodic-global-planner ros-melodic-amcl
+```
 4. Install Ipopt: Please refer the tutorial in "document/ipopt_install".  
 5. create your own catkin_ws and clone the repositories. 
 ```
@@ -28,39 +31,21 @@ git clone https://github.com/Geonhee-LEE/mpc_ros.git
 git clone https://github.com/NSCL/servingbot_ros
 ```
 
-## Operation
+## Launch
 
-### Total navigation in simulation: 
+### Run Navigation algorithm with MPC in simulation: 
 ```
-roslaunch mpc_ros mpc_Gazebo.launch 
+roslaunch mpc_ros nav_gazebo.launch
 ```
-In the GAZEBO simulation, you can check the local planner as non-linear model predictive control. 
-I made the new planner using pluglib.  
-  
+It can be selected with DWA, MPC, Pure persuit according to 'controller' argument.
 
-### NMPC(local planner):
-```
-roslaunch mpc_ros local_mpc_Gazebo.launch 
-```
 
+### Run tracking the reference line with MPC
 ```
-roslaunch zetabank_gazebo servingbot_sq_world.launch
-roslaunch mpc_ros servingbot_mpc.launch 
-```
-### Pure Pursuit(local planner):
-```
-roslaunch zetabank_gazebo servingbot_sq_world.launch
-roslaunch mpc_ros servingbot_mpc.launch controller:=pure_pursuit
+roslaunch mpc_ros ref_trajectory_tracking_gazebo.launch
 ```
 
 Tracking the trajectory such as infinity-shaped, epitrochoid, square using non-linear model predictive control.
-
-
-### DWA:
-```
-roslaunch mpc_ros dwa_Gazebo.launch 
-```
-Tracking the trajectory such as infinity-shaped, epitrochoid, square using dynamic window approach.
 
 
 ### Reference
@@ -68,13 +53,3 @@ Tracking the trajectory such as infinity-shaped, epitrochoid, square using dynam
 HyphaROS MPC MiniCar(https://hypharosworkshop.wordpress.com/)
 
 
-### ROS melodic
-
-#### Installation 
-
-1. Install ROS Libs
-```
-sudo apt install ros-melodic-costmap-2d  ros-melodic-move-base ros-melodic-global-planner
-```
-
-2. Install IpOpt & build
