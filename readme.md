@@ -4,36 +4,28 @@
 
 ## Abstract
 
-I changed the mobile robot model from bycycle to the unicycle which means differential drive wheeled mobile robot for implementing service mobile robot.
-
-Construct the simulation env and compare with DWA algorithm
+This repo is implemented with mobile robot model from bycycle to the unicycle which means differential drive wheeled mobile robot for promising tracking performance. FOr running NMPC, use the GAZEBO simulation environment and compare with DWA algorithm given defalut local planner in ROS. 
 
 
 ## About us
 Contact: gunhee6392@gmail.com  
-Date: 2019/02/16  
-License: Apache 2.0 (from HyphaROS MPC MiniCar) 
+Date: 2020/05/02  
+License: Apache 2.0
 
 ## Features
 * Nonlinear Unicycle Model Based MPC (through ipopt solver)  
-* AMCL localization (encoder-odometry based)  
-* GAZEBO Simulation (supports: MPC)  
+* AMCL localization, fake localization (encoder-odometry based)  
+* GAZEBO simulation, [servingbot](https://github.com/NSCL/servingbot_ros)
 
-### Install from source (16.04) 
-1. Install ROS Kinetic (Desktop-Full) (http://wiki.ros.org/kinetic/Installation/Ubuntu)  
-2. Install dependencies:  
+### Installation
+1. Ubuntu 18.04
+2. Install ROS Melodic 
+3. Install ROS dependencies: 
+4. Install Ipopt: Please refer the tutorial in "document/ipopt_install".  
+5. create your own catkin_ws and clone the repositories. 
 ```
-sudo apt-get install remmina synaptic gimp git ros-kinetic-navigation* ros-kinetic-gmapping ros-kinetic-hector-slam ros-kinetic-mrpt-icp-slam-2d ros-kinetic-slam-karto ros-kinetic-ackermann-msgs -y  
-```
-3. Install Ipopt: Please refer the tutorial in "document/ipopt_install".  
-4. create your own catkin_ws   
-(http://wiki.ros.org/ROS/Tutorials/InstallingandConfiguringROSEnvironment#Create_a_ROS_Workspace)  
-```
-cd catkin_ws/src  
-git clone https://github.com/Geonhee-LEE/mpc_ros.git (branch : servingbot)
-git clone https://github.com/CzJaewan/servingbot.git
-git clone https://github.com/Geonhee-LEE/zetabot_ros.git (branch : servingbot)
-catkin_make  
+git clone https://github.com/Geonhee-LEE/mpc_ros.git 
+git clone https://github.com/NSCL/servingbot_ros
 ```
 
 ## Operation
