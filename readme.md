@@ -4,13 +4,8 @@
 
 ## Abstract
 
-This repo is implemented with mobile robot model from bycycle to the unicycle which means differential drive wheeled mobile robot for promising tracking performance. FOr running NMPC, use the GAZEBO simulation environment and compare with DWA algorithm given defalut local planner in ROS. 
+This repository is implemented with mobile robot model from bycycle to the unicycle which means differential drive wheeled mobile robot for promising tracking performance. For running this NMPC algorithm, you can use the GAZEBO simulatior or customized mobile robot and compare with DWA algorithm given defalut local planner in ROS. 
 
-
-## About us
-Contact: gunhee6392@gmail.com  
-Date: 2020/05/02  
-License: Apache 2.0
 
 ## Features
 * Nonlinear Unicycle Model Based MPC (through ipopt solver)  
@@ -48,8 +43,14 @@ roslaunch mpc_ros ref_trajectory_tracking_gazebo.launch
 Tracking the trajectory such as infinity-shaped, epitrochoid, square using non-linear model predictive control.
 
 
+
+
 ### Reference
 
 HyphaROS MPC MiniCar(https://hypharosworkshop.wordpress.com/)
 
 
+## About us
+Contact: gunhee6392@gmail.com  
+Date: 2020/05/02  
+License: Apache 2.0
