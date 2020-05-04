@@ -43,14 +43,17 @@ roslaunch mpc_ros ref_trajectory_tracking_gazebo.launch
 Tracking the trajectory such as infinity-shaped, epitrochoid, square using non-linear model predictive control.
 
 
+### Youtube video
+[![Video Label](http://img.youtube.com/vi/5IqFGBmDGjU/0.jpg)](https://www.youtube.com/watch?v=5IqFGBmDGjU) mpc
+
+
+### About us
+Contact: gunhee6392@gmail.com  
+Date: 2020/05/02  
+License: Apache 2.0
 
 
 ### Reference
 
 HyphaROS MPC MiniCar(https://hypharosworkshop.wordpress.com/)
 
-
-## About us
-Contact: gunhee6392@gmail.com  
-Date: 2020/05/02  
-License: Apache 2.0
