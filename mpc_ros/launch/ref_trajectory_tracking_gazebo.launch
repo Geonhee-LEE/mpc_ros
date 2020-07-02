@@ -3,37 +3,30 @@
     <param name="use_sim_time" value="true"/>
     <arg name="controller"  default="mpc" doc="opt: dwa, mpc, pure_pursuit"/> 
     <arg name="model"  default="serving_bot" doc="opt: serving_bot"/> 
+    <arg name="trajectory_type"  default="epitrochoid" doc="opt: circle, epitrochoid, square, infinite"/> 
     <arg name="gui" default="false"/>
+    
 
     <!--  ************** GAZEBO Simulator ***************  -->
+    <arg name="z_pos" default="0.0"/>
+    <arg name="roll" default="0"/>
+    <arg name="pitch" default="0"/>
     <!--  ************** circle ***************  -->
-    <!--arg name="x_pos" default="0.0"/>
-    <arg name="y_pos" default="-5.0"/>
-    <arg name="z_pos" default="0.0"/>
-    <arg name="roll" default="0"/>
-    <arg name="pitch" default="0"/>
-    <arg name="yaw" default="0"/-->
-    <!--  ************** epitrochoid ***************>
-    <arg name="x_pos" default="3.0"/>
-    <arg name="y_pos" default="0.01"/>
-    <arg name="z_pos" default="0.0"/>
-    <arg name="roll" default="0"/>
-    <arg name="pitch" default="0"/>
-    <arg name="yaw" default="-1.57"/-->
+    <arg name="x_pos" default="0.0" if="$(eval trajectory_type == 'circle')" />
+    <arg name="y_pos" default="-5.0" if="$(eval trajectory_type == 'circle')" />
+    <arg name="yaw" default="0" if="$(eval trajectory_type == 'circle')" />
+    <!--  ************** epitrochoid ***************-->
+    <arg name="x_pos" default="3.0"  if="$(eval trajectory_type == 'epitrochoid')" />
+    <arg name="y_pos" default="0.01" if="$(eval trajectory_type == 'epitrochoid')"/>
+    <arg name="yaw" default="-1.57" if="$(eval trajectory_type == 'epitrochoid')"/>
     <!--  ************** square *************** -->
-    <arg name="x_pos" default="0.0"/>
-    <arg name="y_pos" default="0.0"/>
-    <arg name="z_pos" default="0.0"/>
-    <arg name="roll" default="0"/>
-    <arg name="pitch" default="0"/>
-    <arg name="yaw" default="1.57075"/>
-    <!--  ************** Infinite ***************>
-    <arg name="x_pos" default="10.0"/>
-    <arg name="y_pos" default="0.0"/>
-    <arg name="z_pos" default="0.0"/>
-    <arg name="roll" default="0"/>
-    <arg name="pitch" default="0"/>
-    <arg name="yaw" default="1.57075"/-->
+    <arg name="x_pos" default="0.0" if="$(eval trajectory_type == 'square')"/>
+    <arg name="y_pos" default="0.0" if="$(eval trajectory_type == 'square')"/>
+    <arg name="yaw" default="1.57075" if="$(eval trajectory_type == 'square')"/>
+    <!--  ************** infinite ***************-->
+    <arg name="x_pos" default="10.0" if="$(eval trajectory_type == 'infinite')"/>
+    <arg name="y_pos" default="0.0"  if="$(eval trajectory_type == 'infinite')"/>
+    <arg name="yaw" default="1.57075"  if="$(eval trajectory_type == 'infinite')"/>
 
     <!--  ************** Robot model ***************  -->
     <param name="robot_description" command="$(find xacro)/xacro.py $(find servingbot_description)/urdf/servingbot.urdf.xacro" if="$(eval model == 'serving_bot')"/>
@@ -54,7 +47,9 @@
     </node>
 
     <!--  ************** Reference trajectory generation **************  -->
-    <node name="mpc_trajectory_generation" pkg="mpc_ros" type="mpc_trajectory_generation.py"  if="$(eval controller == 'mpc')"/>
+    <node name="mpc_trajectory_generation" pkg="mpc_ros" type="mpc_trajectory_generation.py"  if="$(eval controller == 'mpc')">
+        <param name="trajectory_type" value="$(arg trajectory_type)" />
+    </node>
     <node name="dwa_trajectory_generation" pkg="mpc_ros" type="dwa_trajectory_generation.py"  if="$(eval controller == 'dwa')"/>
 
     <!--  ************** MPC Node **************  -->
