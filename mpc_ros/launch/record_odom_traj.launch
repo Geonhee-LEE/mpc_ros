@@ -1,0 +1,9 @@
+<launch>
+
+  <!-- The path_ekf_plotter node -->
+  <node name="odom_path_plotter" type="odom_path_plotter.py" pkg="mpc_ros">
+    <remap from="odom" to="odom"/>
+    <param name="max_list_append" type="double" value="10000.0" />
+  </node>
+
+</launch>
