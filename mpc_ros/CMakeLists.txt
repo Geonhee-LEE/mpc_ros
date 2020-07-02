@@ -57,8 +57,8 @@ ADD_EXECUTABLE( tracking_reference_trajectory src/trackRefTraj.cpp src/trackRefT
 TARGET_LINK_LIBRARIES(tracking_reference_trajectory ipopt ${catkin_LIBRARIES} )
 
 # Pure Pursuit Node
-#add_executable(Pure_Pursuit src/Pure_Pursuit.cpp)
-#target_link_libraries(Pure_Pursuit ${catkin_LIBRARIES})
+add_executable(Pure_Pursuit src/Pure_Pursuit.cpp)
+target_link_libraries(Pure_Pursuit ${catkin_LIBRARIES})
 
 # Own Global planner for tracking desired trajectory
  add_library(global_planner_lib src/global_planner/global_planner.cpp)
