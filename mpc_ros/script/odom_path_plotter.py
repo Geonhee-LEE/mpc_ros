@@ -71,11 +71,13 @@ if __name__ == '__main__':
     if not (max_append > 0):
         rospy.logwarn('The parameter max_list_append not is correct')
         sys.exit()
+
+    # Wheel odometry measurement        
     pub = rospy.Publisher('/odom_path', Path, queue_size=1)
     path = Path() 
     msg = Odometry()
 
-    #Subscription to the topic
+    # Wheel odometry subscription to the topic
     msg = rospy.Subscriber('/odom', Odometry, odomCallback) 
     rate = rospy.Rate(30) # 30hz
 

@@ -61,8 +61,12 @@ add_executable(Pure_Pursuit src/Pure_Pursuit.cpp)
 target_link_libraries(Pure_Pursuit ${catkin_LIBRARIES})
 
 # Own Global planner for tracking desired trajectory
- add_library(global_planner_lib src/global_planner/global_planner.cpp)
- TARGET_LINK_LIBRARIES(global_planner_lib ipopt ${catkin_LIBRARIES} )
+add_library(global_planner_lib src/global_planner/global_planner.cpp)
+TARGET_LINK_LIBRARIES(global_planner_lib ipopt ${catkin_LIBRARIES} )
+
+# MPC Local planner plugin
+add_library(mpc_ros src/MPCLocalPlannerNode.cpp src/MPCLocalPlanner.cpp)
+TARGET_LINK_LIBRARIES(mpc_ros ipopt ${catkin_LIBRARIES} )
 
 #############
 ## Example ##

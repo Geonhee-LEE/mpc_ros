@@ -14,8 +14,8 @@
  *
  */
 
-#ifndef MPC_H
-#define MPC_H
+#ifndef MPC_LOCAL_PLANNER_ROS_H
+#define MPC_LOCAL_PLANNER_ROS_H
 
 #include <vector>
 #include <map>
@@ -33,6 +33,7 @@ class MPC
         vector<double> Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs);
         vector<double> mpc_x;
         vector<double> mpc_y;
+        vector<double> mpc_theta;
 
         void LoadParams(const std::map<string, double> &params);
     
@@ -42,6 +43,7 @@ class MPC
         int _mpc_steps, _x_start, _y_start, _theta_start, _v_start, _cte_start, _etheta_start, _angvel_start, _a_start;
         std::map<string, double> _params;
 
+        unsigned int dis_cnt;
 };
 
 #endif /* MPC_H */

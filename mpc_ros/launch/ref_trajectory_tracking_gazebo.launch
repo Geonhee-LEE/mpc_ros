@@ -50,7 +50,9 @@
     <node name="mpc_trajectory_generation" pkg="mpc_ros" type="mpc_trajectory_generation.py"  if="$(eval controller == 'mpc')">
         <param name="trajectory_type" value="$(arg trajectory_type)" />
     </node>
-    <node name="dwa_trajectory_generation" pkg="mpc_ros" type="dwa_trajectory_generation.py"  if="$(eval controller == 'dwa')"/>
+    <node name="dwa_trajectory_generation" pkg="mpc_ros" type="dwa_trajectory_generation.py"  if="$(eval controller == 'dwa')">
+        <param name="trajectory_type" value="$(arg trajectory_type)" />
+    </node>
 
     <!--  ************** MPC Node **************  -->
     <node name="MPC_tracking" pkg="mpc_ros" type="tracking_reference_trajectory" output="screen" if="$(eval controller == 'mpc')" >
