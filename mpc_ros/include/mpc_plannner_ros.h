@@ -29,7 +29,7 @@
 #include <costmap_2d/costmap_2d_ros.h>
 
 #include "ros/ros.h"
-#include "MPCLocalPlanner.h"
+#include "mpc_plannner.h"
 #include <iostream>
 #include <math.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>

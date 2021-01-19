@@ -14,7 +14,7 @@
  *
  */
 
-#include "MPCLocalPlanner.h"
+#include "mpc_plannner.h"
 //#include <cppad/cppad.hpp>
 #include <cppad/ipopt/solve.hpp>
 #include <Eigen/Core>

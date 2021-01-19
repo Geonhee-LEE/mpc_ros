@@ -65,7 +65,7 @@ add_library(global_planner_lib src/global_planner/global_planner.cpp)
 TARGET_LINK_LIBRARIES(global_planner_lib ipopt ${catkin_LIBRARIES} )
 
 # MPC Local planner plugin
-add_library(mpc_ros src/MPCLocalPlannerNode.cpp src/MPCLocalPlanner.cpp)
+add_library(mpc_ros src/mpc_plannner_ros.cpp src/mpc_plannner.cpp)
 TARGET_LINK_LIBRARIES(mpc_ros ipopt ${catkin_LIBRARIES} )
 
 #############
