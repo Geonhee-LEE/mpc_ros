@@ -22,8 +22,13 @@
 #include <Eigen/Core>
 // abstract class from which our plugin inherits
 #include <nav_core/base_local_planner.h>
-// local planner specific classes which provide some macros
+#include <base_local_planner/trajectory.h>
+#include <base_local_planner/local_planner_util.h>
+#include <base_local_planner/latched_stop_rotate_controller.h>
+#include <base_local_planner/odometry_helper_ros.h>
 #include <base_local_planner/goal_functions.h>
+#include <base_local_planner/simple_trajectory_generator.h>
+// local planner specific classes which provide some macros
 #include <tf/tf.h>
 #include <tf/transform_listener.h>
 #include <costmap_2d/costmap_2d_ros.h>
@@ -78,11 +83,22 @@ namespace mpc_ros{
             bool setPlan(const std::vector<geometry_msgs::PoseStamped>& orig_global_plan);
             bool computeVelocityCommands(geometry_msgs::Twist& cmd_vel);
             bool isGoalReached();
+            bool isInitialized() {return initialized_;}
         private:
             //Pointer to external objects (do NOT delete object)
             costmap_2d::Costmap2DROS* costmap_ros_; ///<@brief pointer to costmap  
+            costmap_2d::Costmap2D* costmap_; ///< @brief The costmap the controller will use
+            std::string global_frame_; ///< @brief The frame in which the controller will run
+            std::string robot_base_frame_; ///< @brief Used as the base frame id of the robot
+            std::vector<geometry_msgs::Point> footprint_spec_;
+      
+            base_local_planner::LocalPlannerUtil planner_util_;
+            base_local_planner::LatchedStopRotateController latchedStopRotateController_;
+            base_local_planner::OdometryHelperRos odom_helper_;
+            geometry_msgs::PoseStamped current_pose_;
+
             // Flags
-            bool goal_reached_;
+            bool reached_goal_;
             bool initialized_;
 
 

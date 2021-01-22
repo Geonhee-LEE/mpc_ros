@@ -36,8 +36,15 @@ namespace mpc_ros{
 
 	void MPCPlannerROS::initialize(std::string name, tf2_ros::Buffer* tf, costmap_2d::Costmap2DROS* costmap_ros){
 
-		costmap_ros_ = costmap_ros;
 		tf_ = tf;
+		costmap_ros_ = costmap_ros;
+        //initialize the copy of the costmap the controller will use
+        costmap_ = costmap_ros_->getCostmap();
+        global_frame_ = costmap_ros_->getGlobalFrameID();
+        robot_base_frame_ = costmap_ros_->getBaseFrameID();
+        footprint_spec_ = costmap_ros_->getRobotFootprint();
+        
+        planner_util_.initialize(tf, costmap_, costmap_ros_->getGlobalFrameID());
         
         //Private parameters handler
         ros::NodeHandle pn("~");
@@ -142,18 +149,46 @@ namespace mpc_ros{
         _mpc_params["MAXTHR"]   = _max_throttle;
         _mpc_params["BOUND"]    = _bound_value;
         _mpc.LoadParams(_mpc_params);
+
+        initialized_ = true;
     }
 
 	bool MPCPlannerROS::setPlan(const std::vector<geometry_msgs::PoseStamped>& orig_global_plan){
+        if( ! isInitialized()) {
+            ROS_ERROR("This planner has not been initialized, please call initialize() before using this planner");
+            return false;
+        }
 
+        latchedStopRotateController_.resetLatching();
+        reached_goal_ = false;
+        planner_util_.setPlan(orig_global_plan);
+    
     }
 
 	bool MPCPlannerROS::computeVelocityCommands(geometry_msgs::Twist& cmd_vel){
-
+        if(!isInitialized()) {
+            ROS_ERROR("This planner has not been initialized, please call initialize() before using this planner");
+            return false;
+        }
     }
 
 	bool MPCPlannerROS::isGoalReached(){
-        
+        if( ! isInitialized()) {
+            ROS_ERROR("This planner has not been initialized, please call initialize() before using this planner");
+            return false;
+        }
+
+        if ( ! costmap_ros_->getRobotPose(current_pose_)) {
+            ROS_ERROR("Could not get robot pose");
+            return false;
+        }
+
+        if(latchedStopRotateController_.isGoalReached(&planner_util_, odom_helper_, current_pose_)) {
+            ROS_INFO("Goal reached");
+            return true;
+        } else {
+            return false;
+        }
     }
 
     // Public: return _thread_numbers
@@ -204,7 +239,7 @@ namespace mpc_ros{
     // CallBack: Update path waypoints (conversion to odom frame)
     void MPCPlannerROS::pathCB(const nav_msgs::Path::ConstPtr& pathMsg)
     {
-        if(_goal_received && !_goal_reached)
+        if(_goal_received && ! _goal_reached)
         {    
             nav_msgs::Path odom_path = nav_msgs::Path();
             try
@@ -319,9 +354,9 @@ namespace mpc_ros{
     // Timer: Control Loop (closed loop nonlinear MPC)
     void MPCPlannerROS::controlLoopCB(const ros::TimerEvent&)
     {          
-        if(_goal_received && !_goal_reached && _path_computed ) //received goal & goal not reached    
+        if(_goal_received && ! _goal_reached && _path_computed ) //received goal & goal not reached    
         {
-            if(!start_timef)
+            if( ! start_timef)
             {
                 tracking_stime == ros::Time::now();
                 start_timef = true;
