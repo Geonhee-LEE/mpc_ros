@@ -18,6 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
   #ackermann_msgs
   message_generation
   move_base
+  base_local_planner
   roscpp
   rospy
   std_msgs
