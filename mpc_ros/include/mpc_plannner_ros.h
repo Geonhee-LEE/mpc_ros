@@ -60,20 +60,18 @@ namespace mpc_ros{
 
     class MPCPlannerROS : public nav_core::BaseLocalPlanner
     {
-
         public:
             MPCPlannerROS();
             ~MPCPlannerROS();
             MPCPlannerROS(std::string name, 
                            tf2_ros::Buffer* tf,
                 costmap_2d::Costmap2DROS* costmap_ros);
-        
-            // Solve the model given an initial state and polynomial coefficients.
-            // Return the first actuatotions.
-            vector<double> Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs);
-            vector<double> mpc_x;
-            vector<double> mpc_y;
-            vector<double> mpc_theta;
+
+            // for visualisation, publishers of global and local plan
+            ros::Publisher g_plan_pub_, l_plan_pub_;
+            void publishLocalPlan(std::vector<geometry_msgs::PoseStamped>& path);
+            void publishGlobalPlan(std::vector<geometry_msgs::PoseStamped>& path);
+
 
             void LoadParams(const std::map<string, double> &params);
 
@@ -82,6 +80,8 @@ namespace mpc_ros{
                 costmap_2d::Costmap2DROS* costmap_ros);
             bool setPlan(const std::vector<geometry_msgs::PoseStamped>& orig_global_plan);
             bool computeVelocityCommands(geometry_msgs::Twist& cmd_vel);
+            bool mpcComputeVelocityCommands(geometry_msgs::PoseStamped global_pose, geometry_msgs::Twist& cmd_vel);
+            base_local_planner::Trajectory findBestPath(const geometry_msgs::PoseStamped& global_pose, const geometry_msgs::PoseStamped& global_vel, geometry_msgs::PoseStamped& drive_velocities);
             bool isGoalReached();
             bool isInitialized() {return initialized_;}
         private:
@@ -105,6 +105,14 @@ namespace mpc_ros{
         public:
             int get_thread_numbers();
         private:
+        
+            // Solve the model given an initial state and polynomial coefficients.
+            // Return the first actuatotions.
+            vector<double> Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs);
+            vector<double> mpc_x;
+            vector<double> mpc_y;
+            vector<double> mpc_theta;
+
             ros::NodeHandle _nh;
             ros::Subscriber _sub_odom, _sub_path, _sub_goal, _sub_amcl;
             ros::Publisher _pub_globalpath,_pub_odompath, _pub_twist, _pub_mpctraj;
