@@ -1,0 +1,92 @@
+<launch>
+
+    <!--  ************** Global Parameters ***************  -->
+    <param name="use_sim_time" value="true"/>
+    <arg name="controller"  default="mpc" doc="opt: dwa, mpc, pure_pursuit"/> 
+    <arg name="model"  default="serving_bot" doc="opt: serving_bot"/> 
+    <arg name="tf_prefix"  default=""/> 
+
+    <!--  ************** GAZEBO Simulator ***************  -->
+    <arg name="x_pos" default="0.0"/>
+    <arg name="y_pos" default="0.0"/>
+    <arg name="z_pos" default="0.0"/>
+    <arg name="roll" default="0"/>
+    <arg name="pitch" default="0"/>
+    <arg name="yaw" default="-1.507"/>
+    <arg name="gui" default="false"/>
+
+    <!--  ************** Robot model ***************  -->
+    <param name="robot_description" command="$(find xacro)/xacro.py $(find servingbot_description)/urdf/servingbot.urdf.xacro" if="$(eval model == 'serving_bot')"/>
+
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" value="$(find mpc_ros)/worlds/sq_world.world"/>
+        <arg name="paused" value="false"/>
+        <arg name="use_sim_time" value="true"/>
+        <arg name="gui" value="$(arg gui)"/>
+        <arg name="headless" value="false"/>
+        <arg name="debug" value="false"/>
+    </include>
+    
+
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model servingbot -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -R $(arg roll) -P $(arg pitch) -Y $(arg yaw) -param robot_description" />
+      
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+        <param name="publish_frequency" type="double" value="50.0" />
+    </node>
+
+
+    <!--  ************** Map **************  -->
+    <node name="map_server" pkg="map_server" type="map_server" args="$(find mpc_ros)/map/sq_world.yaml" output="screen">
+        <param name="frame_id" value="map"/>
+    </node>
+
+
+    <!--  ************** Localization **************  -->
+    
+    <node pkg="amcl" type="amcl" name="amcl" output="screen">
+        <rosparam file="$(find mpc_ros)/params/amcl_params.yaml" command="load" />
+        <param name="initial_pose_x"            value="$(arg x_pos)"/>
+        <param name="initial_pose_y"            value="$(arg y_pos)"/>
+        <param name="initial_pose_a"            value="$(arg yaw)"/>
+    </node>
+
+    <!--  ************** Navigation ***************  -->    
+    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+        <rosparam file="$(find mpc_ros)/params/costmap_common_params.yaml" command="load" ns="global_costmap" />
+        <rosparam file="$(find mpc_ros)/params/costmap_common_params.yaml" command="load" ns="local_costmap" />
+        <rosparam file="$(find mpc_ros)/params/local_costmap_params.yaml" command="load" />
+        <rosparam file="$(find mpc_ros)/params/global_costmap_params.yaml" command="load" />    
+        
+        <!-- Global Planner -->
+        <param name="base_global_planner" value="global_planner/GlobalPlanner" />
+        <param name="planner_frequency" value="1.0" />
+        <param name="planner_frequency" value="0.0" if="$(eval controller == 'pure_pursuit')"/>
+        <param name="planner_patience" value="5.0" />
+        <rosparam file="$(find mpc_ros)/params/global_planner_params.yaml" command="load" />
+        
+        <!-- Local Planner -->
+        <rosparam file="$(find mpc_ros)/params/mpc_last_params.yaml" command="load" />
+        <param name="base_local_planner" value="mpc_ros/MPCPlannerROS"  if="$(eval controller == 'mpc')"/>
+        <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS"  if="$(eval controller == 'dwa')"/>    
+        
+        <!-- external controller >
+        <remap from="/cmd_vel" to="/fake_cmd" unless="$(eval controller == 'dwa')"/-->
+    </node>
+    
+    <!--  ************** MPC Node **************  -->
+    <!--node name="nav_mpc" pkg="mpc_ros" type="nav_mpc" output="screen" if="$(eval controller == 'mpc')" >
+        <rosparam file="$(find mpc_ros)/params/mpc_last_params.yaml" command="load" />
+    </node-->
+
+    <!--  ************** Pure Pursuit **************  -->
+    <!--node name="Pure_Pursuit" pkg="mpc_ros" type="Pure_Pursuit" output="screen" if="$(eval controller == 'pure_pursuit')" >
+        <rosparam file="$(find mpc_ros)/params/pure_pursuit_params.yaml" command="load" />
+        <remap from="/pure_pursuit/odom" to="/odom" />
+        <remap from="/pure_pursuit/global_planner" to="/move_base/GlobalPlanner/plan" />
+        <remap from="/pure_pursuit/goal" to="/move_base_simple/goal" />
+        <remap from="/pure_pursuit/cmd_vel" to="/cmd_vel" />
+    </node-->
+
+    <!--  ************** Visualisation **************  -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mpc_ros)/params/total_rviz_navigation.rviz"/>
+</launch>
