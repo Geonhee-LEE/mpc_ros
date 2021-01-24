@@ -28,6 +28,11 @@
 #include <base_local_planner/odometry_helper_ros.h>
 #include <base_local_planner/goal_functions.h>
 #include <base_local_planner/simple_trajectory_generator.h>
+#include <base_local_planner/simple_scored_sampling_planner.h>
+#include <base_local_planner/oscillation_cost_function.h>
+#include <base_local_planner/map_grid_cost_function.h>
+#include <base_local_planner/obstacle_cost_function.h>
+#include <base_local_planner/twirling_cost_function.h>
 // local planner specific classes which provide some macros
 #include <tf/tf.h>
 #include <tf/transform_listener.h>
@@ -84,6 +89,22 @@ namespace mpc_ros{
             base_local_planner::Trajectory findBestPath(const geometry_msgs::PoseStamped& global_pose, const geometry_msgs::PoseStamped& global_vel, geometry_msgs::PoseStamped& drive_velocities);
             bool isGoalReached();
             bool isInitialized() {return initialized_;}
+            /**
+             * @brief  Update the cost functions before planning
+             * @param  global_pose The robot's current pose
+             * @param  new_plan The new global plan
+             * @param  footprint_spec The robot's footprint
+             *
+             * The obstacle cost function gets the footprint.
+             * The path and goal cost functions get the global_plan
+             * The alignment cost functions get a version of the global plan
+             *   that is modified based on the global_pose 
+             */
+            void updatePlanAndLocalCosts(const geometry_msgs::PoseStamped& global_pose,
+                const std::vector<geometry_msgs::PoseStamped>& new_plan,
+                const std::vector<geometry_msgs::Point>& footprint_spec);
+            // see constructor body for explanations
+
         private:
             //Pointer to external objects (do NOT delete object)
             costmap_2d::Costmap2DROS* costmap_ros_; ///<@brief pointer to costmap  
@@ -91,11 +112,17 @@ namespace mpc_ros{
             std::string global_frame_; ///< @brief The frame in which the controller will run
             std::string robot_base_frame_; ///< @brief Used as the base frame id of the robot
             std::vector<geometry_msgs::Point> footprint_spec_;
+            std::vector<geometry_msgs::PoseStamped> global_plan_;
+
       
             base_local_planner::LocalPlannerUtil planner_util_;
             base_local_planner::LatchedStopRotateController latchedStopRotateController_;
             base_local_planner::OdometryHelperRos odom_helper_;
             geometry_msgs::PoseStamped current_pose_;
+            
+            double forward_point_distance_;
+            base_local_planner::SimpleTrajectoryGenerator generator_;
+            base_local_planner::SimpleScoredSamplingPlanner scored_sampling_planner_;
 
             // Flags
             bool reached_goal_;

@@ -6,7 +6,6 @@ Panels:
       Expanded:
         - /Global Options1
         - /TF1/Frames1
-        - /Global Planner1/GlobalPath1
         - /Local Planner1
       Splitter Ratio: 0.43225806951522827
     Tree Height: 723
@@ -312,11 +311,11 @@ Visualization Manager:
           Buffer Length: 1
           Class: rviz/Path
           Color: 25; 255; 0
-          Enabled: true
+          Enabled: false
           Head Diameter: 0.30000001192092896
           Head Length: 0.20000000298023224
           Length: 0.30000001192092896
-          Line Style: Billboards
+          Line Style: Lines
           Line Width: 0.20000000298023224
           Name: GlobalPath
           Offset:
@@ -330,7 +329,7 @@ Visualization Manager:
           Shaft Length: 0.10000000149011612
           Topic: /move_base/GlobalPlanner/plan
           Unreliable: false
-          Value: true
+          Value: false
         - Alpha: 0.4000000059604645
           Class: rviz/Map
           Color Scheme: costmap
@@ -570,25 +569,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 38.458229064941406
+      Distance: 15.047698020935059
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 3.4851603507995605
-        Y: 2.4264400005340576
-        Z: -3.580935478210449
+        X: 1.0994231700897217
+        Y: -2.2927794456481934
+        Z: -4.697523593902588
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.339796781539917
+      Pitch: 1.2597968578338623
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.700417995452881
+      Yaw: 4.680418491363525
     Saved: ~
 Window Geometry:
   Displays:

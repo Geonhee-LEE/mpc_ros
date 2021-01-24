@@ -175,7 +175,18 @@ namespace mpc_ros{
         latchedStopRotateController_.resetLatching();
         reached_goal_ = false;
         planner_util_.setPlan(orig_global_plan);
-    
+        
+    }
+
+    void MPCPlannerROS::updatePlanAndLocalCosts(
+        const geometry_msgs::PoseStamped& global_pose,
+        const std::vector<geometry_msgs::PoseStamped>& new_plan,
+        const std::vector<geometry_msgs::Point>& footprint_spec) {
+        
+        global_plan_.resize(new_plan.size());
+        for (unsigned int i = 0; i < new_plan.size(); ++i) {
+            global_plan_[i] = new_plan[i];
+        }
     }
 
 	bool MPCPlannerROS::computeVelocityCommands(geometry_msgs::Twist& cmd_vel){
@@ -195,6 +206,7 @@ namespace mpc_ros{
             return false;
         }
         ROS_DEBUG_NAMED("mpc_planner", "Received a transformed plan with %zu points.", transformed_plan.size());
+        updatePlanAndLocalCosts(current_pose_, transformed_plan, costmap_ros_->getRobotFootprint());
 
         /*if (latchedStopRotateController_.isPositionReached(&planner_util_, current_pose_)) {
             //publish an empty plan because we've reached our goal position
@@ -293,7 +305,41 @@ namespace mpc_ros{
       geometry_msgs::PoseStamped& drive_velocities){
 
         base_local_planner::Trajectory result_traj_;
- 
+
+        Eigen::Vector3f pos(global_pose.pose.position.x, global_pose.pose.position.y, tf2::getYaw(global_pose.pose.orientation));
+        Eigen::Vector3f vel(global_vel.pose.position.x, global_vel.pose.position.y, tf2::getYaw(global_vel.pose.orientation));
+        geometry_msgs::PoseStamped goal_pose = global_plan_.back();
+        Eigen::Vector3f goal(goal_pose.pose.position.x, goal_pose.pose.position.y, tf2::getYaw(goal_pose.pose.orientation));
+        base_local_planner::LocalPlannerLimits limits = planner_util_.getCurrentLimits();
+        result_traj_.cost_ = -7;
+
+        // http://docs.ros.org/en/jade/api/base_local_planner/html/classbase__local__planner_1_1SimpleTrajectoryGenerator.html#a0810ac35a39d3d7ccc1c19a862e97fbf
+        // prepare cost functions and generators for this run
+        Eigen::Vector3f vsamples_;
+        int vx_samp, vy_samp, vth_samp;
+        if (vx_samp <= 0) {
+        ROS_WARN("You've specified that you don't want any samples in the x dimension. We'll at least assume that you want to sample one value... so we're going to set vx_samples to 1 instead");
+        vx_samp = 1;
+        }
+    
+        if (vy_samp <= 0) {
+        ROS_WARN("You've specified that you don't want any samples in the y dimension. We'll at least assume that you want to sample one value... so we're going to set vy_samples to 1 instead");
+        vy_samp = 1;
+        }
+    
+        if (vth_samp <= 0) {
+        ROS_WARN("You've specified that you don't want any samples in the th dimension. We'll at least assume that you want to sample one value... so we're going to set vth_samples to 1 instead");
+        vth_samp = 1;
+        }
+        vsamples_[0] = vx_samp;
+        vsamples_[1] = vy_samp;
+        vsamples_[2] = vth_samp;
+        generator_.initialise(pos,
+            vel,
+            goal,
+            &limits,
+            vsamples_);
+
         if(_goal_received && ! _goal_reached && _path_computed ) //received goal & goal not reached    
         {
             if( ! start_timef)
