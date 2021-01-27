@@ -123,6 +123,15 @@ namespace mpc_ros{
             double forward_point_distance_;
             base_local_planner::SimpleTrajectoryGenerator generator_;
             base_local_planner::SimpleScoredSamplingPlanner scored_sampling_planner_;
+            /*
+            base_local_planner::ObstacleCostFunction obstacle_costs_;
+            base_local_planner::OscillationCostFunction oscillation_costs_;
+            base_local_planner::MapGridCostFunction path_costs_;
+            base_local_planner::MapGridCostFunction goal_costs_;
+            base_local_planner::MapGridCostFunction goal_front_costs_;
+            base_local_planner::MapGridCostFunction alignment_costs_;
+            base_local_planner::TwirlingCostFunction twirling_costs_;
+            */
 
             // Flags
             bool reached_goal_;
