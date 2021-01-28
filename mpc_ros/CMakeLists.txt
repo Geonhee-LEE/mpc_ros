@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   nav_msgs
   #ackermann_msgs
+  pluginlib
   message_generation
   move_base
   base_local_planner
@@ -26,24 +27,29 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
 )
 
-
-catkin_package(
-   INCLUDE_DIRS include
-#  LIBRARIES mpc_ros
-#  CATKIN_DEPENDS costmap_2d dynamic_reconfigure geometry_msgs message_generation move_base roscpp rospy std_msgs tf visualization_msgs
-#  DEPENDS system_lib
-)
-
-###########
-## Build ##
-###########
-
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories( ${catkin_INCLUDE_DIRS} include )
 include_directories(/usr/include)
 link_directories(/usr/lib)
 
+
+# dynamic reconfigure
+generate_dynamic_reconfigure_options(
+    cfg/MPCPlanner.cfg
+)
+
+
+catkin_package(
+   INCLUDE_DIRS include
+   LIBRARIES mpc_ros
+   CATKIN_DEPENDS costmap_2d dynamic_reconfigure geometry_msgs move_base roscpp rospy std_msgs tf visualization_msgs pluginlib
+#  DEPENDS system_lib
+)
+
+###########
+## Build ##
+###########
 
 # General MPC_Node 
 ADD_EXECUTABLE( MPC_Node src/MPC.cpp src/MPC_Node.cpp )

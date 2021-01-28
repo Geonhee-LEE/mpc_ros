@@ -37,6 +37,8 @@
 #include <tf/tf.h>
 #include <tf/transform_listener.h>
 #include <costmap_2d/costmap_2d_ros.h>
+#include <dynamic_reconfigure/server.h>
+#include <mpc_ros/MPCPlannerConfig.h>
 
 #include "ros/ros.h"
 #include "mpc_plannner.h"
@@ -123,6 +125,8 @@ namespace mpc_ros{
             double forward_point_distance_;
             base_local_planner::SimpleTrajectoryGenerator generator_;
             base_local_planner::SimpleScoredSamplingPlanner scored_sampling_planner_;
+            dynamic_reconfigure::Server<MPCPlannerConfig> *dsrv_;
+            void reconfigureCB(MPCPlannerConfig &config, uint32_t level);
             /*
             base_local_planner::ObstacleCostFunction obstacle_costs_;
             base_local_planner::OscillationCostFunction oscillation_costs_;
@@ -150,7 +154,7 @@ namespace mpc_ros{
             vector<double> mpc_theta;
 
             ros::NodeHandle _nh;
-            ros::Subscriber _sub_odom, _sub_path, _sub_goal, _sub_amcl;
+            ros::Subscriber _sub_odom;
             ros::Publisher _pub_globalpath,_pub_odompath, _pub_twist, _pub_mpctraj;
             ros::Timer _timer1;
             tf2_ros::Buffer *tf_;  ///
@@ -191,10 +195,7 @@ namespace mpc_ros{
             Eigen::VectorXd polyfit(Eigen::VectorXd xvals, Eigen::VectorXd yvals, int order);
 
             void odomCB(const nav_msgs::Odometry::ConstPtr& odomMsg);
-            void pathCB(const nav_msgs::Path::ConstPtr& pathMsg);
             void desiredPathCB(const nav_msgs::Path::ConstPtr& pathMsg);
-            void goalCB(const geometry_msgs::PoseStamped::ConstPtr& goalMsg);
-            void amclCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& amclMsg);
             void controlLoopCB(const ros::TimerEvent&);
     };
 };

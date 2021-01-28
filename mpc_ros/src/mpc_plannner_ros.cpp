@@ -103,13 +103,8 @@ namespace mpc_ros{
 
         //Publishers and Subscribers
         /*
-        _sub_path   = _nh.subscribe( _globalPath_topic, 1, &MPCPlannerROS::pathCB, this);
-        _sub_goal   = _nh.subscribe( _goal_topic, 1, &MPCPlannerROS::goalCB, this);
-        _sub_amcl   = _nh.subscribe("/amcl_pose", 5, &MPCPlannerROS::amclCB, this);
         _pub_globalpath  = _nh.advertise<nav_msgs::Path>("/global_path", 1); // Global path generated from another source
         _pub_mpctraj   = _nh.advertise<nav_msgs::Path>("/mpc_trajectory", 1);// MPC trajectory output
-        //Timer
-        _timer1 = _nh.createTimer(ros::Duration((1.0)/_controller_freq), &MPCPlannerROS::controlLoopCB, this); // 10Hz //*****mpc
         */
         _sub_odom   = _nh.subscribe("/odom", 1, &MPCPlannerROS::odomCB, this);
         _pub_mpctraj   = _nh.advertise<nav_msgs::Path>("/mpc_trajectory", 1);// MPC trajectory output
@@ -120,7 +115,6 @@ namespace mpc_ros{
         
 
         //Init variables
-        _goal_received = false;
         _goal_reached  = false;
         _path_computed = false;
         _throttle = 0.0; 
@@ -130,13 +124,6 @@ namespace mpc_ros{
         //_ackermann_msg = ackermann_msgs::AckermannDriveStamped();
         _twist_msg = geometry_msgs::Twist();
         _mpc_traj = nav_msgs::Path();
-
-
-
-        idx = 0;
-        file.open("/home/nscl1016/catkin_ws/src/mpc_ros/mpc.csv");
-        file << "idx"<< "," << "cte" << "," <<  "etheta" << "," << "cmd_vel.linear.x" << "," << "cmd_vel.angular.z" << "\n";
-
 
         //Init parameters for MPC object
         _mpc_params["DT"] = _dt;
@@ -157,8 +144,37 @@ namespace mpc_ros{
         _mpc_params["BOUND"]    = _bound_value;
         _mpc.LoadParams(_mpc_params);
 
+        dsrv_ = new dynamic_reconfigure::Server<MPCPlannerConfig>(private_nh);
+        dynamic_reconfigure::Server<MPCPlannerConfig>::CallbackType cb = boost::bind(&MPCPlannerROS::reconfigureCB, this, _1, _2);
+        dsrv_->setCallback(cb);
+        
         initialized_ = true;
+        
     }
+
+  void MPCPlannerROS::reconfigureCB(MPCPlannerConfig &config, uint32_t level) {
+      // update generic local planner params
+      base_local_planner::LocalPlannerLimits limits;
+      limits.max_vel_trans = config.max_vel_trans;
+      limits.min_vel_trans = config.min_vel_trans;
+      limits.max_vel_x = config.max_vel_x;
+      limits.min_vel_x = config.min_vel_x;
+      limits.max_vel_y = config.max_vel_y;
+      limits.min_vel_y = config.min_vel_y;
+      limits.max_vel_theta = config.max_vel_theta;
+      limits.min_vel_theta = config.min_vel_theta;
+      limits.acc_lim_x = config.acc_lim_x;
+      limits.acc_lim_y = config.acc_lim_y;
+      limits.acc_lim_theta = config.acc_lim_theta;
+      limits.acc_lim_trans = config.acc_lim_trans;
+      limits.xy_goal_tolerance = config.xy_goal_tolerance;
+      limits.yaw_goal_tolerance = config.yaw_goal_tolerance;
+      limits.prune_plan = config.prune_plan;
+      limits.trans_stopped_vel = config.trans_stopped_vel;
+      limits.theta_stopped_vel = config.theta_stopped_vel;
+      planner_util_.reconfigureCB(limits, true);
+
+  }
 
     void MPCPlannerROS::publishLocalPlan(std::vector<geometry_msgs::PoseStamped>& path) {
         base_local_planner::publishPlan(path, l_plan_pub_);
@@ -251,6 +267,25 @@ namespace mpc_ros{
         }
         ROS_DEBUG_NAMED("mpc_planner", "Received a transformed plan with %zu points.", transformed_plan.size());
         updatePlanAndLocalCosts(current_pose_, transformed_plan, costmap_ros_->getRobotFootprint());
+        if (latchedStopRotateController_.isPositionReached(&planner_util_, current_pose_)){
+            //publish an empty plan because we've reached our goal position
+            std::vector<geometry_msgs::PoseStamped> local_plan;
+            std::vector<geometry_msgs::PoseStamped> transformed_plan;
+            publishGlobalPlan(transformed_plan);
+            publishLocalPlan(local_plan);
+            base_local_planner::LocalPlannerLimits limits = planner_util_.getCurrentLimits();
+            ROS_WARN_NAMED("mpc_ros", "Reached the goal!!!.");
+            return true;
+            /*return latchedStopRotateController_.computeVelocityCommandsStopRotate(
+                cmd_vel,
+                limits.getAccLimits(),
+                dp_->getSimPeriod(),
+                &planner_util_,
+                odom_helper_,
+                current_pose_,
+                boost::bind(&MPCPlannerROS::checkTrajectory, dp_, _1, _2, _3));*/
+
+        }
 
         /*if (latchedStopRotateController_.isPositionReached(&planner_util_, current_pose_)) {
             //publish an empty plan because we've reached our goal position
@@ -414,7 +449,7 @@ namespace mpc_ros{
                 sampling = sampling + 1;  
             }
            
-            if(odom_path.poses.size() >= 6 )
+            if(odom_path.poses.size() > 3)
             {
                 // publish odom path
                 odom_path.header.frame_id = "odom";
@@ -423,7 +458,7 @@ namespace mpc_ros{
             }
             else
             {
-                cout << "Failed to path generation" << endl;
+                ROS_DEBUG_NAMED("mpc_ros", "Failed to path generation since small down-sampling path.");
                 _waypointsDist = -1;
                 result_traj_.cost_ = -1;
                 return result_traj_;
@@ -686,59 +721,4 @@ namespace mpc_ros{
     {
         _odom = *odomMsg;
     }
-
-    // CallBack: Update path waypoints (conversion to odom frame)
-    void MPCPlannerROS::pathCB(const nav_msgs::Path::ConstPtr& pathMsg)
-    {
-    }
-
-    // CallBack: Update goal status
-    void MPCPlannerROS::goalCB(const geometry_msgs::PoseStamped::ConstPtr& goalMsg)
-    {
-        _goal_pos = goalMsg->pose.position;
-        _goal_received = true;
-        _goal_reached = false;
-        ROS_INFO("Goal Received :goalCB!");
-    }
-
-    // Callback: Check if the car is inside the goal area or not 
-    void MPCPlannerROS::amclCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& amclMsg)
-    {
-        if(_goal_received)
-        {
-            double car2goal_x = _goal_pos.x - amclMsg->pose.pose.position.x;
-            double car2goal_y = _goal_pos.y - amclMsg->pose.pose.position.y;
-            double dist2goal = sqrt(car2goal_x*car2goal_x + car2goal_y*car2goal_y);
-            if(dist2goal < _goalRadius)
-            {
-                if(start_timef)
-                {
-                    tracking_etime = ros::Time::now();
-                    tracking_time_sec = tracking_etime.sec - tracking_stime.sec; 
-                    tracking_time_nsec = tracking_etime.nsec - tracking_stime.nsec; 
-                    
-                                    
-                    file << "tracking time"<< "," << tracking_time_sec << "," <<  tracking_time_nsec << "\n";
-
-                    file.close();
-
-                    
-                    start_timef = false;
-                    
-                }
-                _goal_received = false;
-                _goal_reached = true;
-                _path_computed = false;
-                ROS_INFO("Goal Reached !");
-                cout << "tracking time: " << tracking_time_sec << "." << tracking_time_nsec << endl;
-
-            }
-        }
-    }
-
-    // Timer: Control Loop (closed loop nonlinear MPC)
-    void MPCPlannerROS::controlLoopCB(const ros::TimerEvent&)
-    {    
-    }
-
 }
