@@ -138,6 +138,7 @@ namespace mpc_ros{
             */
 
             // Flags
+            std::string odom_topic_;
             bool reached_goal_;
             bool initialized_;
 

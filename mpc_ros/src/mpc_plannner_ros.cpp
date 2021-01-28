@@ -49,6 +49,11 @@ namespace mpc_ros{
         
         planner_util_.initialize(tf, costmap_, costmap_ros_->getGlobalFrameID());
         
+        if( private_nh.getParam( "odom_topic", odom_topic_ ))
+        {
+            odom_helper_.setOdomTopic( odom_topic_ );
+        }
+        
         //Private parameters handler
         ros::NodeHandle pn("~");
 
@@ -172,7 +177,7 @@ namespace mpc_ros{
       limits.prune_plan = config.prune_plan;
       limits.trans_stopped_vel = config.trans_stopped_vel;
       limits.theta_stopped_vel = config.theta_stopped_vel;
-      planner_util_.reconfigureCB(limits, true);
+      planner_util_.reconfigureCB(limits, false);
 
   }
 
@@ -267,6 +272,7 @@ namespace mpc_ros{
         }
         ROS_DEBUG_NAMED("mpc_planner", "Received a transformed plan with %zu points.", transformed_plan.size());
         updatePlanAndLocalCosts(current_pose_, transformed_plan, costmap_ros_->getRobotFootprint());
+
         if (latchedStopRotateController_.isPositionReached(&planner_util_, current_pose_)){
             //publish an empty plan because we've reached our goal position
             std::vector<geometry_msgs::PoseStamped> local_plan;
