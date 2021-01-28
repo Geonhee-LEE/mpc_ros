@@ -58,14 +58,11 @@ namespace mpc_ros{
         ros::NodeHandle pn("~");
 
         //Parameters for control loop
-        pn.param("thread_numbers", _thread_numbers, 2); // number of threads for this ROS node
-        pn.param("pub_twist_cmd", _pub_twist_flag, true);
         pn.param("debug_info", _debug_info, true);
         pn.param("delay_mode", _delay_mode, true);
         pn.param("max_speed", _max_speed, 0.50); // unit: m/s
         pn.param("waypoints_dist", _waypointsDist, -1.0); // unit: m
         pn.param("path_length", _pathLength, 8.0); // unit: m
-        pn.param("goal_radius", _goalRadius, 0.5); // unit: m
         pn.param("controller_freq", _controller_freq, 10);
         //pn.param("vehicle_Lf", _Lf, 0.290); // distance between the front of the vehicle and its center of gravity
         _dt = double(1.0/_controller_freq); // time step duration dt in s 
@@ -87,15 +84,11 @@ namespace mpc_ros{
         pn.param("mpc_bound_value", _bound_value, 1.0e3); // Bound value for other variables
 
         //Parameter for topics & Frame name
-        pn.param<std::string>("global_path_topic", _globalPath_topic, "/move_base/TrajectoryPlannerROS/global_plan" );
-        pn.param<std::string>("goal_topic", _goal_topic, "/move_base_simple/goal" );
         pn.param<std::string>("map_frame", _map_frame, "map" ); //*****for mpc, "odom"
         pn.param<std::string>("odom_frame", _odom_frame, "odom");
-        pn.param<std::string>("car_frame", _car_frame, "base_footprint" );
 
         //Display the parameters
         cout << "\n===== Parameters =====" << endl;
-        cout << "pub_twist_cmd: "  << _pub_twist_flag << endl;
         cout << "debug_info: "  << _debug_info << endl;
         cout << "delay_mode: "  << _delay_mode << endl;
         //cout << "vehicle_Lf: "  << _Lf << endl;
@@ -115,13 +108,8 @@ namespace mpc_ros{
         _pub_mpctraj   = _nh.advertise<nav_msgs::Path>("/mpc_trajectory", 1);// MPC trajectory output
         _pub_odompath  = _nh.advertise<nav_msgs::Path>("/mpc_reference", 1); // reference path for MPC ///mpc_reference 
         
-        if(_pub_twist_flag)
-            _pub_twist = _nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1); //for stage (Ackermann msg non-supported)
-        
 
         //Init variables
-        _goal_reached  = false;
-        _path_computed = false;
         _throttle = 0.0; 
         _w = 0.0;
         _speed = 0.0;
@@ -177,6 +165,30 @@ namespace mpc_ros{
       limits.prune_plan = config.prune_plan;
       limits.trans_stopped_vel = config.trans_stopped_vel;
       limits.theta_stopped_vel = config.theta_stopped_vel;
+
+      //Parameter for MPC solver
+      _debug_info = config.debug_info;
+      _delay_mode = config.delay_mode;
+      _max_speed = config.max_speed;
+      _waypointsDist = config.waypoints_dist;
+      _pathLength = config.path_length;
+      _controller_freq = config.controller_freq;
+      _mpc_steps = config.steps;
+      _ref_cte = config.ref_cte;
+      _ref_vel = config.ref_vel;
+      _ref_etheta = config.ref_etheta;
+      _w_cte = config.w_cte;
+      _w_etheta = config.w_etheta;
+      _w_vel = config.w_vel;
+      _w_angvel = config.w_angvel;
+      _w_angvel_d = config.w_angvel_d;
+      _w_accel_d = config.w_accel_d;
+      _w_accel = config.w_accel;
+      _max_angvel = config.max_angvel;
+      _max_throttle = config.max_throttle;
+      _bound_value = config.bound_value;
+
+
       planner_util_.reconfigureCB(limits, false);
 
   }
@@ -196,7 +208,6 @@ namespace mpc_ros{
         }
 
         latchedStopRotateController_.resetLatching();
-        reached_goal_ = false;
         planner_util_.setPlan(orig_global_plan);
         
     }
@@ -681,12 +692,6 @@ namespace mpc_ros{
         } else {
             return false;
         }
-    }
-
-    // Public: return _thread_numbers
-    int MPCPlannerROS::get_thread_numbers()
-    {
-        return _thread_numbers;
     }
 
     // Evaluate a polynomial.

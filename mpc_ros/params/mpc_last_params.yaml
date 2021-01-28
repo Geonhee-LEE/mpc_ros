@@ -1,13 +1,11 @@
 
 
 # Parameters for control loop
-pub_twist_cmd: true
 debug_info: false
 delay_mode: true
 max_speed: 0.5 # unit: m/s #0.8
 waypoints_dist: -1.0 # unit: m, set < 0 means computed by node
 path_length: 5.0 # unit: m
-goal_radius: 0.5 # unit: m
 controller_freq: 10
 
 # Parameter for MPC solver

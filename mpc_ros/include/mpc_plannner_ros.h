@@ -79,7 +79,6 @@ namespace mpc_ros{
             void publishLocalPlan(std::vector<geometry_msgs::PoseStamped>& path);
             void publishGlobalPlan(std::vector<geometry_msgs::PoseStamped>& path);
 
-
             void LoadParams(const std::map<string, double> &params);
 
             // Local planner plugin functions
@@ -115,14 +114,12 @@ namespace mpc_ros{
             std::string robot_base_frame_; ///< @brief Used as the base frame id of the robot
             std::vector<geometry_msgs::Point> footprint_spec_;
             std::vector<geometry_msgs::PoseStamped> global_plan_;
-
       
             base_local_planner::LocalPlannerUtil planner_util_;
             base_local_planner::LatchedStopRotateController latchedStopRotateController_;
             base_local_planner::OdometryHelperRos odom_helper_;
             geometry_msgs::PoseStamped current_pose_;
             
-            double forward_point_distance_;
             base_local_planner::SimpleTrajectoryGenerator generator_;
             base_local_planner::SimpleScoredSamplingPlanner scored_sampling_planner_;
             dynamic_reconfigure::Server<MPCPlannerConfig> *dsrv_;
@@ -139,48 +136,28 @@ namespace mpc_ros{
 
             // Flags
             std::string odom_topic_;
-            bool reached_goal_;
             bool initialized_;
 
-
-        public:
-            int get_thread_numbers();
         private:
         
             // Solve the model given an initial state and polynomial coefficients.
             // Return the first actuatotions.
-            vector<double> Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs);
+            //vector<double> Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs);
             vector<double> mpc_x;
             vector<double> mpc_y;
             vector<double> mpc_theta;
 
             ros::NodeHandle _nh;
             ros::Subscriber _sub_odom;
-            ros::Publisher _pub_globalpath,_pub_odompath, _pub_twist, _pub_mpctraj;
-            ros::Timer _timer1;
+            ros::Publisher _pub_odompath, _pub_mpctraj;
             tf2_ros::Buffer *tf_;  ///
-            ros::Time tracking_stime;
-            ros::Time tracking_etime;
-            ros::Time tracking_time;
-            int tracking_time_sec;
-            int tracking_time_nsec;
             
-
-            std::ofstream file;
-            unsigned int idx = 0;
-
-            //time flag
-            bool start_timef = false;
-            bool end_timef = false;
-
-            geometry_msgs::Point _goal_pos;
             nav_msgs::Odometry _odom;
             nav_msgs::Path _odom_path, _mpc_traj; 
             //ackermann_msgs::AckermannDriveStamped _ackermann_msg;
             geometry_msgs::Twist _twist_msg;
 
-            string _globalPath_topic, _goal_topic;
-            string _map_frame, _odom_frame, _car_frame;
+            string _map_frame, _odom_frame;
 
             MPC _mpc;
             map<string, double> _mpc_params;
@@ -190,8 +167,8 @@ namespace mpc_ros{
             //double _Lf; 
             double _dt, _w, _throttle, _speed, _max_speed;
             double _pathLength, _goalRadius, _waypointsDist;
-            int _controller_freq, _downSampling, _thread_numbers;
-            bool _goal_received, _goal_reached, _path_computed, _pub_twist_flag, _debug_info, _delay_mode;
+            int _controller_freq, _downSampling;
+            bool _debug_info, _delay_mode;
             double polyeval(Eigen::VectorXd coeffs, double x);
             Eigen::VectorXd polyfit(Eigen::VectorXd xvals, Eigen::VectorXd yvals, int order);
 
