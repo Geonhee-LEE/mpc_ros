@@ -49,64 +49,40 @@ namespace mpc_ros{
         
         planner_util_.initialize(tf, costmap_, costmap_ros_->getGlobalFrameID());
         
-        if( private_nh.getParam( "odom_topic", odom_topic_ ))
+        if( private_nh.getParam( "odom_frame", _odom_frame ))
         {
-            odom_helper_.setOdomTopic( odom_topic_ );
+            odom_helper_.setOdomTopic( _odom_frame );
         }
-        
-        //Private parameters handler
-        ros::NodeHandle pn("~");
 
-        //Parameters for control loop
-        pn.param("debug_info", _debug_info, true);
-        pn.param("delay_mode", _delay_mode, true);
-        pn.param("max_speed", _max_speed, 0.50); // unit: m/s
-        pn.param("waypoints_dist", _waypointsDist, -1.0); // unit: m
-        pn.param("path_length", _pathLength, 8.0); // unit: m
-        pn.param("controller_freq", _controller_freq, 10);
-        //pn.param("vehicle_Lf", _Lf, 0.290); // distance between the front of the vehicle and its center of gravity
-        _dt = double(1.0/_controller_freq); // time step duration dt in s 
-
-        //Parameter for MPC solver
-        pn.param("mpc_steps", _mpc_steps, 20.0);
-        pn.param("mpc_ref_cte", _ref_cte, 0.0);
-        pn.param("mpc_ref_vel", _ref_vel, 1.0);
-        pn.param("mpc_ref_etheta", _ref_etheta, 0.0);
-        pn.param("mpc_w_cte", _w_cte, 5000.0);
-        pn.param("mpc_w_etheta", _w_etheta, 5000.0);
-        pn.param("mpc_w_vel", _w_vel, 1.0);
-        pn.param("mpc_w_angvel", _w_angvel, 100.0);
-        pn.param("mpc_w_angvel_d", _w_angvel_d, 10.0);
-        pn.param("mpc_w_accel", _w_accel, 50.0);
-        pn.param("mpc_w_accel_d", _w_accel_d, 10.0);
-        pn.param("mpc_max_angvel", _max_angvel, 3.0); // Maximal angvel radian (~30 deg)
-        pn.param("mpc_max_throttle", _max_throttle, 1.0); // Maximal throttle accel
-        pn.param("mpc_bound_value", _bound_value, 1.0e3); // Bound value for other variables
+        //Assuming this planner is being run within the navigation stack, we can
+        //just do an upward search for the frequency at which its being run. This
+        //also allows the frequency to be overwritten locally.
+        ros::NodeHandle nh_;
+        std::string controller_frequency_param_name;
+        double controller_frequency = 0;
+        if(!nh_.searchParam("move_base/controller_frequency", controller_frequency_param_name)) {
+            ROS_WARN("controller_frequency_param_name doesn't exits");
+        } else {
+            nh_.param(controller_frequency_param_name, controller_frequency, 20.0);
+            
+            if(controller_frequency > 0) {
+            } else {
+                ROS_WARN("A controller_frequency less than 0 has been set. Ignoring the parameter, assuming a rate of 20Hz");
+            }
+        }
+        //private_nh.param("vehicle_Lf", _Lf, 0.290); // distance between the front of the vehicle and its center of gravity
+        _dt = double(1.0/controller_frequency); // time step duration dt in s 
 
         //Parameter for topics & Frame name
-        pn.param<std::string>("map_frame", _map_frame, "map" ); //*****for mpc, "odom"
-        pn.param<std::string>("odom_frame", _odom_frame, "odom");
+        private_nh.param<std::string>("map_frame", _map_frame, "map" ); 
+        private_nh.param<std::string>("odom_frame", _odom_frame, "odom");
+        private_nh.param<std::string>("base_frame", _base_frame, "base_footprint");
 
-        //Display the parameters
-        cout << "\n===== Parameters =====" << endl;
-        cout << "debug_info: "  << _debug_info << endl;
-        cout << "delay_mode: "  << _delay_mode << endl;
-        //cout << "vehicle_Lf: "  << _Lf << endl;
-        cout << "frequency: "   << _dt << endl;
-        cout << "mpc_steps: "   << _mpc_steps << endl;
-        cout << "mpc_ref_vel: " << _ref_vel << endl;
-        cout << "mpc_w_cte: "   << _w_cte << endl;
-        cout << "mpc_w_etheta: "  << _w_etheta << endl;
-        cout << "mpc_max_angvel: "  << _max_angvel << endl;
 
         //Publishers and Subscribers
-        /*
-        _pub_globalpath  = _nh.advertise<nav_msgs::Path>("/global_path", 1); // Global path generated from another source
-        _pub_mpctraj   = _nh.advertise<nav_msgs::Path>("/mpc_trajectory", 1);// MPC trajectory output
-        */
-        _sub_odom   = _nh.subscribe("/odom", 1, &MPCPlannerROS::odomCB, this);
-        _pub_mpctraj   = _nh.advertise<nav_msgs::Path>("/mpc_trajectory", 1);// MPC trajectory output
-        _pub_odompath  = _nh.advertise<nav_msgs::Path>("/mpc_reference", 1); // reference path for MPC ///mpc_reference 
+        _sub_odom   = _nh.subscribe("odom", 1, &MPCPlannerROS::odomCB, this);
+        _pub_mpctraj   = _nh.advertise<nav_msgs::Path>("mpc_trajectory", 1);// MPC trajectory output
+        _pub_odompath  = _nh.advertise<nav_msgs::Path>("mpc_reference", 1); // reference path for MPC ///mpc_reference 
         
 
         //Init variables
@@ -118,31 +94,12 @@ namespace mpc_ros{
         _twist_msg = geometry_msgs::Twist();
         _mpc_traj = nav_msgs::Path();
 
-        //Init parameters for MPC object
-        _mpc_params["DT"] = _dt;
-        //_mpc_params["LF"] = _Lf;
-        _mpc_params["STEPS"]    = _mpc_steps;
-        _mpc_params["REF_CTE"]  = _ref_cte;
-        _mpc_params["REF_ETHETA"] = _ref_etheta;
-        _mpc_params["REF_V"]    = _ref_vel;
-        _mpc_params["W_CTE"]    = _w_cte;
-        _mpc_params["W_EPSI"]   = _w_etheta;
-        _mpc_params["W_V"]      = _w_vel;
-        _mpc_params["W_ANGVEL"]  = _w_angvel;
-        _mpc_params["W_A"]      = _w_accel;
-        _mpc_params["W_DANGVEL"] = _w_angvel_d;
-        _mpc_params["W_DA"]     = _w_accel_d;
-        _mpc_params["ANGVEL"]   = _max_angvel;
-        _mpc_params["MAXTHR"]   = _max_throttle;
-        _mpc_params["BOUND"]    = _bound_value;
-        _mpc.LoadParams(_mpc_params);
-
+        
         dsrv_ = new dynamic_reconfigure::Server<MPCPlannerConfig>(private_nh);
         dynamic_reconfigure::Server<MPCPlannerConfig>::CallbackType cb = boost::bind(&MPCPlannerROS::reconfigureCB, this, _1, _2);
         dsrv_->setCallback(cb);
-        
+
         initialized_ = true;
-        
     }
 
   void MPCPlannerROS::reconfigureCB(MPCPlannerConfig &config, uint32_t level) {
@@ -172,7 +129,6 @@ namespace mpc_ros{
       _max_speed = config.max_speed;
       _waypointsDist = config.waypoints_dist;
       _pathLength = config.path_length;
-      _controller_freq = config.controller_freq;
       _mpc_steps = config.steps;
       _ref_cte = config.ref_cte;
       _ref_vel = config.ref_vel;
@@ -206,6 +162,36 @@ namespace mpc_ros{
             ROS_ERROR("This planner has not been initialized, please call initialize() before using this planner");
             return false;
         }
+
+        //Init parameters for MPC object
+        _mpc_params["DT"] = _dt;
+        //_mpc_params["LF"] = _Lf;
+        _mpc_params["STEPS"]    = _mpc_steps;
+        _mpc_params["REF_CTE"]  = _ref_cte;
+        _mpc_params["REF_ETHETA"] = _ref_etheta;
+        _mpc_params["REF_V"]    = _ref_vel;
+        _mpc_params["W_CTE"]    = _w_cte;
+        _mpc_params["W_EPSI"]   = _w_etheta;
+        _mpc_params["W_V"]      = _w_vel;
+        _mpc_params["W_ANGVEL"]  = _w_angvel;
+        _mpc_params["W_A"]      = _w_accel;
+        _mpc_params["W_DANGVEL"] = _w_angvel_d;
+        _mpc_params["W_DA"]     = _w_accel_d;
+        _mpc_params["ANGVEL"]   = _max_angvel;
+        _mpc_params["MAXTHR"]   = _max_throttle;
+        _mpc_params["BOUND"]    = _bound_value;
+        _mpc.LoadParams(_mpc_params);
+        //Display the parameters
+        cout << "\n===== Parameters =====" << endl;
+        cout << "debug_info: "  << _debug_info << endl;
+        cout << "delay_mode: "  << _delay_mode << endl;
+        //cout << "vehicle_Lf: "  << _Lf << endl;
+        cout << "frequency: "   << _dt << endl;
+        cout << "mpc_steps: "   << _mpc_steps << endl;
+        cout << "mpc_ref_vel: " << _ref_vel << endl;
+        cout << "mpc_w_cte: "   << _w_cte << endl;
+        cout << "mpc_w_etheta: "  << _w_etheta << endl;
+        cout << "mpc_max_angvel: "  << _max_angvel << endl;
 
         latchedStopRotateController_.resetLatching();
         planner_util_.setPlan(orig_global_plan);
@@ -601,7 +587,7 @@ namespace mpc_ros{
         }
         // Display the MPC predicted trajectory
         _mpc_traj = nav_msgs::Path();
-        _mpc_traj.header.frame_id = "base_footprint"; // points in car coordinate        
+        _mpc_traj.header.frame_id = _base_frame; // points in car coordinate        
         _mpc_traj.header.stamp = ros::Time::now();
 
         geometry_msgs::PoseStamped tempPose;

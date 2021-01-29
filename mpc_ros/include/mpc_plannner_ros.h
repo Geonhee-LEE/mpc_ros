@@ -135,7 +135,6 @@ namespace mpc_ros{
             */
 
             // Flags
-            std::string odom_topic_;
             bool initialized_;
 
         private:
@@ -157,7 +156,7 @@ namespace mpc_ros{
             //ackermann_msgs::AckermannDriveStamped _ackermann_msg;
             geometry_msgs::Twist _twist_msg;
 
-            string _map_frame, _odom_frame;
+            string _map_frame, _odom_frame, _base_frame;
 
             MPC _mpc;
             map<string, double> _mpc_params;
@@ -167,7 +166,7 @@ namespace mpc_ros{
             //double _Lf; 
             double _dt, _w, _throttle, _speed, _max_speed;
             double _pathLength, _goalRadius, _waypointsDist;
-            int _controller_freq, _downSampling;
+            int _downSampling;
             bool _debug_info, _delay_mode;
             double polyeval(Eigen::VectorXd coeffs, double x);
             Eigen::VectorXd polyfit(Eigen::VectorXd xvals, Eigen::VectorXd yvals, int order);
