@@ -15,7 +15,7 @@
 # limitations under the License.
 */
 
-#include "navMpc.h"
+#include "MPC_last.h"
 //#include <cppad/cppad.hpp>
 #include <cppad/ipopt/solve.hpp>
 #include <Eigen/Core>
@@ -118,13 +118,16 @@ class FG_eval
                 cout << "_v_start" << vars[_v_start + i] <<endl;
                 cout << "_cte_start" << vars[_cte_start + i] <<endl;
                 cout << "_etheta_start" << vars[_etheta_start + i] <<endl;
-            }*/
-
+            }
+            */
+            
             for (int i = 0; i < _mpc_steps; i++) 
             {
               fg[0] += _w_cte * CppAD::pow(vars[_cte_start + i] - _ref_cte, 2); // cross deviation error
               fg[0] += _w_etheta * CppAD::pow(vars[_etheta_start + i] - _ref_etheta, 2); // heading error
               fg[0] += _w_vel * CppAD::pow(vars[_v_start + i] - _ref_vel, 2); // speed error
+              
+              //cout << "start_cte, etheta, velocity: " << vars[_cte_start + i] << ", " << vars[_etheta_start + i]  << ", " << vars[_v_start + i] << endl;
 
               cost_cte +=  _w_cte * CppAD::pow(vars[_cte_start + i] - _ref_cte, 2);
               cost_etheta +=  (_w_etheta * CppAD::pow(vars[_etheta_start + i] - _ref_etheta, 2)); 
@@ -132,21 +135,21 @@ class FG_eval
             }
             cout << "-----------------------------------------------" <<endl;
             cout << "cost_cte, etheta, velocity: " << cost_cte << ", " << cost_etheta  << ", " << cost_vel << endl;
-            
+
 
             // Minimize the use of actuators.
             for (int i = 0; i < _mpc_steps - 1; i++) {
               fg[0] += _w_angvel * CppAD::pow(vars[_angvel_start + i], 2);
               fg[0] += _w_accel * CppAD::pow(vars[_a_start + i], 2);
             }
-            cout << "cost of actuators: " << fg[0] << endl; 
+            //cout << "cost of actuators: " << fg[0] << endl; 
 
             // Minimize the value gap between sequential actuations.
             for (int i = 0; i < _mpc_steps - 2; i++) {
               fg[0] += _w_angvel_d * CppAD::pow(vars[_angvel_start + i + 1] - vars[_angvel_start + i], 2);
               fg[0] += _w_accel_d * CppAD::pow(vars[_a_start + i + 1] - vars[_a_start + i], 2);
             }
-            cout << "cost of gap: " << fg[0] << endl; 
+            //cout << "cost of gap: " << fg[0] << endl; 
             
 
             // fg[x] for constraints
@@ -381,9 +384,6 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
     // Cost
     auto cost = solution.obj_value;
     std::cout << "------------ Total Cost(solution): " << cost << "------------" << std::endl;
-    cout << "max_angvel:" << _max_angvel <<endl;
-    cout << "max_throttle:" << _max_throttle <<endl;
- 
     cout << "-----------------------------------------------" <<endl;
 
     this->mpc_x = {};

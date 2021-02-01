@@ -1,0 +1,74 @@
+<launch>
+
+    <!--  ************** Global Parameters ***************  -->
+    <param name="/use_sim_time" value="true"/>
+    <arg name="controller"  default="pure_pursuit" doc="opt: dwa, mpc, pure_pursuit"/> 
+
+    <!--  ************** GAZEBO Simulator ***************  -->
+    <!--  ************** circle ***************  >
+    <arg name="x_pos" default="0.0"/>
+    <arg name="y_pos" default="-5.0"/>
+    <arg name="z_pos" default="0.0"/>
+    <arg name="roll" default="0"/>
+    <arg name="pitch" default="0"/>
+    <arg name="yaw" default="0"/-->
+    <!--  ************** epitrochoid *************** >
+    <arg name="x_pos" default="3.0"/>
+    <arg name="y_pos" default="0.0"/>
+    <arg name="z_pos" default="0.0"/>
+    <arg name="roll" default="0"/>
+    <arg name="pitch" default="0"/>
+    <arg name="yaw" default="-1.57"/-->
+    <!--  ************** square ***************  -->
+    <arg name="x_pos" default="0.0"/>
+    <arg name="y_pos" default="0.0"/>
+    <arg name="z_pos" default="0.0"/>
+    <arg name="roll" default="0"/>
+    <arg name="pitch" default="0"/>
+    <arg name="yaw" default="1.57075"/>
+    <!--  ************** Infinite ***************  >
+    <arg name="x_pos" default="10.0"/>
+    <arg name="y_pos" default="0.0"/>
+    <arg name="z_pos" default="0.0"/>
+    <arg name="roll" default="0"/>
+    <arg name="pitch" default="0"/>
+    <arg name="yaw" default="1.57075"/-->
+
+    <param name="robot_description" command="$(find xacro)/xacro.py $(find servingbot_description)/urdf/servingbot.urdf.xacro" />
+
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" value="$(find mpc_ros)/worlds/empty.world"/>
+        <arg name="paused" value="false"/>
+        <arg name="use_sim_time" value="true"/>
+        <arg name="gui" value="false"/>
+        <arg name="headless" value="false"/>
+        <arg name="debug" value="false"/>
+    </include>
+    
+
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model servingbot -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -R $(arg roll) -P $(arg pitch) -Y $(arg yaw) -param robot_description" />
+    <include file="$(find servingbot_bringup)/launch/servingbot_remote.launch" />
+
+    
+    <!--  ************** MPC Node **************  -->
+    <node name="MPC_local_plan" pkg="mpc_ros" type="MPC_local_plan" output="screen" if="$(eval controller == 'mpc')" >
+        <rosparam file="$(find mpc_ros)/params/mpc_local_square_params.yaml" command="load" />
+        <!--rosparam file="$(find mpc_ros)/params/mpc_local_params.yaml" command="load" /-->
+        <!--rosparam file="$(find mpc_ros)/params/mpc_local_epitrochoid_params.yaml" command="load" /-->
+    </node>
+
+    <!--  ************** Pure pursuit Node **************  -->
+    <node name="Pure_Pursuit_localplan" pkg="mpc_ros" type="Pure_Pursuit_localplan" output="screen" if="$(eval controller == 'pure_pursuit')" >
+        <rosparam file="$(find mpc_ros)/params/pure_pursuit_local_params.yaml" command="load" />
+        <remap from="/pure_pursuit/odom" to="/odom" />
+        <remap from="/pure_pursuit/global_planner" to="/move_base/GlobalPlanner/plan" />
+        <remap from="/pure_pursuit/goal" to="/move_base_simple/goal" />
+        <remap from="/pure_pursuit/cmd_vel" to="/cmd_vel" />
+
+    </node>
+
+
+    <!--  ************** Visualisation **************  -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mpc_ros)/rviz/rviz_navigation.rviz"/>
+
+</launch>

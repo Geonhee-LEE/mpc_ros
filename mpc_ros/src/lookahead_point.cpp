@@ -66,7 +66,7 @@ class PurePursuit
 
         ros::NodeHandle n_;
         ros::Subscriber odom_sub, path_sub, goal_sub, amcl_sub;
-        ros::Publisher ackermann_pub, cmdvel_pub, marker_pub;
+        ros::Publisher ackermann_pub, cmdvel_pub, marker_pub, lookahead_pub;
         ros::Timer timer1, timer2;
         tf::TransformListener tf_listener;
 
@@ -107,6 +107,7 @@ class PurePursuit
         double steering_gain, max_w, base_angle, goal_radius, speed_incremental;
         int controller_freq;
         bool foundForwardPt, goal_received, goal_reached, cmd_vel_mode, debug_mode, smooth_accel;
+
 
         void odomCB(const nav_msgs::Odometry::ConstPtr& odomMsg);
         void pathCB(const nav_msgs::Path::ConstPtr& pathMsg);
@@ -156,6 +157,7 @@ PurePursuit::PurePursuit()
     ackermann_pub = n_.advertise<ackermann_msgs::AckermannDriveStamped>("/pure_pursuit/ackermann_cmd", 1);
     if(cmd_vel_mode) cmdvel_pub = n_.advertise<geometry_msgs::Twist>("/cmd_vel", 1);    
 
+    lookahead_pub = n_.advertise<geometry_msgs::Pose>("/lookahead_pt", 1);
     //Timer
     timer1 = n_.createTimer(ros::Duration((1.0)/controller_freq), &PurePursuit::controlLoopCB, this); // Duration(0.05) -> 20Hz
 
@@ -395,6 +397,8 @@ double PurePursuit::get_alpha(const geometry_msgs::Pose& carPose)
                     if(_isWayPtAwayFromLfwDist)
                     {
                         forwardPt = odom_path_wayPt;
+
+                        //lookahead_pub.publish(odom_path_wayPt);   
                         foundForwardPt = true;
                         break;
                     }
@@ -412,6 +416,7 @@ double PurePursuit::get_alpha(const geometry_msgs::Pose& carPose)
     {
         forwardPt = odom_goal_pos;
         foundForwardPt = false;
+        //lookahead_pub.publish(odom_goal_pos);
         //ROS_INFO("goal REACHED!");
     }
 
@@ -630,7 +635,7 @@ void PurePursuit::controlLoopCB(const ros::TimerEvent&)
         }
 
         this->cmd_vel.angular.z = this->w;
-	this->cmdvel_pub.publish(this->cmd_vel);
+	//this->cmdvel_pub.publish(this->cmd_vel);
     }   
 }
 

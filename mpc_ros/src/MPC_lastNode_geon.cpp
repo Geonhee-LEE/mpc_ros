@@ -18,36 +18,23 @@
 #include <iostream>
 #include <map>
 #include <math.h>
-
 #include "ros/ros.h"
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Twist.h>
 #include <tf/transform_listener.h>
-#include <std_msgs/Float32.h>
-
-// #include <tf/transform_datatypes.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <nav_msgs/Path.h>
 #include <nav_msgs/Odometry.h>
-//#include <ackermann_msgs/AckermannDriveStamped.h>
+#include <ackermann_msgs/AckermannDriveStamped.h>
 #include <visualization_msgs/Marker.h>
 
-#include "trackRefTraj.h"
+#include "MPC_last.h"
 #include <Eigen/Core>
 #include <Eigen/QR>
 
-
-// inlcude iostream and string libraries
-#include <iostream>
-#include <fstream>
-#include <string>
-
-
 using namespace std;
 using namespace Eigen;
-
-
-
 
 /********************/
 /* CLASS DEFINITION */
@@ -56,20 +43,19 @@ class MPCNode
 {
     public:
         MPCNode();
-        ~MPCNode();
         int get_thread_numbers();
         
     private:
         ros::NodeHandle _nh;
-        ros::Subscriber _sub_odom, _sub_gen_path, _sub_path, _sub_goal, _sub_amcl;
-        ros::Publisher _pub_totalcost, _pub_ctecost, _pub_ethetacost,_pub_odompath, _pub_twist, _pub_ackermann, _pub_mpctraj;
+        ros::Subscriber _sub_odom, _sub_path, _sub_goal, _sub_amcl;
+        ros::Publisher _pub_globalpath,_pub_odompath, _pub_twist, _pub_mpctraj;
         ros::Timer _timer1;
         tf::TransformListener _tf_listener;
 
         geometry_msgs::Point _goal_pos;
         nav_msgs::Odometry _odom;
         nav_msgs::Path _odom_path, _mpc_traj; 
-	//ackermann_msgs::AckermannDriveStamped _ackermann_msg;
+        ackermann_msgs::AckermannDriveStamped _ackermann_msg;
         geometry_msgs::Twist _twist_msg;
 
         string _globalPath_topic, _goal_topic;
@@ -85,7 +71,6 @@ class MPCNode
         double _pathLength, _goalRadius, _waypointsDist;
         int _controller_freq, _downSampling, _thread_numbers;
         bool _goal_received, _goal_reached, _path_computed, _pub_twist_flag, _debug_info, _delay_mode;
-
         double polyeval(Eigen::VectorXd coeffs, double x);
         Eigen::VectorXd polyfit(Eigen::VectorXd xvals, Eigen::VectorXd yvals, int order);
 
@@ -95,15 +80,6 @@ class MPCNode
         void goalCB(const geometry_msgs::PoseStamped::ConstPtr& goalMsg);
         void amclCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& amclMsg);
         void controlLoopCB(const ros::TimerEvent&);
-
-        //For making global planner
-        nav_msgs::Path _gen_path;
-        unsigned int min_idx;
-        
-        double _mpc_etheta;
-        double _mpc_cte;
-        fstream file;
-        unsigned int idx;
 }; // end of class
 
 
@@ -119,7 +95,7 @@ MPCNode::MPCNode()
     pn.param("delay_mode", _delay_mode, true);
     pn.param("max_speed", _max_speed, 0.50); // unit: m/s
     pn.param("waypoints_dist", _waypointsDist, -1.0); // unit: m
-    pn.param("path_length", _pathLength, 2.0); // unit: m
+    pn.param("path_length", _pathLength, 8.0); // unit: m
     pn.param("goal_radius", _goalRadius, 0.5); // unit: m
     pn.param("controller_freq", _controller_freq, 10);
     //pn.param("vehicle_Lf", _Lf, 0.290); // distance between the front of the vehicle and its center of gravity
@@ -144,7 +120,7 @@ MPCNode::MPCNode()
     //Parameter for topics & Frame name
     pn.param<std::string>("global_path_topic", _globalPath_topic, "/move_base/TrajectoryPlannerROS/global_plan" );
     pn.param<std::string>("goal_topic", _goal_topic, "/move_base_simple/goal" );
-    pn.param<std::string>("map_frame", _map_frame, "odom" ); //*****for mpc, "odom"
+    pn.param<std::string>("map_frame", _map_frame, "map" ); //*****for mpc, "odom"
     pn.param<std::string>("odom_frame", _odom_frame, "odom");
     pn.param<std::string>("car_frame", _car_frame, "base_footprint" );
 
@@ -164,19 +140,13 @@ MPCNode::MPCNode()
     //Publishers and Subscribers
     _sub_odom   = _nh.subscribe("/odom", 1, &MPCNode::odomCB, this);
     _sub_path   = _nh.subscribe( _globalPath_topic, 1, &MPCNode::pathCB, this);
-    _sub_gen_path   = _nh.subscribe( "desired_path", 1, &MPCNode::desiredPathCB, this);
     _sub_goal   = _nh.subscribe( _goal_topic, 1, &MPCNode::goalCB, this);
     _sub_amcl   = _nh.subscribe("/amcl_pose", 5, &MPCNode::amclCB, this);
-    
+    _pub_globalpath  = _nh.advertise<nav_msgs::Path>("/global_path", 1); // Global path generated from another source
     _pub_odompath  = _nh.advertise<nav_msgs::Path>("/mpc_reference", 1); // reference path for MPC ///mpc_reference 
     _pub_mpctraj   = _nh.advertise<nav_msgs::Path>("/mpc_trajectory", 1);// MPC trajectory output
-    //_pub_ackermann = _nh.advertise<ackermann_msgs::AckermannDriveStamped>("/ackermann_cmd", 1);
     if(_pub_twist_flag)
         _pub_twist = _nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1); //for stage (Ackermann msg non-supported)
-    
-    _pub_totalcost  = _nh.advertise<std_msgs::Float32>("/total_cost", 1); // Global path generated from another source
-    _pub_ctecost  = _nh.advertise<std_msgs::Float32>("/cross_track_error", 1); // Global path generated from another source
-    _pub_ethetacost  = _nh.advertise<std_msgs::Float32>("/theta_error", 1); // Global path generated from another source
     
     //Timer
     _timer1 = _nh.createTimer(ros::Duration((1.0)/_controller_freq), &MPCNode::controlLoopCB, this); // 10Hz //*****mpc
@@ -189,7 +159,7 @@ MPCNode::MPCNode()
     _w = 0.0;
     _speed = 0.0;
 
-    //_ackermann_msg = ackermann_msgs::AckermannDriveStamped();
+    _ackermann_msg = ackermann_msgs::AckermannDriveStamped();
     _twist_msg = geometry_msgs::Twist();
     _mpc_traj = nav_msgs::Path();
 
@@ -211,26 +181,13 @@ MPCNode::MPCNode()
     _mpc_params["MAXTHR"]   = _max_throttle;
     _mpc_params["BOUND"]    = _bound_value;
     _mpc.LoadParams(_mpc_params);
-
-    min_idx = 0;
-    idx = 0;
-    _mpc_etheta = 0;
-    _mpc_cte = 0;
-    file.open("/home/geonhee/catkin_ws/src/mpc_ros/mpc.csv");
 }
-
-MPCNode::~MPCNode()
-{
-    file.close();
-    
-};
 
 // Public: return _thread_numbers
 int MPCNode::get_thread_numbers()
 {
     return _thread_numbers;
 }
-
 
 // Evaluate a polynomial.
 double MPCNode::polyeval(Eigen::VectorXd coeffs, double x) 
@@ -242,7 +199,6 @@ double MPCNode::polyeval(Eigen::VectorXd coeffs, double x)
     }
     return result;
 }
-
 
 // Fit a polynomial.
 // Adapted from
@@ -261,7 +217,6 @@ Eigen::VectorXd MPCNode::polyfit(Eigen::VectorXd xvals, Eigen::VectorXd yvals, i
         for (int i = 0; i < order; i++) 
             A(j, i + 1) = A(j, i) * xvals(j);
     }
-
     auto Q = A.householderQr();
     auto result = Q.solve(yvals);
     return result;
@@ -271,121 +226,70 @@ Eigen::VectorXd MPCNode::polyfit(Eigen::VectorXd xvals, Eigen::VectorXd yvals, i
 void MPCNode::odomCB(const nav_msgs::Odometry::ConstPtr& odomMsg)
 {
     _odom = *odomMsg;
-    
-}
-
-// CallBack: Update generated path (conversion to odom frame)
-void MPCNode::desiredPathCB(const nav_msgs::Path::ConstPtr& totalPathMsg)
-{
-    
-    _gen_path = *totalPathMsg;
-    
-    _goal_received = true;
-    _goal_reached = false;
-    nav_msgs::Path mpc_path = nav_msgs::Path();   // For generating mpc reference path  
-    geometry_msgs::PoseStamped tempPose;
-    nav_msgs::Odometry odom = _odom; 
-
-    try
-    {
-        double total_length = 0.0;
-        //find waypoints distance
-        if(_waypointsDist <= 0.0)
-        {        
-            double gap_x = totalPathMsg->poses[1].pose.position.x - totalPathMsg->poses[0].pose.position.x;
-            double gap_y = totalPathMsg->poses[1].pose.position.y - totalPathMsg->poses[0].pose.position.y;
-            _waypointsDist = sqrt(gap_x*gap_x + gap_y*gap_y);             
-        }                       
-
-        // Find the nearst point for robot position
-        
-        int min_val = 100; 
-
-        int N = totalPathMsg->poses.size(); // Number of waypoints        
-        const double px = odom.pose.pose.position.x; //pose: odom frame
-        const double py = odom.pose.pose.position.y;
-        const double ptheta = odom.pose.pose.position.y;
-        
-        double dx, dy; // difference distance
-        double pre_yaw = 0;
-        double roll, pitch, yaw = 0;
-
-        for(int i = min_idx; i < N; i++) 
-        {
-            dx = totalPathMsg->poses[i].pose.position.x - px;
-            dy = totalPathMsg->poses[i].pose.position.y - py;
-                    
-            tf::Quaternion q(
-                totalPathMsg->poses[i].pose.orientation.x,
-                totalPathMsg->poses[i].pose.orientation.y,
-                totalPathMsg->poses[i].pose.orientation.z,
-                totalPathMsg->poses[i].pose.orientation.w);
-            tf::Matrix3x3 m(q);
-            m.getRPY(roll, pitch, yaw);
-
-            if(abs(pre_yaw - yaw) > 5)
-            {
-                cout << "abs(pre_yaw - yaw)" << abs(pre_yaw - yaw) << endl;
-                pre_yaw = yaw;
-            }
-       
-            if(min_val > sqrt(dx*dx + dy*dy) && abs((int)(i - min_idx)) < 50)
-            {
-                min_val = sqrt(dx*dx + dy*dy);
-                min_idx = i;
-            }
-        }
-        for(int i = min_idx; i < N ; i++)
-        {
-            if(total_length > _pathLength)
-                break;
-            
-            _tf_listener.transformPose(_odom_frame, ros::Time(0) , 
-                                            totalPathMsg->poses[i], _odom_frame, tempPose);                     
-            mpc_path.poses.push_back(tempPose);                          
-            total_length = total_length + _waypointsDist;           
-        }   
-        
-        // Connect the end of path to the front
-        if(total_length < _pathLength )
-        {
-            for(int i = 0; i < N ; i++)
-            {
-                if(total_length > _pathLength)                
-                    break;
-                _tf_listener.transformPose(_odom_frame, ros::Time(0) , 
-                                                totalPathMsg->poses[i], _odom_frame, tempPose);                     
-                mpc_path.poses.push_back(tempPose);                          
-                total_length = total_length + _waypointsDist;    
-            }
-        }  
-
-        if(mpc_path.poses.size() >= _pathLength )
-        {
-            _odom_path = mpc_path; // Path waypoints in odom frame
-            _path_computed = true;
-            // publish odom path
-            mpc_path.header.frame_id = _odom_frame;
-            mpc_path.header.stamp = ros::Time::now();
-            _pub_odompath.publish(mpc_path);
-        }
-        else
-        {
-            cout << "Failed to path generation" << endl;
-            _waypointsDist = -1;
-        }       
-    }
-    catch(tf::TransformException &ex)
-    {
-        ROS_ERROR("%s",ex.what());
-        ros::Duration(1.0).sleep();
-    }
-    
 }
 
 // CallBack: Update path waypoints (conversion to odom frame)
 void MPCNode::pathCB(const nav_msgs::Path::ConstPtr& pathMsg)
-{    
+{
+    if(_goal_received && !_goal_reached)
+    {    
+        nav_msgs::Path odom_path = nav_msgs::Path();
+        try
+        {
+            double total_length = 0.0;
+            int sampling = _downSampling;
+
+            //find waypoints distance
+            if(_waypointsDist <=0.0)
+            {        
+                double dx = pathMsg->poses[1].pose.position.x - pathMsg->poses[0].pose.position.x;
+                double dy = pathMsg->poses[1].pose.position.y - pathMsg->poses[0].pose.position.y;
+                _waypointsDist = sqrt(dx*dx + dy*dy);
+                _downSampling = int(_pathLength/10.0/_waypointsDist);
+            }            
+
+            // Cut and downsampling the path
+            for(int i =0; i< pathMsg->poses.size(); i++)
+            {
+                if(total_length > _pathLength)
+                    break;
+
+                if(sampling == _downSampling)
+                {   
+                    geometry_msgs::PoseStamped tempPose;
+                    _tf_listener.transformPose(_odom_frame, ros::Time(0) , pathMsg->poses[i], _map_frame, tempPose);                     
+                    odom_path.poses.push_back(tempPose);  
+                    sampling = 0;
+                }
+                total_length = total_length + _waypointsDist; 
+                sampling = sampling + 1;  
+            }
+           
+            if(odom_path.poses.size() >= 6 )
+            {
+                _odom_path = odom_path; // Path waypoints in odom frame
+                _path_computed = true;
+                // publish odom path
+                odom_path.header.frame_id = _odom_frame;
+                odom_path.header.stamp = ros::Time::now();
+                _pub_odompath.publish(odom_path);
+            }
+            else
+            {
+                cout << "Failed to path generation" << endl;
+                _waypointsDist = -1;
+            }
+            //DEBUG            
+            //cout << endl << "N: " << odom_path.poses.size() << endl 
+            //<<  "Car path[0]: " << odom_path.poses[0];
+            // << ", path[N]: " << _odom_path.poses[_odom_path.poses.size()-1] << endl;
+        }
+        catch(tf::TransformException &ex)
+        {
+            ROS_ERROR("%s",ex.what());
+            ros::Duration(1.0).sleep();
+        }
+    }
 }
 
 // CallBack: Update goal status
@@ -424,13 +328,14 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
     {    
         nav_msgs::Odometry odom = _odom; 
         nav_msgs::Path odom_path = _odom_path;   
+        geometry_msgs::Point goal_pos = _goal_pos;
 
         // Update system states: X=[x, y, theta, v]
         const double px = odom.pose.pose.position.x; //pose: odom frame
         const double py = odom.pose.pose.position.y;
         tf::Pose pose;
         tf::poseMsgToTF(odom.pose.pose, pose);
-        const double theta = tf::getYaw(pose.getRotation());
+        double theta = tf::getYaw(pose.getRotation());
         const double v = odom.twist.twist.linear.x; //twist: body fixed frame
         // Update system inputs: U=[w, throttle]
         const double w = _w; // steering -> w
@@ -454,15 +359,44 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
             x_veh[i] = dx * costheta + dy * sintheta;
             y_veh[i] = dy * costheta - dx * sintheta;
         }
-        
+
         // Fit waypoints
         auto coeffs = polyfit(x_veh, y_veh, 3); 
-
         const double cte  = polyeval(coeffs, 0.0);
-        const double etheta = atan(coeffs[1]);
+        double etheta = atan(coeffs[1]);
 
-        _mpc_cte = cte;
-        _mpc_etheta = etheta;
+        // Global coordinate system about theta
+        double gx = 0;
+        double gy = 0;
+        int N_sample = N * 0.3;
+        for(int i = 1; i < N_sample; i++) 
+        {
+            gx += odom_path.poses[i].pose.position.x - odom_path.poses[i-1].pose.position.x;
+            gy += odom_path.poses[i].pose.position.y - odom_path.poses[i-1].pose.position.y;
+        }       
+        
+        double temp_theta = theta;
+        double traj_deg = atan2(gy,gx);
+        double PI = 3.141592;
+
+        // Degree conversion -pi~pi -> 0~2pi(ccw) since need a continuity        
+        if(temp_theta <= -PI + traj_deg) 
+            temp_theta = temp_theta + 2 * PI;
+        
+        // Implementation about theta error more precisly
+        if(gx && gy && temp_theta - traj_deg < 1.8 * PI)
+            etheta = temp_theta - traj_deg;
+        else
+            etheta = 0;
+
+        cout << "etheta: "<< etheta << ", atan2(gy,gx): " << atan2(gy,gx) << ", temp_theta:" << traj_deg << endl;
+
+        // Difference bewteen current position and goal position
+        const double x_err = goal_pos.x -  odom.pose.pose.position.x;
+        const double y_err = goal_pos.y -  odom.pose.pose.position.y;
+        const double goal_err = sqrt(x_err*x_err + y_err*y_err);
+
+        cout << "x_err:"<< x_err << ", y_err:"<< y_err  << endl;
 
         VectorXd state(6);
         if(_delay_mode)
@@ -484,12 +418,16 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         }
         
         // Solve MPC Problem
-        vector<double> mpc_results = _mpc.Solve(state, coeffs);
+        ros::Time begin = ros::Time::now();
+        vector<double> mpc_results = _mpc.Solve(state, coeffs);    
+        ros::Time end = ros::Time::now();
+        cout << "Duration: " << end.sec << "." << end.nsec << endl << begin.sec<< "."  << begin.nsec << endl;
               
         // MPC result (all described in car frame), output = (acceleration, w)        
         _w = mpc_results[0]; // radian/sec, angular velocity
         _throttle = mpc_results[1]; // acceleration
-        _speed = v + _throttle*dt;  // speed
+
+        _speed = v + _throttle * dt;  // speed
         if (_speed >= _max_speed)
             _speed = _max_speed;
         if(_speed <= 0.0)
@@ -513,18 +451,26 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         _mpc_traj = nav_msgs::Path();
         _mpc_traj.header.frame_id = _car_frame; // points in car coordinate        
         _mpc_traj.header.stamp = ros::Time::now();
+
+        geometry_msgs::PoseStamped tempPose;
+        tf2::Quaternion myQuaternion;
+
         for(int i=0; i<_mpc.mpc_x.size(); i++)
         {
-            geometry_msgs::PoseStamped tempPose;
             tempPose.header = _mpc_traj.header;
             tempPose.pose.position.x = _mpc.mpc_x[i];
             tempPose.pose.position.y = _mpc.mpc_y[i];
-            tempPose.pose.orientation.w = 1.0;
+
+            myQuaternion.setRPY( 0, 0, _mpc.mpc_theta[i] );  
+            tempPose.pose.orientation.x = myQuaternion[0];
+            tempPose.pose.orientation.y = myQuaternion[1];
+            tempPose.pose.orientation.z = myQuaternion[2];
+            tempPose.pose.orientation.w = myQuaternion[3];
+                
             _mpc_traj.poses.push_back(tempPose); 
         }     
         // publish the mpc trajectory
         _pub_mpctraj.publish(_mpc_traj);
-
     }
     else
     {
@@ -534,63 +480,16 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         if(_goal_reached && _goal_received)
             cout << "Goal Reached: control loop !" << endl;
     }
-
-
     // publish general cmd_vel 
     if(_pub_twist_flag)
     {
         _twist_msg.linear.x  = _speed; 
         _twist_msg.angular.z = _w;
         _pub_twist.publish(_twist_msg);
-
-        std_msgs::Float32 mpc_total_cost;
-        mpc_total_cost.data = static_cast<float>(_mpc._mpc_totalcost);
-        _pub_totalcost.publish(mpc_total_cost);
-
-        std_msgs::Float32 mpc_cte_cost;
-        mpc_cte_cost.data = static_cast<float>(_mpc._mpc_ctecost);
-        _pub_ctecost.publish(mpc_cte_cost);
-
-        std_msgs::Float32 mpc_etheta_cost;
-        mpc_etheta_cost.data = static_cast<float>(_mpc._mpc_ethetacost);
-        _pub_ethetacost.publish(mpc_etheta_cost);
-
-        //cout << "_mpc_totalcost: "<< _mpc._mpc_totalcost << endl;
-        //cout << "_mpc_ctecost: "<< _mpc._mpc_ctecost << endl;
-        //cout << "_mpc_ethetacost: "<< _mpc._mpc_ethetacost << endl;
-        //cout << "_mpc_velcost: "<< _mpc._mpc_velcost << endl;
-        //writefile
-        idx++;
-        cout << "idx: "<< idx << endl;
-        file << idx<< "," << _mpc_cte<< "," <<  _mpc_etheta << "," << _twist_msg.linear.x<< "," << _twist_msg.angular.z  << ",";
-
     }
-    else
-    {
-        _twist_msg.linear.x  = 0; 
-        _twist_msg.angular.z = 0;
-        _pub_twist.publish(_twist_msg);
-    }
-    
-  
-    /*
-    file.open("/home/geonhee/catkin_ws/src/mpc_ros/write.csv");
-    string line;
-    while (getline(file, line,'\n')) 
-    {
-        istringstream templine(line); 
-        string data;
-        while (getline( templine, data,',')) 
-        {
-            cout << "data.c_str(): "<< data << endl;
-            matrix.push_back(atof(data.c_str()));  
-        }
-    }
-    file.close();*/
-
 }
 
-/*****************/
+/****************/
 /* MAIN FUNCTION */
 /*****************/
 int main(int argc, char **argv)
@@ -605,3 +504,4 @@ int main(int argc, char **argv)
     ros::waitForShutdown();
     return 0;
 }
+

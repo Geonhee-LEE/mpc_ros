@@ -1,0 +1,4 @@
+GlobalPlanner:
+    use_dijkstra: False
+    use_grid_path: false
+    meter_scoring: true

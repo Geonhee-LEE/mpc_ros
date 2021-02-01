@@ -111,7 +111,6 @@ def generation_desired_path():
     #epitrochoid
     
     '''
-    '''
     
     R = 5
     r = 1
@@ -138,13 +137,14 @@ def generation_desired_path():
         
         
         desired_path.poses.append(pose)
+    '''
     
     '''
     '''
 
     #ifinite
     
-    '''
+    
     period = 1000
     scale_factor = 1  
     for t in range(0, iter):
@@ -167,7 +167,7 @@ def generation_desired_path():
         pose.pose.orientation.w = q[3]      
         
         desired_path.poses.append(pose)
-    '''
+    
 
     #square
     '''

@@ -15,7 +15,7 @@
 # limitations under the License.
 */
 
-#include "trackRefTraj.h"
+#include "MPC_local.h"
 //#include <cppad/cppad.hpp>
 #include <cppad/ipopt/solve.hpp>
 #include <Eigen/Core>

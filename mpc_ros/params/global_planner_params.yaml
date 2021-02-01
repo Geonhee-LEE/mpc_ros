@@ -1,7 +1,7 @@
 GlobalPlanner:
 
   allow_unknown: true
-  default_tolerance: 0.0
+  default_tolerance: 0.0 
   visualize_potential: true
   use_dijkstra: true
   use_quadratic: true
@@ -15,4 +15,3 @@ GlobalPlanner:
   publish_potential: true
 
 #  orientation_mode: 0.8
-
