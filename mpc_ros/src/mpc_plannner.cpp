@@ -23,6 +23,7 @@
 // https://github.com/udacity/CarND-MPC-Quizzes
 
 using CppAD::AD;
+using CppAD::Value;
 
 // =========================================
 // FG_eval class definition implementation.
@@ -38,6 +39,8 @@ class FG_eval
         int _mpc_steps, _x_start, _y_start, _theta_start, _v_start, _cte_start, _etheta_start, _angvel_start, _a_start;
 
         AD<double> cost_cte, cost_etheta, cost_vel;
+        mpc_ros::DifferentialDriveKinematicModel model_;
+        
         // Constructor
         FG_eval(Eigen::VectorXd coeffs) 
         { 
@@ -205,9 +208,18 @@ class FG_eval
                 // This is also CppAD can compute derivatives and pass
                 // these to the solver.
                 // TODO: Setup the rest of the model constraints
-                fg[2 + _x_start + i] = x1 - (x0 + v0 * CppAD::cos(theta0) * _dt);
-                fg[2 + _y_start + i] = y1 - (y0 + v0 * CppAD::sin(theta0) * _dt);
-                fg[2 + _theta_start + i] = theta1 - (theta0 +  w0 * _dt);
+                CPPAD_TESTVECTOR(AD<double>) states(3), inputs(2);
+                CPPAD_TESTVECTOR(AD<double>) outputs(3);
+                states[0] = x0;
+                states[1] = y0;
+                states[2] = theta0;
+                inputs[0] = v0;
+                inputs[1] = w0;
+                model_.getDifferentialDriveStates(states, inputs, outputs);
+
+                fg[2 + _x_start + i] = x1 - (x0 + outputs[0] * _dt);
+                fg[2 + _y_start + i] = y1 - (y0 + outputs[1] * _dt);
+                fg[2 + _theta_start + i] = theta1 - (theta0 + outputs[2] * _dt);
                 fg[2 + _v_start + i] = v1 - (v0 + a0 * _dt);
                 
                 fg[2 + _cte_start + i] = cte1 - ((f0 - y0) + (v0 * CppAD::sin(etheta0) * _dt));

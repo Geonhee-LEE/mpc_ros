@@ -20,6 +20,8 @@
 #include <vector>
 #include <map>
 #include <Eigen/Core>
+#include <models/bicycle_kinematic_model.h>
+#include <models/differential_drive_kinematic_model.h>
 
 using namespace std;
 
@@ -44,6 +46,7 @@ class MPC
         std::map<string, double> _params;
 
         unsigned int dis_cnt;
+        
 };
 
 #endif /* MPC_H */
