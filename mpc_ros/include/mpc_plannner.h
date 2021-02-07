@@ -20,11 +20,13 @@
 #include <vector>
 #include <map>
 #include <Eigen/Core>
-#include <models/bicycle_kinematic_model.h>
-#include <models/differential_drive_kinematic_model.h>
+#include <models/unicycle_kinematic_model.h>
+#include <cppad/cppad.hpp>
+#include <cppad/ipopt/solve.hpp>
 
 using namespace std;
 
+namespace mpc_ros {
 class MPC
 {
     public:
@@ -48,5 +50,7 @@ class MPC
         unsigned int dis_cnt;
         
 };
+
+}
 
 #endif /* MPC_H */
