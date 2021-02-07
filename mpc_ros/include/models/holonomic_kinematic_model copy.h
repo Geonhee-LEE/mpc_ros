@@ -14,8 +14,8 @@
  *
  */
 
-#ifndef UNICYCLE_KINEMATIC_MODEL_H_
-#define UNICYCLE_KINEMATIC_MODEL_H_
+#ifndef HOLOMINIC_KINEMATIC_MODEL_H_
+#define HOLOMINIC_KINEMATIC_MODEL_H_
 
 #include <models/kinematic_model.h>
 
@@ -24,10 +24,10 @@ namespace mpc_ros {
 // =========================================
 // KinematicModel class definition implementation.
 // =========================================
-class UnicycleKinematicModel : public KinematicModel 
+class HolonomicKinematicModel : public KinematicModel 
 {
     public:
-        UnicycleKinematicModel(Eigen::VectorXd coeffs) 
+        HolonomicKinematicModel(Eigen::VectorXd coeffs) 
         { 
             this->coeffs = coeffs; 
 
@@ -186,4 +186,4 @@ class UnicycleKinematicModel : public KinematicModel
 
 }
 
-#endif  // UNICYCLE_KINEMATIC_MODEL_H_
+#endif  // HOLOMINIC_KINEMATIC_MODEL_H_
