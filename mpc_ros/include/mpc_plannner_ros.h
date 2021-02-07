@@ -161,10 +161,10 @@ namespace mpc_ros{
             MPC _mpc;
             map<string, double> _mpc_params;
             double _mpc_steps, _ref_cte, _ref_etheta, _ref_vel, _w_cte, _w_etheta, _w_vel, 
-                _w_angvel, _w_accel, _w_angvel_d, _w_accel_d, _max_angvel, _max_throttle, _bound_value;
-
+                _w_angvel, _w_accel, _w_angvel_d, _w_accel_d, max_vel_theta, acc_lim_trans, _bound_value;
+            double controller_freq;
             //double _Lf; 
-            double _dt, _w, _throttle, _speed, _max_speed;
+            double _dt, _w, _throttle, _speed, max_vel_trans;
             double _pathLength, _goalRadius, _waypointsDist;
             int _downSampling;
             bool _debug_info, _delay_mode;

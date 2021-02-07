@@ -57,21 +57,6 @@ namespace mpc_ros{
         //Assuming this planner is being run within the navigation stack, we can
         //just do an upward search for the frequency at which its being run. This
         //also allows the frequency to be overwritten locally.
-        ros::NodeHandle nh_;
-        std::string controller_frequency_param_name;
-        double controller_frequency = 0;
-        if(!nh_.searchParam("move_base/controller_frequency", controller_frequency_param_name)) {
-            ROS_WARN("controller_frequency_param_name doesn't exits");
-        } else {
-            nh_.param(controller_frequency_param_name, controller_frequency, 20.0);
-            
-            if(controller_frequency > 0) {
-            } else {
-                ROS_WARN("A controller_frequency less than 0 has been set. Ignoring the parameter, assuming a rate of 20Hz");
-            }
-        }
-        //private_nh.param("vehicle_Lf", _Lf, 0.290); // distance between the front of the vehicle and its center of gravity
-        _dt = double(1.0/controller_frequency); // time step duration dt in s 
 
         //Parameter for topics & Frame name
         private_nh.param<std::string>("map_frame", _map_frame, "map" ); 
@@ -103,49 +88,53 @@ namespace mpc_ros{
     }
 
   void MPCPlannerROS::reconfigureCB(MPCPlannerConfig &config, uint32_t level) {
-      // update generic local planner params
-      base_local_planner::LocalPlannerLimits limits;
-      limits.max_vel_trans = config.max_vel_trans;
-      limits.min_vel_trans = config.min_vel_trans;
-      limits.max_vel_x = config.max_vel_x;
-      limits.min_vel_x = config.min_vel_x;
-      limits.max_vel_y = config.max_vel_y;
-      limits.min_vel_y = config.min_vel_y;
-      limits.max_vel_theta = config.max_vel_theta;
-      limits.min_vel_theta = config.min_vel_theta;
-      limits.acc_lim_x = config.acc_lim_x;
-      limits.acc_lim_y = config.acc_lim_y;
-      limits.acc_lim_theta = config.acc_lim_theta;
-      limits.acc_lim_trans = config.acc_lim_trans;
-      limits.xy_goal_tolerance = config.xy_goal_tolerance;
-      limits.yaw_goal_tolerance = config.yaw_goal_tolerance;
-      limits.prune_plan = config.prune_plan;
-      limits.trans_stopped_vel = config.trans_stopped_vel;
-      limits.theta_stopped_vel = config.theta_stopped_vel;
+        // update generic local planner params
+        base_local_planner::LocalPlannerLimits limits;
+        limits.max_vel_trans = config.max_vel_trans;
+        limits.min_vel_trans = config.min_vel_trans;
+        limits.max_vel_x = config.max_vel_x;
+        limits.min_vel_x = config.min_vel_x;
+        limits.max_vel_y = config.max_vel_y;
+        limits.min_vel_y = config.min_vel_y;
+        limits.max_vel_theta = config.max_vel_theta;
+        limits.min_vel_theta = config.min_vel_theta;
+        limits.acc_lim_x = config.acc_lim_x;
+        limits.acc_lim_y = config.acc_lim_y;
+        limits.acc_lim_theta = config.acc_lim_theta;
+        limits.acc_lim_trans = config.acc_lim_trans;
+        limits.xy_goal_tolerance = config.xy_goal_tolerance;
+        limits.yaw_goal_tolerance = config.yaw_goal_tolerance;
+        limits.prune_plan = config.prune_plan;
+        limits.trans_stopped_vel = config.trans_stopped_vel;
+        limits.theta_stopped_vel = config.theta_stopped_vel;
 
-      //Parameter for MPC solver
-      _debug_info = config.debug_info;
-      _delay_mode = config.delay_mode;
-      _max_speed = config.max_speed;
-      _waypointsDist = config.waypoints_dist;
-      _pathLength = config.path_length;
-      _mpc_steps = config.steps;
-      _ref_cte = config.ref_cte;
-      _ref_vel = config.ref_vel;
-      _ref_etheta = config.ref_etheta;
-      _w_cte = config.w_cte;
-      _w_etheta = config.w_etheta;
-      _w_vel = config.w_vel;
-      _w_angvel = config.w_angvel;
-      _w_angvel_d = config.w_angvel_d;
-      _w_accel_d = config.w_accel_d;
-      _w_accel = config.w_accel;
-      _max_angvel = config.max_angvel;
-      _max_throttle = config.max_throttle;
-      _bound_value = config.bound_value;
+        //Parameter for MPC solver
+        max_vel_trans = config.max_vel_trans;
+        max_vel_theta = config.max_vel_theta;
+        acc_lim_trans = config.acc_lim_trans;
+        controller_freq = config.controller_frequency;
+        _debug_info = config.debug_info;
+        _delay_mode = config.delay_mode;
+        _waypointsDist = config.waypoints_dist;
+        _pathLength = config.path_length;
+        _mpc_steps = config.steps;
+        _ref_cte = config.ref_cte;
+        _ref_vel = config.ref_vel;
+        _ref_etheta = config.ref_etheta;
+        _w_cte = config.w_cte;
+        _w_etheta = config.w_etheta;
+        _w_vel = config.w_vel;
+        _w_angvel = config.w_angvel;
+        _w_angvel_d = config.w_angvel_d;
+        _w_accel_d = config.w_accel_d;
+        _w_accel = config.w_accel;
+        _bound_value = config.bound_value;
 
+        ros::NodeHandle nh_move_base("~");
+        nh_move_base.setParam("controller_frequency", controller_freq);
+        _dt = double(1.0/controller_freq); // time step duration dt in s 
 
-      planner_util_.reconfigureCB(limits, false);
+        planner_util_.reconfigureCB(limits, false);
 
   }
 
@@ -177,8 +166,8 @@ namespace mpc_ros{
         _mpc_params["W_A"]      = _w_accel;
         _mpc_params["W_DANGVEL"] = _w_angvel_d;
         _mpc_params["W_DA"]     = _w_accel_d;
-        _mpc_params["ANGVEL"]   = _max_angvel;
-        _mpc_params["MAXTHR"]   = _max_throttle;
+        _mpc_params["ANGVEL"]   = max_vel_theta;
+        _mpc_params["MAXTHR"]   = acc_lim_trans;
         _mpc_params["BOUND"]    = _bound_value;
         _mpc.LoadParams(_mpc_params);
         //Display the parameters
@@ -191,7 +180,7 @@ namespace mpc_ros{
         cout << "mpc_ref_vel: " << _ref_vel << endl;
         cout << "mpc_w_cte: "   << _w_cte << endl;
         cout << "mpc_w_etheta: "  << _w_etheta << endl;
-        cout << "mpc_max_angvel: "  << _max_angvel << endl;
+        cout << "max_vel_theta: "  << max_vel_theta << endl;
 
         latchedStopRotateController_.resetLatching();
         planner_util_.setPlan(orig_global_plan);
@@ -567,8 +556,8 @@ namespace mpc_ros{
         _throttle = mpc_results[1]; // acceleration
 
         _speed = v + _throttle * dt;  // speed
-        if (_speed >= _max_speed)
-            _speed = _max_speed;
+        if (_speed >= max_vel_trans)
+            _speed = max_vel_trans;
         if(_speed <= 0.0)
             _speed = 0.0;
 
