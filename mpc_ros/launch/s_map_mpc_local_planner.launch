@@ -60,6 +60,7 @@
         <!-- Global Planner -->
         <param name="base_global_planner" value="global_planner/GlobalPlanner" />
         <param name="planner_frequency" value="1.0" />
+        <param name="controller_frequency" value="5.0" />
         <param name="planner_frequency" value="0.0" if="$(eval controller == 'pure_pursuit')"/>
         <param name="planner_patience" value="5.0" />
         <rosparam file="$(find mpc_ros)/params/global_planner_params.yaml" command="load" />

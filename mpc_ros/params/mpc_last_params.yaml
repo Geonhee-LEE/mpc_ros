@@ -54,7 +54,7 @@ MPCPlannerROS:
   debug_info: false
   delay_mode: true
   waypoints_dist: -1.0 # unit: m, set < 0 means computed by node
-  path_length: 20.0 # unit: m
+  path_length: 10.0 # unit: m
   controller_frequency: 5
 
   # Parameter for MPC solver

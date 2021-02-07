@@ -112,7 +112,6 @@ namespace mpc_ros{
         max_vel_trans = config.max_vel_trans;
         max_vel_theta = config.max_vel_theta;
         acc_lim_trans = config.acc_lim_trans;
-        controller_freq = config.controller_frequency;
         _debug_info = config.debug_info;
         _delay_mode = config.delay_mode;
         _waypointsDist = config.waypoints_dist;
@@ -131,7 +130,7 @@ namespace mpc_ros{
         _bound_value = config.bound_value;
 
         ros::NodeHandle nh_move_base("~");
-        nh_move_base.setParam("controller_frequency", controller_freq);
+        nh_move_base.param("controller_frequency", controller_freq, 5.0);
         _dt = double(1.0/controller_freq); // time step duration dt in s 
 
         planner_util_.reconfigureCB(limits, false);
