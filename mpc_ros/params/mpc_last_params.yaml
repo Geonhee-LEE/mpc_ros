@@ -54,19 +54,18 @@ MPCPlannerROS:
   debug_info: false
   delay_mode: true
   waypoints_dist: -1.0 # unit: m, set < 0 means computed by node
-  path_length: 10.0 # unit: m
-  controller_frequency: 5
+  path_length: 5.0 # unit: m
 
   # Parameter for MPC solver
-  mpc_steps: 0.0
-  mpc_ref_cte: 0.0
-  mpc_ref_vel: 0.0 #1.0
-  mpc_ref_etheta: 0.0
-  mpc_w_cte: 1000.0
-  mpc_w_etheta: 1000.0
-  mpc_w_vel: 100.0 #100.0
-  mpc_w_angvel: 100.0 #100.0
-  mpc_w_angvel_d: 0.0
-  mpc_w_accel: 50.0
-  mpc_w_accel_d: 10.0
-  mpc_bound_value: 1.0e3 # Bound value for other variables
+  steps: 10.0
+  ref_cte: 0.0
+  ref_vel: 1.0 #1.0
+  ref_etheta: 0.0
+  w_cte: 1000.0
+  w_etheta: 1000.0
+  w_vel: 100.0 #100.0
+  w_angvel: 100.0 #100.0
+  w_angvel_d: 0.0
+  w_accel: 50.0
+  w_accel_d: 10.0
+  bound_value: 1.0e3 # Bound value for other variables

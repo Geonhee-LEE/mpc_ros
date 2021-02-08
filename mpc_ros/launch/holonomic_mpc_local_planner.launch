@@ -3,7 +3,7 @@
     <!--  ************** Global Parameters ***************  -->
     <param name="use_sim_time" value="true"/>
     <arg name="controller"  default="mpc" doc="opt: dwa, mpc, pure_pursuit"/> 
-    <arg name="model"  default="serving_bot" doc="opt: serving_bot"/> 
+    <arg name="model"  default="holonomic" doc="opt: holonomic, serving_bot"/> 
     <arg name="tf_prefix"  default=""/> 
 
     <!--  ************** GAZEBO Simulator ***************  -->
@@ -16,7 +16,7 @@
     <arg name="gui" default="false"/>
 
     <!--  ************** Robot model ***************  -->
-    <param name="robot_description" command="$(find xacro)/xacro.py $(find servingbot_description)/urdf/servingbot.urdf.xacro" if="$(eval model == 'serving_bot')"/>
+    <param name="robot_description" command="$(find xacro)/xacro.py $(find mpc_model_description)/urdf/holonomic/holonomic.urdf.xacro" if="$(eval model == 'holonomic')"/>
 
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="world_name" value="$(find mpc_ros)/worlds/big_s_world.world"/>
@@ -28,7 +28,7 @@
     </include>
     
 
-    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model servingbot -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -R $(arg roll) -P $(arg pitch) -Y $(arg yaw) -param robot_description" />
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model holonomic_bot -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -R $(arg roll) -P $(arg pitch) -Y $(arg yaw) -param robot_description" />
       
     <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
         <param name="publish_frequency" type="double" value="50.0" />

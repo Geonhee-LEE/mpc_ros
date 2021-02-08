@@ -16,7 +16,7 @@
     <arg name="gui" default="false"/>
 
     <!--  ************** Robot model ***************  -->
-    <param name="robot_description" command="$(find xacro)/xacro.py $(find servingbot_description)/urdf/servingbot.urdf.xacro" if="$(eval model == 'serving_bot')"/>
+    <param name="robot_description" command="$(find xacro)/xacro.py $(find mpc_model_description)/urdf/servingbot.urdf.xacro" if="$(eval model == 'serving_bot')"/>
 
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="world_name" value="$(find mpc_ros)/worlds/big_s_world.world"/>
