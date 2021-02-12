@@ -3,21 +3,21 @@
     <!--  ************** Global Parameters ***************  -->
     <param name="use_sim_time" value="true"/>
     <arg name="controller"  default="mpc" doc="opt: dwa, mpc, pure_pursuit"/> 
+    <arg name="model"  default="serving_bot" doc="opt: serving_bot"/> 
     <arg name="tf_prefix"  default=""/> 
 
     <!--  ************** GAZEBO Simulator ***************  -->
     <arg name="x_pos" default="0.0"/>
     <arg name="y_pos" default="0.0"/>
-    <arg name="z_pos" default="1.0"/>
+    <arg name="z_pos" default="0.0"/>
     <arg name="roll" default="0"/>
     <arg name="pitch" default="0"/>
     <arg name="yaw" default="-1.507"/>
-    <arg name="gui" default="true"/>
+    <arg name="gui" default="false"/>
 
-    <arg name="model" default="$(find steer_bot_description)/urdf/steer_bot.urdf.xacro"/>
-    <arg name="cmd_timeout" default="0.5"/>
+    <!--  ************** Robot model ***************  -->
+    <param name="robot_description" command="$(find xacro)/xacro.py $(find servingbot_description)/urdf/servingbot.urdf.xacro" if="$(eval model == 'serving_bot')"/>
 
-    <!-- Gazebo  -->
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="world_name" value="$(find mpc_ros)/worlds/big_s_world.world"/>
         <arg name="paused" value="false"/>
@@ -26,37 +26,14 @@
         <arg name="headless" value="false"/>
         <arg name="debug" value="false"/>
     </include>
+    
 
-    <!-- Load the robot description -->
-    <param name="robot_description" command="$(find xacro)/xacro $(arg model)"/>
-
-    <!-- Load ros_controllers configuration parameters -->
-    <rosparam file="$(find steer_bot_control)/config/ctrl_ackermann_steering_controller.yaml" command="load"  />
-    <rosparam file="$(find steer_bot_control)/config/ctrl_gains.yaml" command="load" />
-    <rosparam file="$(find steer_bot_control)/config/ctrl_joint_state_publisher.yaml" command="load"  />
-    <rosparam file="$(find steer_bot_control)/config/ctrl_steer_bot_hardware_gazebo.yaml" command="load" />
-
-    <!-- Spawn the controllers -->
-    <node pkg="controller_manager" type="spawner" name="controller_spawner" 
-        args="joint_state_publisher ackermann_steering_controller"
-        output="screen" respawn="false" />
-
-    <!-- Launch  the robot state publisher -->
-    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
-        <param name="publish_frequency" value="50.0"/>
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model servingbot -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -R $(arg roll) -P $(arg pitch) -Y $(arg yaw) -param robot_description" />
+      
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+        <param name="publish_frequency" type="double" value="50.0" />
     </node>
 
-    <!-- Launch a rqt steering GUI for publishing to /steer_bot/steer_drive_controller/cmd_vel -->
-    <node pkg="rqt_robot_steering" type="rqt_robot_steering" name="rqt_robot_steering" >
-        <param name="default_topic" value="ackermann_steering_controller/cmd_vel"/>
-    </node>
-
-    <!-- Spawn robot in Gazebo -->
-    <node name="spawn_vehicle" pkg="gazebo_ros" type="spawn_model"
-        args="-urdf -param robot_description -model steer_bot
-            -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos)
-            -R $(arg roll) -P $(arg pitch) -Y $(arg yaw)"
-        respawn="false" output="screen" />
 
     <!--  ************** Map **************  -->
     <node name="map_server" pkg="map_server" type="map_server" args="$(find mpc_ros)/map/big_s_world.yaml" output="screen">
@@ -65,6 +42,7 @@
 
 
     <!--  ************** Localization **************  -->
+    
     <node pkg="amcl" type="amcl" name="amcl" output="screen">
         <rosparam file="$(find mpc_ros)/params/amcl_params.yaml" command="load" />
         <param name="initial_pose_x"            value="$(arg x_pos)"/>
