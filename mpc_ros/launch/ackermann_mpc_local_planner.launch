@@ -3,6 +3,7 @@
     <!--  ************** Global Parameters ***************  -->
     <param name="use_sim_time" value="true"/>
     <arg name="controller"  default="mpc" doc="opt: dwa, mpc, pure_pursuit"/> 
+    <arg name="model"  default="ackermann" doc="opt: ackermann, serving_bot"/> 
     <arg name="tf_prefix"  default=""/> 
 
     <!--  ************** GAZEBO Simulator ***************  -->
@@ -12,9 +13,8 @@
     <arg name="roll" default="0"/>
     <arg name="pitch" default="0"/>
     <arg name="yaw" default="-1.507"/>
-    <arg name="gui" default="true"/>
+    <arg name="gui" default="false"/>
 
-    <arg name="model" default="$(find steer_bot_description)/urdf/steer_bot.urdf.xacro"/>
     <arg name="cmd_timeout" default="0.5"/>
 
     <!-- Gazebo  -->
@@ -28,7 +28,7 @@
     </include>
 
     <!-- Load the robot description -->
-    <param name="robot_description" command="$(find xacro)/xacro $(arg model)"/>
+    <param name="robot_description" command="$(find xacro)/xacro $(find steer_bot_description)/urdf/steer_bot.urdf.xacro"  if="$(eval model == 'ackermann')"/>
 
     <!-- Load ros_controllers configuration parameters -->
     <rosparam file="$(find steer_bot_control)/config/ctrl_ackermann_steering_controller.yaml" command="load"  />
@@ -47,9 +47,9 @@
     </node>
 
     <!-- Launch a rqt steering GUI for publishing to /steer_bot/steer_drive_controller/cmd_vel -->
-    <node pkg="rqt_robot_steering" type="rqt_robot_steering" name="rqt_robot_steering" >
+    <!--node pkg="rqt_robot_steering" type="rqt_robot_steering" name="rqt_robot_steering" >
         <param name="default_topic" value="ackermann_steering_controller/cmd_vel"/>
-    </node>
+    </node-->
 
     <!-- Spawn robot in Gazebo -->
     <node name="spawn_vehicle" pkg="gazebo_ros" type="spawn_model"
@@ -94,6 +94,8 @@
         
         <!-- external controller >
         <remap from="/cmd_vel" to="/fake_cmd" unless="$(eval controller == 'dwa')"/-->
+        <remap from="odom" to="/ackermann_steering_controller/odom" unless="$(eval controller == 'ackermann')"/>
+        <remap from="cmd_vel" to="/ackermann_steering_controller/cmd_vel" unless="$(eval controller == 'ackermann')"/>
     </node>
     
     <!--  ************** MPC Node **************  -->
