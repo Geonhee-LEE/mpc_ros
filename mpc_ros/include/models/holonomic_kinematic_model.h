@@ -27,6 +27,8 @@ namespace mpc_ros {
 class HolonomicKinematicModel : public KinematicModel 
 {
     public:
+        HolonomicKinematicModel(){}
+        
         HolonomicKinematicModel(Eigen::VectorXd coeffs) 
         { 
             this->coeffs = coeffs; 

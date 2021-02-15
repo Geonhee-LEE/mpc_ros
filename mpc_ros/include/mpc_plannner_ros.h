@@ -159,6 +159,7 @@ namespace mpc_ros{
             string _map_frame, _odom_frame, _base_frame;
 
             MPC _mpc;
+            std::string model_type;
             map<string, double> _mpc_params;
             double _mpc_steps, _ref_cte, _ref_etheta, _ref_vel, _w_cte, _w_etheta, _w_vel, 
                 _w_angvel, _w_accel, _w_angvel_d, _w_accel_d, max_vel_theta, acc_lim_trans, _bound_value;

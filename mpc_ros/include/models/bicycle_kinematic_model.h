@@ -32,6 +32,34 @@ class BicycleKinematicModel: public KinematicModel
     //! Default constructor
     BicycleKinematicModel(){}
 
+    BicycleKinematicModel(Eigen::VectorXd coeffs) 
+    { 
+        this->coeffs = coeffs; 
+
+        // Set default value    
+        _dt = 0.1;  // in sec
+        _ref_cte   = 0;
+        _ref_etheta  = 0;
+        _ref_vel   = 0.5; // m/s
+        _w_cte     = 100;
+        _w_etheta    = 100;
+        _w_vel     = 1;
+        _w_angvel   = 100;
+        _w_accel   = 50;
+        _w_angvel_d = 0;
+        _w_accel_d = 0;
+
+        _mpc_steps   = 40;
+        _x_start     = 0;
+        _y_start     = _x_start + _mpc_steps;
+        _theta_start   = _y_start + _mpc_steps;
+        _v_start     = _theta_start + _mpc_steps;
+        _cte_start   = _v_start + _mpc_steps;
+        _etheta_start  = _cte_start + _mpc_steps;
+        _angvel_start = _etheta_start + _mpc_steps;
+        _a_start     = _angvel_start + _mpc_steps - 1;
+    }
+
     //! Constructs model with given wheelbase
     BicycleKinematicModel(double lr, double lf){}
 

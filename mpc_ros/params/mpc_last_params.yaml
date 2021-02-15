@@ -5,6 +5,7 @@ MPCPlannerROS:
   map_frame: "map"
   odom_frame: "odom"
   base_frame: "base_footprint"
+  model_type: "unicycle"
 
   max_vel_trans:  1.0
   min_vel_trans:  0.01

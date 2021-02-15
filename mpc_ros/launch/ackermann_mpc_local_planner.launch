@@ -12,7 +12,7 @@
     <arg name="z_pos" default="1.0"/>
     <arg name="roll" default="0"/>
     <arg name="pitch" default="0"/>
-    <arg name="yaw" default="-1.507"/>
+    <arg name="yaw" default="0"/>
     <arg name="gui" default="false"/>
 
     <arg name="cmd_timeout" default="0.5"/>

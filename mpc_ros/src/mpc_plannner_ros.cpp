@@ -62,6 +62,7 @@ namespace mpc_ros{
         private_nh.param<std::string>("map_frame", _map_frame, "map" ); 
         private_nh.param<std::string>("odom_frame", _odom_frame, "odom");
         private_nh.param<std::string>("base_frame", _base_frame, "base_footprint");
+        private_nh.param<std::string>("model_type", model_type, "unicycle");
 
 
         //Publishers and Subscribers
@@ -546,7 +547,13 @@ namespace mpc_ros{
 
         // Solve MPC Problem
         ros::Time begin = ros::Time::now();
-        vector<double> mpc_results = _mpc.Solve(state, coeffs);    
+        vector<double> mpc_results;
+        if(model_type == "unicycle")
+            mpc_results = _mpc.unicycleModelSolve(state, coeffs); 
+        else if(model_type == "bicycle")
+            mpc_results = _mpc.bicycleModelSolve(state, coeffs); 
+        else if(model_type == "holonimic")
+            mpc_results = _mpc.holonomicModelSolve(state, coeffs); 
         ros::Time end = ros::Time::now();
         cout << "Duration: " << end.sec << "." << end.nsec << endl << begin.sec<< "."  << begin.nsec << endl;
             

@@ -27,6 +27,7 @@ namespace mpc_ros {
 class UnicycleKinematicModel : public KinematicModel 
 {
     public:
+
         UnicycleKinematicModel(Eigen::VectorXd coeffs) 
         { 
             this->coeffs = coeffs; 
