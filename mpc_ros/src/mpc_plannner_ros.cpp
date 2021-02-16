@@ -72,9 +72,11 @@ namespace mpc_ros{
         
 
         //Init variables
-        _throttle = 0.0; 
+        _throttle_x = 0.0; 
+        _throttle_y = 0.0;
         _w = 0.0;
-        _speed = 0.0;
+        _speed_x = 0.0;
+        _speed_y = 0.0;
 
         //_ackermann_msg = ackermann_msgs::AckermannDriveStamped();
         _twist_msg = geometry_msgs::Twist();
@@ -398,11 +400,15 @@ namespace mpc_ros{
         tf::Pose pose;
         tf::poseMsgToTF(base_odom.pose.pose, pose);
         double theta = tf::getYaw(pose.getRotation());
-        const double v = base_odom.twist.twist.linear.x; //twist: body fixed frame
+        const double v_x = base_odom.twist.twist.linear.x; //twist: body fixed frame
+        const double v_y = base_odom.twist.twist.linear.y; //twist: body fixed frame
+        
         // Update system inputs: U=[w, throttle]
         const double w = _w; // steering -> w
         //const double steering = _steering;  // radian
-        const double throttle = _throttle; // accel: >0; brake: <0
+        const double throttle_x = _throttle_x; // accel: >0; brake: <0
+        const double throttle_y = _throttle_y; // accel: >0; brake: <0
+        
         const double dt = _dt;
 
         //Update path waypoints (conversion to odom frame)
@@ -526,60 +532,145 @@ namespace mpc_ros{
 
         cout << "x_err:"<< x_err << ", y_err:"<< y_err  << endl;
 
-        VectorXd state(6);
-        if(_delay_mode)
-        {
-            // Kinematic model is used to predict vehicle state at the actual moment of control (current time + delay dt)
-            const double px_act = v * dt;
-            const double py_act = 0;
-            const double theta_act = w * dt; //(steering) theta_act = v * steering * dt / Lf;
-            const double v_act = v + throttle * dt; //v = v + a * dt
-            
-            const double cte_act = cte + v * sin(etheta) * dt;
-            const double etheta_act = etheta - theta_act;  
-            
-            state << px_act, py_act, theta_act, v_act, cte_act, etheta_act;
-        }
-        else
-        {
-            state << 0, 0, 0, v, cte, etheta;
-        }
-
-        // Solve MPC Problem
         ros::Time begin = ros::Time::now();
         vector<double> mpc_results;
+
         if(model_type == "unicycle")
+        {
+            VectorXd state(6);
+            if(_delay_mode)
+            {
+                // Kinematic model is used to predict vehicle state at the actual moment of control (current time + delay dt)
+                const double px_act = v_x * dt;
+                const double py_act = 0;
+                const double theta_act = w * dt; //(steering) theta_act = v * steering * dt / Lf;
+                const double vx_act = v_x + throttle_x * dt; //v = v + a * dt
+                
+                const double cte_act = cte + v_x * sin(etheta) * dt;
+                const double etheta_act = etheta - theta_act;  
+                
+                state << px_act, py_act, theta_act, vx_act, cte_act, etheta_act;
+            }
+            else
+            {
+                state << 0, 0, 0, v_x, cte, etheta;
+            }
+            // Solve MPC Problem
             mpc_results = _mpc.unicycleModelSolve(state, coeffs); 
+
+        }
+
         else if(model_type == "bicycle")
+        {
+            VectorXd state(6);
+            if(_delay_mode)
+            {
+                // Kinematic model is used to predict vehicle state at the actual moment of control (current time + delay dt)
+                const double px_act = v_x * dt;
+                const double py_act = 0;
+                const double theta_act = w * dt; //(steering) theta_act = v * steering * dt / Lf;
+                const double vx_act = v_x + throttle_x * dt; //v = v + a * dt
+                
+                const double cte_act = cte + v_x * sin(etheta) * dt;
+                const double etheta_act = etheta - theta_act;  
+                
+                state << px_act, py_act, theta_act, vx_act, cte_act, etheta_act;
+            }
+            else
+            {
+                state << 0, 0, 0, v_x, cte, etheta;
+            }
+            // Solve MPC Problem
             mpc_results = _mpc.bicycleModelSolve(state, coeffs); 
+
+        }
+
         else if(model_type == "holonimic")
+        {
+            VectorXd state(7);
+            if(_delay_mode)
+            {
+                // Kinematic model is used to predict vehicle state at the actual moment of control (current time + delay dt)
+                const double px_act = v_x * dt;
+                const double py_act = v_y * dt;
+                const double theta_act = w * dt; //(steering) theta_act = v * steering * dt / Lf;
+                const double vx_act = v_x + throttle_x * dt; //v = v + a * dt
+                const double vy_act = v_y + throttle_y * dt; //v = v + a * dt
+                
+                //const double cte_act = cte + vx * sin(etheta) * dt + vy * cos(etheta) * dt;
+                const double cte_act = cte + v_x * sin(etheta) * dt;
+                const double etheta_act = etheta - theta_act;  
+                
+                state << px_act, py_act, theta_act, vx_act, vy_act, cte_act, etheta_act;
+            }
+            else
+            {
+                state << 0, 0, 0, v_x, v_y, cte, etheta;
+            }
+
+            // Solve MPC Problem
             mpc_results = _mpc.holonomicModelSolve(state, coeffs); 
+
+        }
+
         ros::Time end = ros::Time::now();
         cout << "Duration: " << end.sec << "." << end.nsec << endl << begin.sec<< "."  << begin.nsec << endl;
             
         // MPC result (all described in car frame), output = (acceleration, w)        
-        _w = mpc_results[0]; // radian/sec, angular velocity
-        _throttle = mpc_results[1]; // acceleration
+        if(model_type != "holonimic")
+        {
+            _w = mpc_results[0]; // radian/sec, angular velocity
+            _throttle_x = mpc_results[1]; // acceleration
+            _throttle_y = 0; // acceleration
 
-        _speed = v + _throttle * dt;  // speed
-        if (_speed >= max_vel_trans)
-            _speed = max_vel_trans;
-        if(_speed <= 0.0)
-            _speed = 0.0;
+            _speed_x = v_x + _throttle_x * dt;  // speed
+            _speed_x = 0;  // speed
+
+            if(_speed_x >= max_vel_trans)
+                _speed_x = max_vel_trans;
+            if(_speed_x <= 0.0)
+                _speed_x = 0.0;
+        }
+
+        else
+        {
+            _w = mpc_results[0]; // radian/sec, angular velocity
+            _throttle_x = mpc_results[1]; // acceleration
+            _throttle_y = mpc_results[2]; // acceleration
+
+            _speed_x = v_x + _throttle_x * dt;  // speed
+            _speed_y = v_y + _throttle_y * dt;  // speed
+   
+            if(_speed_x >= max_vel_trans)
+                _speed_x = max_vel_trans;
+            if(_speed_x <= -max_vel_trans)
+                _speed_x = -max_vel_trans;
+
+            if (_speed_y >= max_vel_trans)
+                _speed_y = max_vel_trans;
+            if(_speed_y <= -max_vel_trans)
+                _speed_y = -max_vel_trans;
+        }
 
         if(_debug_info)
         {
             cout << "\n\nDEBUG" << endl;
             cout << "theta: " << theta << endl;
-            cout << "V: " << v << endl;
+            cout << "V_x: " << v_x << endl;
+            cout << "V_y: " << v_y << endl;
+
             //cout << "odom_path: \n" << odom_path << endl;
             //cout << "x_points: \n" << x_veh << endl;
             //cout << "y_points: \n" << y_veh << endl;
             cout << "coeffs: \n" << coeffs << endl;
             cout << "_w: \n" << _w << endl;
-            cout << "_throttle: \n" << _throttle << endl;
-            cout << "_speed: \n" << _speed << endl;
+            cout << "_throttle_x: \n" << _throttle_x << endl;
+            cout << "_throttle_y: \n" << _throttle_y << endl;
+
+            cout << "_speed_x: \n" << _speed_x << endl;
+            cout << "_speed_y: \n" << _speed_y << endl;
         }
+
         // Display the MPC predicted trajectory
         _mpc_traj = nav_msgs::Path();
         _mpc_traj.header.frame_id = _base_frame; // points in car coordinate        
@@ -612,9 +703,10 @@ namespace mpc_ros{
             drive_velocities.pose.orientation.y = 0;
             drive_velocities.pose.orientation.z = 0;
         }
+        
         else{
-            drive_velocities.pose.position.x = _speed;
-            drive_velocities.pose.position.y = 0;
+            drive_velocities.pose.position.x = _speed_x;
+            drive_velocities.pose.position.y = _speed_y;
             drive_velocities.pose.position.z = 0;
             tf2::Quaternion q;
             q.setRPY(0, 0, _w);
@@ -670,6 +762,7 @@ namespace mpc_ros{
         if(latchedStopRotateController_.isGoalReached(&planner_util_, odom_helper_, current_pose_)) {
             ROS_INFO("Goal reached");
             return true;
+
         } else {
             return false;
         }

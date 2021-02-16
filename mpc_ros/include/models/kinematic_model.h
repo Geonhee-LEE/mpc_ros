@@ -40,9 +40,10 @@ class KinematicModel
     double _dt, _ref_cte, _ref_etheta, _ref_vel; 
     double  _w_cte, _w_etheta, _w_vel, _w_angvel, _w_accel, _w_angvel_d, _w_accel_d;
     int _mpc_steps, _x_start, _y_start, _theta_start, _v_start, _cte_start, _etheta_start, _angvel_start, _a_start;
+    int _vx_start, _vy_start, _ax_start, _ay_start;
 
     AD<double> cost_cte, cost_etheta, cost_vel;
-
+    AD<double> cost_vel_x, cost_vel_y;
     // Constructor
     KinematicModel(){}
 
