@@ -531,6 +531,7 @@ namespace mpc_ros{
         const double goal_err = sqrt(x_err*x_err + y_err*y_err);
 
         cout << "x_err:"<< x_err << ", y_err:"<< y_err  << endl;
+        cout << model_type << endl;
 
         ros::Time begin = ros::Time::now();
         vector<double> mpc_results;
@@ -587,6 +588,7 @@ namespace mpc_ros{
 
         else if(model_type == "holonoimic")
         {
+            
             VectorXd state(7);
             if(_delay_mode)
             {
@@ -624,7 +626,7 @@ namespace mpc_ros{
             _throttle_y = 0; // acceleration
 
             _speed_x = v_x + _throttle_x * dt;  // speed
-            _speed_x = 0;  // speed
+            _speed_y = 0;  // speed
 
             if(_speed_x >= max_vel_trans)
                 _speed_x = max_vel_trans;
@@ -634,6 +636,7 @@ namespace mpc_ros{
 
         else
         {
+
             _w = mpc_results[0]; // radian/sec, angular velocity
             _throttle_x = mpc_results[1]; // acceleration
             _throttle_y = mpc_results[2]; // acceleration
@@ -643,12 +646,12 @@ namespace mpc_ros{
    
             if(_speed_x >= max_vel_trans)
                 _speed_x = max_vel_trans;
-            if(_speed_x <= -max_vel_trans)
+            if(_speed_x < -max_vel_trans)
                 _speed_x = -max_vel_trans;
 
             if (_speed_y >= max_vel_trans)
                 _speed_y = max_vel_trans;
-            if(_speed_y <= -max_vel_trans)
+            if(_speed_y < -max_vel_trans)
                 _speed_y = -max_vel_trans;
         }
 

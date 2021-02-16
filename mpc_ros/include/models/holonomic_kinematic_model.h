@@ -127,7 +127,6 @@ class HolonomicKinematicModel : public KinematicModel
               fg[0] += _w_accel_d * CppAD::pow(vars[_ay_start + i + 1] - vars[_ay_start + i], 2);
             }
             
-            
 
             // fg[x] for constraints
             // Initial constraints
