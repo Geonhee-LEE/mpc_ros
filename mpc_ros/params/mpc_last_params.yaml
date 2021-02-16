@@ -13,10 +13,10 @@ mpc_steps: 20.0
 mpc_ref_cte: 0.0
 mpc_ref_vel: 1.0 #1.0
 mpc_ref_etheta: 0.0
-mpc_w_cte: 1000.0
-mpc_w_etheta: 1000.0
-mpc_w_vel: 100.0 #100.0
-mpc_w_angvel: 100.0 #100.0
+mpc_w_cte: 2000.0
+mpc_w_etheta: 0.0
+mpc_w_vel: 10.0 #100.0
+mpc_w_angvel: 2000.0 #100.0
 mpc_w_angvel_d: 0.0
 mpc_w_accel: 50.0
 mpc_w_accel_d: 10.0

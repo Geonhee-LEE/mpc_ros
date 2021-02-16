@@ -16,7 +16,7 @@
 # limitations under the License.
 */
 
-#include "MPC.h"
+#include "MPC_holo.h"
 //#include <cppad/cppad.hpp>
 #include <cppad/ipopt/solve.hpp>
 #include <Eigen/Core>
@@ -37,9 +37,9 @@ class FG_eval
 
         double _dt, _ref_cte, _ref_etheta, _ref_vel; 
         double  _w_cte, _w_etheta, _w_vel, _w_angvel, _w_accel, _w_angvel_d, _w_accel_d;
-        int _mpc_steps, _x_start, _y_start, _theta_start, _v_start, _cte_start, _etheta_start, _angvel_start, _a_start;
+        int _mpc_steps, _x_start, _y_start, _theta_start, _vx_start, _vy_start, _cte_start, _etheta_start, _angvel_start, _ax_start, _ay_start;
 
-        AD<double> cost_cte, cost_etheta, cost_vel;
+        AD<double> cost_cte, cost_etheta, cost_vel_x, cost_vel_y;
         // Constructor
         FG_eval(Eigen::VectorXd coeffs) 
         { 
@@ -61,12 +61,13 @@ class FG_eval
             _mpc_steps   = 40;
             _x_start     = 0;
             _y_start     = _x_start + _mpc_steps;
-            _theta_start   = _y_start + _mpc_steps;
-            _v_start     = _theta_start + _mpc_steps;
-            _cte_start   = _v_start + _mpc_steps;
-            _etheta_start  = _cte_start + _mpc_steps;
-            _angvel_start = _etheta_start + _mpc_steps;
-            _a_start     = _angvel_start + _mpc_steps - 1;
+
+            _vx_start     = _y_start + _mpc_steps;
+            _vy_start     = _vx_start + _mpc_steps;
+            _cte_start   = _vy_start + _mpc_steps;
+
+            _ax_start     = _cte_start + _mpc_steps;
+            _ay_start     = _ax_start + _mpc_steps - 1;
         }
 
         // Load parameters for constraints
@@ -88,13 +89,14 @@ class FG_eval
 
             _x_start     = 0;
             _y_start     = _x_start + _mpc_steps;
-            _theta_start   = _y_start + _mpc_steps;
-            _v_start     = _theta_start + _mpc_steps;
-            _cte_start   = _v_start + _mpc_steps;
-            _etheta_start  = _cte_start + _mpc_steps;
-            _angvel_start = _etheta_start + _mpc_steps;
-            _a_start     = _angvel_start + _mpc_steps - 1;
-            
+
+            _vx_start     = _y_start + _mpc_steps;
+            _vy_start     = _vx_start + _mpc_steps;
+            _cte_start   = _vy_start + _mpc_steps;
+
+            _ax_start     = _cte_start + _mpc_steps;
+            _ay_start     = _ax_start + _mpc_steps - 1;
+
             //cout << "\n!! FG_eval Obj parameters updated !! " << _mpc_steps << endl; 
         }
 
@@ -103,11 +105,15 @@ class FG_eval
         // fg: function that evaluates the objective and constraints using the syntax       
         void operator()(ADvector& fg, const ADvector& vars) 
         {
+            cout << "operatoer start"<< endl; 
+
             // fg[0] for cost function
             fg[0] = 0;
             cost_cte =  0;
             cost_etheta = 0;
-            cost_vel = 0;
+
+            cost_vel_x = 0;
+            cost_vel_y = 0;
 
             /*
             for (int i = 0; i < _mpc_steps; i++) 
@@ -120,44 +126,46 @@ class FG_eval
                 cout << "_cte_start" << vars[_cte_start + i] <<endl;
                 cout << "_etheta_start" << vars[_etheta_start + i] <<endl;
             }*/
+            cout << "_mpc_steps : " << _mpc_steps << endl;
 
             for (int i = 0; i < _mpc_steps; i++) 
             {
               fg[0] += _w_cte * CppAD::pow(vars[_cte_start + i] - _ref_cte, 2); // cross deviation error
-              fg[0] += _w_etheta * CppAD::pow(vars[_etheta_start + i] - _ref_etheta, 2); // heading error
-              fg[0] += _w_vel * CppAD::pow(vars[_v_start + i] - _ref_vel, 2); // speed error
+
+              fg[0] += _w_vel * CppAD::pow(vars[_vx_start + i] - _ref_vel, 2); // speed_x error
+              fg[0] += _w_vel * CppAD::pow(vars[_vy_start + i] - _ref_vel, 2); // speed_y error
 
               cost_cte +=  _w_cte * CppAD::pow(vars[_cte_start + i] - _ref_cte, 2);
-              cost_etheta +=  (_w_etheta * CppAD::pow(vars[_etheta_start + i] - _ref_etheta, 2)); 
-              cost_vel +=  (_w_vel * CppAD::pow(vars[_v_start + i] - _ref_vel, 2)); 
-            }
-            cout << "-----------------------------------------------" <<endl;
-            cout << "cost_cte, etheta, velocity: " << cost_cte << ", " << cost_etheta  << ", " << cost_vel << endl;
+
+              cost_vel_x +=  (_w_vel * CppAD::pow(vars[_vx_start + i] - _ref_vel, 2)); 
+              cost_vel_y +=  (_w_vel * CppAD::pow(vars[_vy_start + i] - _ref_vel, 2)); 
             
+            }            
 
             // Minimize the use of actuators.
             for (int i = 0; i < _mpc_steps - 1; i++) {
-              fg[0] += _w_angvel * CppAD::pow(vars[_angvel_start + i], 2);
-              fg[0] += _w_accel * CppAD::pow(vars[_a_start + i], 2);
+  
+              fg[0] += _w_accel * CppAD::pow(vars[_ax_start + i], 2);
+              fg[0] += _w_accel * CppAD::pow(vars[_ay_start + i], 2); //error
             }
             cout << "cost of actuators: " << fg[0] << endl; 
 
             // Minimize the value gap between sequential actuations.
             for (int i = 0; i < _mpc_steps - 2; i++) {
-              fg[0] += _w_angvel_d * CppAD::pow(vars[_angvel_start + i + 1] - vars[_angvel_start + i], 2);
-              fg[0] += _w_accel_d * CppAD::pow(vars[_a_start + i + 1] - vars[_a_start + i], 2);
+              fg[0] += _w_accel_d * CppAD::pow(vars[_ax_start + i + 1] - vars[_ax_start + i], 2);
+              fg[0] += _w_accel_d * CppAD::pow(vars[_ay_start + i + 1] - vars[_ay_start + i], 2);
+
             }
             cout << "cost of gap: " << fg[0] << endl; 
-            
 
             // fg[x] for constraints
             // Initial constraints
             fg[1 + _x_start] = vars[_x_start];
             fg[1 + _y_start] = vars[_y_start];
-            fg[1 + _theta_start] = vars[_theta_start];
-            fg[1 + _v_start] = vars[_v_start];
+
+            fg[1 + _vx_start] = vars[_vx_start];
+            fg[1 + _vy_start] = vars[_vy_start];
             fg[1 + _cte_start] = vars[_cte_start];
-            fg[1 + _etheta_start] = vars[_etheta_start];
 
             // Add system dynamic model constraint
             for (int i = 0; i < _mpc_steps - 1; i++)
@@ -165,24 +173,26 @@ class FG_eval
                 // The state at time t+1 .
                 AD<double> x1 = vars[_x_start + i + 1];
                 AD<double> y1 = vars[_y_start + i + 1];
-                AD<double> theta1 = vars[_theta_start + i + 1];
-                AD<double> v1 = vars[_v_start + i + 1];
+
+                AD<double> vx1 = vars[_vx_start + i + 1];
+                AD<double> vy1 = vars[_vy_start + i + 1];
+
                 AD<double> cte1 = vars[_cte_start + i + 1];
-                AD<double> etheta1 = vars[_etheta_start + i + 1];
 
                 // The state at time t.
                 AD<double> x0 = vars[_x_start + i];
                 AD<double> y0 = vars[_y_start + i];
-                AD<double> theta0 = vars[_theta_start + i];
-                AD<double> v0 = vars[_v_start + i];
+
+
+                AD<double> vx0 = vars[_vx_start + i];
+                AD<double> vy0 = vars[_vy_start + i];
+                
                 AD<double> cte0 = vars[_cte_start + i];
-                AD<double> etheta0 = vars[_etheta_start + i];
 
                 // Only consider the actuation at time t.
                 //AD<double> angvel0 = vars[_angvel_start + i];
-                AD<double> w0 = vars[_angvel_start + i];
-                AD<double> a0 = vars[_a_start + i];
-
+                AD<double> ax0 = vars[_ax_start + i];
+                AD<double> ay0 = vars[_ay_start + i];
 
                 //AD<double> f0 = coeffs[0] + coeffs[1] * x0 + coeffs[2] * CppAD::pow(x0, 2) + coeffs[3] * CppAD::pow(x0, 3);
                 AD<double> f0 = 0.0;
@@ -199,7 +209,6 @@ class FG_eval
                 }
                 trj_grad0 = CppAD::atan(trj_grad0);
 
-
                 // Here's `x` to get you started.
                 // The idea here is to constraint this value to be 0.
                 //
@@ -207,14 +216,17 @@ class FG_eval
                 // This is also CppAD can compute derivatives and pass
                 // these to the solver.
                 // TODO: Setup the rest of the model constraints
-                fg[2 + _x_start + i] = x1 - (x0 + v0 * CppAD::cos(theta0) * _dt);
-                fg[2 + _y_start + i] = y1 - (y0 + v0 * CppAD::sin(theta0) * _dt);
-                fg[2 + _theta_start + i] = theta1 - (theta0 +  w0 * _dt);
-                fg[2 + _v_start + i] = v1 - (v0 + a0 * _dt);
-                
-                fg[2 + _cte_start + i] = cte1 - ((f0 - y0) + (v0 * CppAD::sin(etheta0) * _dt));
-                fg[2 + _etheta_start + i] = etheta1 - ((theta0 - trj_grad0) + w0 * _dt);
+                fg[2 + _x_start + i] = x1 - (x0 + vx0 * _dt);
+                fg[2 + _y_start + i] = y1 - (y0 + vy0 * _dt);
+
+                fg[2 + _vx_start + i] = vx1 - (vx0 + ax0 * _dt); //ax0 * CppAD::sin(theta0) * dt + ay0 * CppAD::cos(theta0) * dt
+                fg[2 + _vy_start + i] = vy1 - (vy0 + ay0 * _dt); //ax0 * CppAD::cos(theta0) * dt + ay0 * CppAD::sin(theta0) * dt
+
+                fg[2 + _cte_start + i] = cte1 - ((f0 - y0) + (vx0  * _dt));
+
             }
+            cout << "operatoer: " << fg.size() << endl; 
+
         }
 };
 
@@ -231,12 +243,12 @@ MPC::MPC()
 
     _x_start     = 0;
     _y_start     = _x_start + _mpc_steps;
-    _theta_start   = _y_start + _mpc_steps;
-    _v_start     = _theta_start + _mpc_steps;
-    _cte_start   = _v_start + _mpc_steps;
-    _etheta_start  = _cte_start + _mpc_steps;
-    _angvel_start = _etheta_start + _mpc_steps;
-    _a_start     = _angvel_start + _mpc_steps - 1;
+    _vx_start     = _y_start + _mpc_steps;
+    _vy_start     = _vx_start + _mpc_steps;
+    _cte_start   = _vy_start + _mpc_steps;
+
+    _ax_start     = _cte_start + _mpc_steps;
+    _ay_start     = _ax_start + _mpc_steps - 1;
 
 }
 
@@ -251,12 +263,13 @@ void MPC::LoadParams(const std::map<string, double> &params)
     
     _x_start     = 0;
     _y_start     = _x_start + _mpc_steps;
-    _theta_start   = _y_start + _mpc_steps;
-    _v_start     = _theta_start + _mpc_steps;
-    _cte_start   = _v_start + _mpc_steps;
-    _etheta_start  = _cte_start + _mpc_steps;
-    _angvel_start = _etheta_start + _mpc_steps;
-    _a_start     = _angvel_start + _mpc_steps - 1;
+
+    _vx_start     = _y_start + _mpc_steps;
+    _vx_start     = _vx_start + _mpc_steps;
+    _cte_start   = _vy_start + _mpc_steps;
+
+    _ax_start     = _cte_start + _mpc_steps;
+    _ay_start     = _ax_start + _mpc_steps - 1;
 
     cout << "\n!! MPC Obj parameters updated !! " << endl; 
 }
@@ -264,50 +277,70 @@ void MPC::LoadParams(const std::map<string, double> &params)
 
 vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) 
 {
+
+    std::cout << "------------ Start solve ------------" << std::endl;
+
+    
     bool ok = true;
     size_t i;
     typedef CPPAD_TESTVECTOR(double) Dvector;
+    /*
     const double x = state[0];
     const double y = state[1];
     const double theta = state[2];
-    const double v = state[3];
+    const double vx = state[3];
+    const double vy = state[4];
+
+    const double cte = state[5];
+    const double etheta = state[6];
+    */
+    const double x = state[0];
+    const double y = state[1];
+    const double vx = state[2];
+    const double vy = state[3];
+
     const double cte = state[4];
-    const double etheta = state[5];
 
     // Set the number of model variables (includes both states and inputs).
     // For example: If the state is a 4 element vector, the actuators is a 2
     // element vector and there are 10 timesteps. The number of variables is:
     // 4 * 10 + 2 * 9
-    size_t n_vars = _mpc_steps * 6 + (_mpc_steps - 1) * 2;
+
+    size_t n_vars = _mpc_steps * 5 + (_mpc_steps -1 ) * 2;
+    
     std::cout << "------- n_vars : " << n_vars << std::endl;
 
     // Set the number of constraints
-    size_t n_constraints = _mpc_steps * 6;
+    size_t n_constraints = _mpc_steps * 5;
+
     std::cout << "------- n_constaraints : " << n_constraints << std::endl;
+
 
     // Initial value of the independent variables.
     // SHOULD BE 0 besides initial state.
+
+    
     Dvector vars(n_vars);
+    std::cout << "------- n_vars : " << n_vars << std::endl;
 
-    std::cout << "------- check n_vars : " << n_vars << std::endl;
-
-    std::cout << "------------ check Vars : " << vars.size() << std::endl;
+    std::cout << "------------ Set Vars : " << vars.size() << std::endl;
 
     for (int i = 0; i < n_vars; i++) 
     {
         vars[i] = 0;
-        std::cout << "------------ count : " << i << std::endl;
-
     }
+
     std::cout << "------------ Set Vars : " << vars.size() << std::endl;
+
 
     // Set the initial variable values
     vars[_x_start] = x;
     vars[_y_start] = y;
-    vars[_theta_start] = theta;
-    vars[_v_start] = v;
+
+    vars[_vx_start] = vx;
+    vars[_vy_start] = vy;
+
     vars[_cte_start] = cte;
-    vars[_etheta_start] = etheta;
 
     // Set lower and upper limits for variables.
     Dvector vars_lowerbound(n_vars);
@@ -315,21 +348,21 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
     
     // Set all non-actuators upper and lowerlimits
     // to the max negative and positive values.
-    for (int i = 0; i < _angvel_start; i++) 
+    for (int i = 0; i < _ax_start; i++) 
     {
         vars_lowerbound[i] = -_bound_value;
         vars_upperbound[i] = _bound_value;
     }
 
-    // The upper and lower limits of angvel are set to -25 and 25
-    // degrees (values in radians).
-    for (int i = _angvel_start; i < _a_start; i++) 
-    {
-        vars_lowerbound[i] = -_max_angvel;
-        vars_upperbound[i] = _max_angvel;
-    }
     // Acceleration/decceleration upper and lower limits
-    for (int i = _a_start; i < n_vars; i++)  
+
+    for (int i = _ax_start; i < _ay_start; i++) 
+    {
+        vars_lowerbound[i] = -_max_throttle;
+        vars_upperbound[i] = _max_throttle;
+    }
+
+    for (int i = _ay_start; i < n_vars; i++)  
     {
         vars_lowerbound[i] = -_max_throttle;
         vars_upperbound[i] = _max_throttle;
@@ -340,6 +373,7 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
     // Should be 0 besides initial state.
     Dvector constraints_lowerbound(n_constraints);
     Dvector constraints_upperbound(n_constraints);
+
     for (int i = 0; i < n_constraints; i++)
     {
         constraints_lowerbound[i] = 0;
@@ -348,23 +382,32 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
 
     std::cout << "------------ Set constraints : " << constraints_lowerbound.size() << std::endl;
 
+    //------------------------------------------------
+
     constraints_lowerbound[_x_start] = x;
     constraints_lowerbound[_y_start] = y;
-    constraints_lowerbound[_theta_start] = theta;
-    constraints_lowerbound[_v_start] = v;
+    constraints_lowerbound[_vx_start] = vx;
+    constraints_lowerbound[_vy_start] = vy;
+
     constraints_lowerbound[_cte_start] = cte;
-    constraints_lowerbound[_etheta_start] = etheta;
+    
+    //------------------------------------------------
+
     constraints_upperbound[_x_start] = x;
     constraints_upperbound[_y_start] = y;
-    constraints_upperbound[_theta_start] = theta;
-    constraints_upperbound[_v_start] = v;
+    constraints_upperbound[_vx_start] = vx;
+    constraints_upperbound[_vy_start] = vy;
+
     constraints_upperbound[_cte_start] = cte;
-    constraints_upperbound[_etheta_start] = etheta;
+    std::cout << "------------ Set FG_eval  ------------" << std::endl;
 
     // object that computes objective and constraints
     FG_eval fg_eval(coeffs);
     fg_eval.LoadParams(_params);
 
+    std::cout << "------------ End FG_eval  ------------" << std::endl;
+
+    std::cout << "------------ Set options  ------------" << std::endl;
 
     // options for IPOPT solver
     std::string options;
@@ -381,6 +424,8 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
     // Change this as you see fit.
     options += "Numeric max_cpu_time          0.5\n";
 
+    std::cout << "------------ set solve  ------------" << std::endl;
+
     // place to return solution
     CppAD::ipopt::solve_result<Dvector> solution;
 
@@ -388,6 +433,9 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
     CppAD::ipopt::solve<Dvector, FG_eval>(
       options, vars, vars_lowerbound, vars_upperbound, constraints_lowerbound,
       constraints_upperbound, fg_eval, solution);
+
+    std::cout << "------------ end solve  ------------" << std::endl;
+
 
     // Check some of the solution values
     ok &= solution.status == CppAD::ipopt::solve_result<Dvector>::success;
@@ -405,7 +453,9 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
         this->mpc_y.push_back(solution.x[_y_start + i]);
     }
     vector<double> result;
-    result.push_back(solution.x[_angvel_start]);
-    result.push_back(solution.x[_a_start]);
+    //result.push_back(solution.x[_angvel_start]);
+    result.push_back(solution.x[_ax_start]);
+    result.push_back(solution.x[_ay_start]);
+
     return result;
 }
