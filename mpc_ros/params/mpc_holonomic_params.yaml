@@ -1,0 +1,72 @@
+
+
+MPCPlannerROS:
+# Robot Configuration Parameters
+  map_frame: "map"
+  odom_frame: "odom"
+  base_frame: "base_footprint"
+  model_type: "holonomic"
+
+  max_vel_trans:  1.0
+  min_vel_trans:  0.01
+  
+  max_vel_x: 0.5
+  min_vel_x: -0.05
+
+  max_vel_y: 0.0
+  min_vel_y: 0.0
+
+  # The velocity when robot is moving in a straight line
+  trans_stopped_vel: 0.01
+
+  max_vel_theta: 1.5
+  min_vel_theta: 0.1
+  theta_stopped_vel: 0.01
+
+  acc_lim_x: 2.0
+  acc_lim_y: 0.0
+  acc_lim_theta: 3.0
+
+  prune_plan: true
+
+# Goal Tolerance Parametes
+  yaw_goal_tolerance: 1.0
+  xy_goal_tolerance: 0.5
+  latch_xy_goal_tolerance: false
+
+# Trajectory Scoring Parameters
+  path_distance_bias: 32.0
+  goal_distance_bias: 20.0
+  occdist_scale: 0.02
+  forward_point_distance: 0.325 # when 0 is, off map warn disappear
+  stop_time_buffer: 0.2
+  scaling_speed: 0.25
+  max_scaling_factor: 0.2
+
+# Oscillation Prevention Parameters
+  oscillation_reset_dist: 0.05
+
+# Debugging
+  publish_traj_pc : true
+  publish_cost_grid_pc: true
+   # global_frame_id: odom
+
+  # Parameters for control loop
+  debug_info: false
+  delay_mode: true
+  waypoints_dist: -1.0 # unit: m, set < 0 means computed by node
+  path_length: 5.0 # unit: m
+
+  # Parameter for MPC solver
+  steps: 10.0
+  ref_cte: 0.0
+  ref_vel: 1.0 #1.0
+  ref_etheta: 0.0
+  w_cte: 1000.0
+  w_etheta: 0.0
+  w_vel: 10.0 #100.0
+  w_angvel: 2000.0 #100.0
+  w_angvel_d: 0.0
+  w_accel: 50.0
+  w_accel_d: 10.0
+  bound_value: 1.0e3 # Bound value for other variables

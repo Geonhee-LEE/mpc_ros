@@ -76,7 +76,7 @@
     
     <!--  ************** MPC Node **************  -->
     <!--node name="nav_mpc" pkg="mpc_ros" type="nav_mpc" output="screen" if="$(eval controller == 'mpc')" >
-        <rosparam file="$(find mpc_ros)/params/mpc_last_params.yaml" command="load" />
+        <rosparam file="$(find mpc_ros)/params/mpc_holonomic_params.yaml" command="load" />
     </node-->
 
     <!--  ************** Pure Pursuit **************  -->
