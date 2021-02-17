@@ -8,13 +8,13 @@ MPCPlannerROS:
   model_type: "holonomic"
 
   max_vel_trans:  1.0
-  min_vel_trans:  0.01
+  min_vel_trans:  -1.0
   
   max_vel_x: 0.5
-  min_vel_x: -0.05
+  min_vel_x: -0.5
 
-  max_vel_y: 0.0
-  min_vel_y: 0.0
+  max_vel_y: 0.5
+  min_vel_y: -0.5
 
   # The velocity when robot is moving in a straight line
   trans_stopped_vel: 0.01
@@ -24,7 +24,7 @@ MPCPlannerROS:
   theta_stopped_vel: 0.01
 
   acc_lim_x: 2.0
-  acc_lim_y: 0.0
+  acc_lim_y: 2.0
   acc_lim_theta: 3.0
 
   prune_plan: true
@@ -65,7 +65,7 @@ MPCPlannerROS:
   w_cte: 1000.0
   w_etheta: 0.0
   w_vel: 10.0 #100.0
-  w_angvel: 2000.0 #100.0
+  w_angvel: 1000.0 #100.0
   w_angvel_d: 0.0
   w_accel: 50.0
   w_accel_d: 10.0

@@ -56,6 +56,7 @@ MPC::MPC()
     _vy_start = _vx_start + _mpc_steps;
     _cte_h_start   = _vy_start + _mpc_steps;
     _etheta_h_start  = _cte_h_start + _mpc_steps;
+
     _angvel_h_start = _etheta_h_start + _mpc_steps;
     _ax_start     = _angvel_h_start + _mpc_steps - 1;
     _ay_start     = _ax_start + _mpc_steps - 1;
@@ -382,6 +383,8 @@ vector<double> MPC::bicycleModelSolve(Eigen::VectorXd state, Eigen::VectorXd coe
 
 vector<double> MPC::holonomicModelSolve(Eigen::VectorXd state, Eigen::VectorXd coeffs) 
 {
+    cout << "Start holonomic solve" << endl;
+
     bool ok = true;
     size_t i;
     typedef CPPAD_TESTVECTOR(double) Dvector;
@@ -400,7 +403,7 @@ vector<double> MPC::holonomicModelSolve(Eigen::VectorXd state, Eigen::VectorXd c
     size_t n_vars = _mpc_steps * 7 + (_mpc_steps - 1) * 3;
     
     // Set the number of constraints
-    size_t n_constraints = _mpc_steps * 6;
+    size_t n_constraints = _mpc_steps * 7;
 
     // Initial value of the independent variables.
     // SHOULD BE 0 besides initial state.
@@ -479,9 +482,18 @@ vector<double> MPC::holonomicModelSolve(Eigen::VectorXd state, Eigen::VectorXd c
     constraints_upperbound[_cte_h_start] = cte;
     constraints_upperbound[_etheta_h_start] = etheta;
 
+    cout << "constraint set" << endl;
+
+
     // object that computes objective and constraints
     HolonomicKinematicModel model(coeffs);
+
+    cout << "holonomic model" << endl;
+
     model.loadParams(_params);
+
+    cout << "holonomic model loadParam" << endl;
+
 
     // options for IPOPT solver
     std::string options;
@@ -498,6 +510,9 @@ vector<double> MPC::holonomicModelSolve(Eigen::VectorXd state, Eigen::VectorXd c
     // Change this as you see fit.
     options += "Numeric max_cpu_time          0.5\n";
 
+
+    cout << "set option" << endl;
+
     // place to return solution
     CppAD::ipopt::solve_result<Dvector> solution;
 
@@ -508,6 +523,8 @@ vector<double> MPC::holonomicModelSolve(Eigen::VectorXd state, Eigen::VectorXd c
 
     // Check some of the solution values
     ok &= solution.status == CppAD::ipopt::solve_result<Dvector>::success;
+
+    cout << "get solve" << endl;
 
     // Cost
     auto cost = solution.obj_value;

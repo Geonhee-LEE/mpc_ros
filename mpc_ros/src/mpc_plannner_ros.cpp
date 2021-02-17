@@ -586,7 +586,7 @@ namespace mpc_ros{
 
         }
 
-        else if(model_type == "holonoimic")
+        else if(model_type == "holonomic")
         {
             
             VectorXd state(7);
@@ -619,7 +619,7 @@ namespace mpc_ros{
         cout << "Duration: " << end.sec << "." << end.nsec << endl << begin.sec<< "."  << begin.nsec << endl;
             
         // MPC result (all described in car frame), output = (acceleration, w)        
-        if(model_type != "holonoimic")
+        if(model_type != "holonomic")
         {
             _w = mpc_results[0]; // radian/sec, angular velocity
             _throttle_x = mpc_results[1]; // acceleration
@@ -636,6 +636,7 @@ namespace mpc_ros{
 
         else
         {
+            cout << "holonomic results" << endl;
 
             _w = mpc_results[0]; // radian/sec, angular velocity
             _throttle_x = mpc_results[1]; // acceleration
@@ -644,6 +645,12 @@ namespace mpc_ros{
             _speed_x = v_x + _throttle_x * dt;  // speed
             _speed_y = v_y + _throttle_y * dt;  // speed
    
+            cout << "thorottle_x" << _throttle_x <<endl;
+            cout << "thorottle_y" << _throttle_y <<endl;
+            cout << "speed_x" << _speed_x <<endl;
+            cout << "speed_y" << _speed_y <<endl;
+
+
             if(_speed_x >= max_vel_trans)
                 _speed_x = max_vel_trans;
             if(_speed_x < -max_vel_trans)
