@@ -64,6 +64,9 @@ namespace mpc_ros{
         private_nh.param<std::string>("base_frame", _base_frame, "base_footprint");
         private_nh.param<std::string>("model_type", model_type, "unicycle");
 
+        // Paramters for Bicycle model
+        private_nh.param<double>("Lf", _Lf, 0.4);
+
 
         //Publishers and Subscribers
         _sub_odom   = _nh.subscribe("odom", 1, &MPCPlannerROS::odomCB, this);
@@ -154,7 +157,7 @@ namespace mpc_ros{
 
         //Init parameters for MPC object
         _mpc_params["DT"] = _dt;
-        //_mpc_params["LF"] = _Lf;
+        _mpc_params["LF"] = _Lf; // Bicycle
         _mpc_params["STEPS"]    = _mpc_steps;
         _mpc_params["REF_CTE"]  = _ref_cte;
         _mpc_params["REF_ETHETA"] = _ref_etheta;

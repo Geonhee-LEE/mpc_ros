@@ -67,27 +67,28 @@ class BicycleKinematicModel: public KinematicModel
     void loadParams(const std::map<string, double> &params)
     {
         _dt = params.find("DT") != params.end() ? params.at("DT") : _dt;
+        _Lf = params.find("LF") != params.end() ? params.at("LF") : _Lf;
         _mpc_steps = params.find("STEPS") != params.end()    ? params.at("STEPS") : _mpc_steps;
         _ref_cte   = params.find("REF_CTE") != params.end()  ? params.at("REF_CTE") : _ref_cte;
-        _ref_etheta  = params.find("REF_ETHETA") != params.end() ? params.at("REF_ETHETA") : _ref_etheta;
+        _ref_epsi  = params.find("REF_EPSI") != params.end() ? params.at("REF_EPSI") : _ref_epsi;
         _ref_vel   = params.find("REF_V") != params.end()    ? params.at("REF_V") : _ref_vel;
         
         _w_cte   = params.find("W_CTE") != params.end()   ? params.at("W_CTE") : _w_cte;
-        _w_etheta  = params.find("W_EPSI") != params.end()  ? params.at("W_EPSI") : _w_etheta;
+        _w_epsi  = params.find("W_EPSI") != params.end()  ? params.at("W_EPSI") : _w_epsi;
         _w_vel   = params.find("W_V") != params.end()     ? params.at("W_V") : _w_vel;
-        _w_angvel = params.find("W_ANGVEL") != params.end() ? params.at("W_ANGVEL") : _w_angvel;
+        _w_delta = params.find("W_DELTA") != params.end() ? params.at("W_DELTA") : _w_delta;
         _w_accel = params.find("W_A") != params.end()     ? params.at("W_A") : _w_accel;
-        _w_angvel_d = params.find("W_DANGVEL") != params.end() ? params.at("W_DANGVEL") : _w_angvel_d;
+        _w_delta_d = params.find("W_DDELTA") != params.end() ? params.at("W_DDELTA") : _w_delta_d;
         _w_accel_d = params.find("W_DA") != params.end()     ? params.at("W_DA") : _w_accel_d;
 
         _x_start     = 0;
         _y_start     = _x_start + _mpc_steps;
-        _theta_start   = _y_start + _mpc_steps;
-        _v_start     = _theta_start + _mpc_steps;
+        _psi_start   = _y_start + _mpc_steps;
+        _v_start     = _psi_start + _mpc_steps;
         _cte_start   = _v_start + _mpc_steps;
-        _etheta_start  = _cte_start + _mpc_steps;
-        _angvel_start = _etheta_start + _mpc_steps;
-        _a_start     = _angvel_start + _mpc_steps - 1;
+        _epsi_start  = _cte_start + _mpc_steps;
+        _delta_start = _epsi_start + _mpc_steps;
+        _a_start     = _delta_start + _mpc_steps - 1;
         
         //cout << "\n!! FG_eval Obj parameters updated !! " << _mpc_steps << endl; 
     }

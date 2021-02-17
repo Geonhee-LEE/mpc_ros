@@ -164,7 +164,7 @@ namespace mpc_ros{
             double _mpc_steps, _ref_cte, _ref_etheta, _ref_vel, _w_cte, _w_etheta, _w_vel, 
                 _w_angvel, _w_accel, _w_angvel_d, _w_accel_d, max_vel_theta, acc_lim_trans, _bound_value;
             double controller_freq;
-            //double _Lf; 
+            double _Lf; // bycycle 
             double _dt, _w, _throttle, _speed, max_vel_trans;
             double _pathLength, _goalRadius, _waypointsDist;
             int _downSampling;

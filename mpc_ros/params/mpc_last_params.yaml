@@ -70,3 +70,6 @@ MPCPlannerROS:
   w_accel: 50.0
   w_accel_d: 10.0
   bound_value: 1.0e3 # Bound value for other variables
+
+  # Paramter for Bicycle model
+  Lf: 0.4
