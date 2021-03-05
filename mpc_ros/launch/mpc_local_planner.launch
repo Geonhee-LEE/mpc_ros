@@ -19,7 +19,7 @@
     <param name="robot_description" command="$(find xacro)/xacro.py $(find servingbot_description)/urdf/servingbot.urdf.xacro" if="$(eval model == 'serving_bot')"/>
 
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
-        <arg name="world_name" value="$(find mpc_ros)/worlds/sq_world.world"/>
+        <arg name="world_name" value="$(find mpc_ros)/worlds/big_s_world.world"/>
         <arg name="paused" value="false"/>
         <arg name="use_sim_time" value="true"/>
         <arg name="gui" value="$(arg gui)"/>
@@ -36,7 +36,7 @@
 
 
     <!--  ************** Map **************  -->
-    <node name="map_server" pkg="map_server" type="map_server" args="$(find mpc_ros)/map/sq_world.yaml" output="screen">
+    <node name="map_server" pkg="map_server" type="map_server" args="$(find mpc_ros)/map/big_s_world.yaml" output="screen">
         <param name="frame_id" value="map"/>
     </node>
 

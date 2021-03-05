@@ -12,8 +12,8 @@
     <arg name="z_pos" default="0.0"/>
     <arg name="roll" default="0"/>
     <arg name="pitch" default="0"/>
-    <arg name="yaw" default="-1.507"/>
-    <arg name="gui" default="false"/>
+    <arg name="yaw" default="0"/>
+    <arg name="gui" default="true"/>
 
     <!--  ************** Robot model ***************  -->
     <param name="robot_description" command="$(find xacro)/xacro.py $(find mpc_model_description)/urdf/holonomic/holonomic.urdf.xacro" if="$(eval model == 'holonomic')"/>
@@ -66,7 +66,7 @@
         <rosparam file="$(find mpc_ros)/params/global_planner_params.yaml" command="load" />
         
         <!-- Local Planner -->
-        <rosparam file="$(find mpc_ros)/params/mpc_last_params.yaml" command="load" />
+        <rosparam file="$(find mpc_ros)/params/mpc_holonomic_params.yaml" command="load" />
         <param name="base_local_planner" value="mpc_ros/MPCPlannerROS"  if="$(eval controller == 'mpc')"/>
         <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS"  if="$(eval controller == 'dwa')"/>    
         
@@ -76,7 +76,7 @@
     
     <!--  ************** MPC Node **************  -->
     <!--node name="nav_mpc" pkg="mpc_ros" type="nav_mpc" output="screen" if="$(eval controller == 'mpc')" >
-        <rosparam file="$(find mpc_ros)/params/mpc_last_params.yaml" command="load" />
+        <rosparam file="$(find mpc_ros)/params/mpc_holonomic_params.yaml" command="load" />
     </node-->
 
     <!--  ************** Pure Pursuit **************  -->

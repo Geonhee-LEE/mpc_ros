@@ -49,6 +49,8 @@ class MPC
         // Parameters for mpc solver
         double _max_angvel, _max_throttle, _bound_value;
         int _mpc_steps, _x_start, _y_start, _theta_start, _v_start, _cte_start, _etheta_start, _angvel_start, _a_start;
+        int _vx_start, _vy_start, _cte_h_start, _etheta_h_start, _angvel_h_start, _ax_start, _ay_start;
+
         std::map<string, double> _params;
         std::string model_type;
 

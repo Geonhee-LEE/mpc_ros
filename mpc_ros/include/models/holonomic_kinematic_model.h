@@ -27,7 +27,6 @@ namespace mpc_ros {
 class HolonomicKinematicModel : public KinematicModel 
 {
     public:
-        HolonomicKinematicModel(){}
         
         HolonomicKinematicModel(Eigen::VectorXd coeffs) 
         { 
@@ -47,14 +46,19 @@ class HolonomicKinematicModel : public KinematicModel
             _w_accel_d = 0;
 
             _mpc_steps   = 40;
+
             _x_start     = 0;
             _y_start     = _x_start + _mpc_steps;
             _theta_start   = _y_start + _mpc_steps;
-            _v_start     = _theta_start + _mpc_steps;
-            _cte_start   = _v_start + _mpc_steps;
+            _vx_start     = _theta_start + _mpc_steps;
+            _vy_start     = _vx_start + _mpc_steps;
+
+            _cte_start   = _vy_start + _mpc_steps;
             _etheta_start  = _cte_start + _mpc_steps;
             _angvel_start = _etheta_start + _mpc_steps;
-            _a_start     = _angvel_start + _mpc_steps - 1;
+
+            _ax_start     = _angvel_start + _mpc_steps - 1;
+            _ay_start     = _ax_start + _mpc_steps - 1;
         }
 
         void loadParams(const std::map<string, double> &params)
@@ -76,11 +80,14 @@ class HolonomicKinematicModel : public KinematicModel
             _x_start     = 0;
             _y_start     = _x_start + _mpc_steps;
             _theta_start   = _y_start + _mpc_steps;
-            _v_start     = _theta_start + _mpc_steps;
-            _cte_start   = _v_start + _mpc_steps;
+            _vx_start     = _theta_start + _mpc_steps;
+            _vy_start     = _vx_start + _mpc_steps;
+
+            _cte_start   = _vy_start + _mpc_steps;
             _etheta_start  = _cte_start + _mpc_steps;
             _angvel_start = _etheta_start + _mpc_steps;
-            _a_start     = _angvel_start + _mpc_steps - 1;
+            _ax_start     = _angvel_start + _mpc_steps - 1;
+            _ay_start     = _ax_start + _mpc_steps - 1;
             
             //cout << "\n!! FG_eval Obj parameters updated !! " << _mpc_steps << endl; 
         }
@@ -91,31 +98,39 @@ class HolonomicKinematicModel : public KinematicModel
             fg[0] = 0;
             cost_cte =  0;
             cost_etheta = 0;
-            cost_vel = 0;
+            cost_vel_x = 0;
+            cost_vel_y = 0;
 
             for (int i = 0; i < _mpc_steps; i++) 
             {
               fg[0] += _w_cte * CppAD::pow(vars[_cte_start + i] - _ref_cte, 2); // cross deviation error
               fg[0] += _w_etheta * CppAD::pow(vars[_etheta_start + i] - _ref_etheta, 2); // heading error
-              fg[0] += _w_vel * CppAD::pow(vars[_v_start + i] - _ref_vel, 2); // speed error
+              
+              fg[0] += _w_vel * CppAD::pow(vars[_vx_start + i] - _ref_vel, 2); // speed_x error
+              fg[0] += _w_vel * CppAD::pow(vars[_vy_start + i] - _ref_vel, 2); // speed_y error
 
               cost_cte +=  _w_cte * CppAD::pow(vars[_cte_start + i] - _ref_cte, 2);
               cost_etheta +=  (_w_etheta * CppAD::pow(vars[_etheta_start + i] - _ref_etheta, 2)); 
-              cost_vel +=  (_w_vel * CppAD::pow(vars[_v_start + i] - _ref_vel, 2)); 
+              
+              cost_vel_x +=  (_w_vel * CppAD::pow(vars[_vx_start + i] - _ref_vel, 2)); 
+              cost_vel_y +=  (_w_vel * CppAD::pow(vars[_vy_start + i] - _ref_vel, 2)); 
+                        
             }
 
             // Minimize the use of actuators.
             for (int i = 0; i < _mpc_steps - 1; i++) {
               fg[0] += _w_angvel * CppAD::pow(vars[_angvel_start + i], 2);
-              fg[0] += _w_accel * CppAD::pow(vars[_a_start + i], 2);
-            }
+              fg[0] += _w_accel * CppAD::pow(vars[_ax_start + i], 2);
+              fg[0] += _w_accel * CppAD::pow(vars[_ay_start + i], 2); //error
+              
+             }
 
             // Minimize the value gap between sequential actuations.
             for (int i = 0; i < _mpc_steps - 2; i++) {
               fg[0] += _w_angvel_d * CppAD::pow(vars[_angvel_start + i + 1] - vars[_angvel_start + i], 2);
-              fg[0] += _w_accel_d * CppAD::pow(vars[_a_start + i + 1] - vars[_a_start + i], 2);
+              fg[0] += _w_accel_d * CppAD::pow(vars[_ax_start + i + 1] - vars[_ax_start + i], 2);
+              fg[0] += _w_accel_d * CppAD::pow(vars[_ay_start + i + 1] - vars[_ay_start + i], 2);
             }
-            
             
 
             // fg[x] for constraints
@@ -123,7 +138,8 @@ class HolonomicKinematicModel : public KinematicModel
             fg[1 + _x_start] = vars[_x_start];
             fg[1 + _y_start] = vars[_y_start];
             fg[1 + _theta_start] = vars[_theta_start];
-            fg[1 + _v_start] = vars[_v_start];
+            fg[1 + _vx_start] = vars[_vx_start];
+            fg[1 + _vy_start] = vars[_vy_start];
             fg[1 + _cte_start] = vars[_cte_start];
             fg[1 + _etheta_start] = vars[_etheta_start];
 
@@ -134,7 +150,9 @@ class HolonomicKinematicModel : public KinematicModel
                 AD<double> x1 = vars[_x_start + i + 1];
                 AD<double> y1 = vars[_y_start + i + 1];
                 AD<double> theta1 = vars[_theta_start + i + 1];
-                AD<double> v1 = vars[_v_start + i + 1];
+                AD<double> vx1 = vars[_vx_start + i + 1];
+                AD<double> vy1 = vars[_vy_start + i + 1];
+
                 AD<double> cte1 = vars[_cte_start + i + 1];
                 AD<double> etheta1 = vars[_etheta_start + i + 1];
 
@@ -142,15 +160,17 @@ class HolonomicKinematicModel : public KinematicModel
                 AD<double> x0 = vars[_x_start + i];
                 AD<double> y0 = vars[_y_start + i];
                 AD<double> theta0 = vars[_theta_start + i];
-                AD<double> v0 = vars[_v_start + i];
+                AD<double> vx0 = vars[_vx_start + i];
+                AD<double> vy0 = vars[_vy_start + i];
+                
                 AD<double> cte0 = vars[_cte_start + i];
                 AD<double> etheta0 = vars[_etheta_start + i];
 
                 // Only consider the actuation at time t.
                 //AD<double> angvel0 = vars[_angvel_start + i];
                 AD<double> w0 = vars[_angvel_start + i];
-                AD<double> a0 = vars[_a_start + i];
-
+                AD<double> ax0 = vars[_ax_start + i];
+                AD<double> ay0 = vars[_ay_start + i];
 
                 //AD<double> f0 = coeffs[0] + coeffs[1] * x0 + coeffs[2] * CppAD::pow(x0, 2) + coeffs[3] * CppAD::pow(x0, 3);
                 AD<double> f0 = 0.0;
@@ -174,13 +194,16 @@ class HolonomicKinematicModel : public KinematicModel
                 // This is also CppAD can compute derivatives and pass
                 // these to the solver.
                 // TODO: Setup the rest of the model constraints       
-                fg[2 + _x_start + i] = x1 - (x0 + v0 * CppAD::cos(theta0) * _dt);
-                fg[2 + _y_start + i] = y1 - (y0 + v0 * CppAD::sin(theta0) * _dt);
-                fg[2 + _theta_start + i] = theta1 - (theta0 +  w0 * _dt);                
-                fg[2 + _v_start + i] = v1 - (v0 + a0 * _dt);
-                fg[2 + _cte_start + i] = cte1 - ((f0 - y0) + (v0 * CppAD::sin(etheta0) * _dt));
-                //fg[2 + _etheta_start + i] = etheta1 - ((theta0 - trj_grad0) + w0 * _dt);//theta0-trj_grad0)->etheta : it can have more curvature prediction, but its gradient can be only adjust positive plan.   
-                fg[2 + _etheta_start + i] = etheta1 - (etheta0 + w0 * _dt);
+                fg[2 + _x_start + i] = x1 - (x0 - (vy0 * CppAD::sin(theta0) - vx0 * CppAD::cos(theta0)) * _dt);
+                fg[2 + _y_start + i] = y1 - (y0 + (vy0 * CppAD::cos(theta0) + vx0 * CppAD::sin(theta0)) * _dt);
+                fg[2 + _theta_start + i] = theta1 - (theta0 +  w0 * _dt);
+                fg[2 + _vx_start + i] = vx1 - (vx0 + ax0 * _dt); //ax0 * CppAD::sin(theta0) * dt + ay0 * CppAD::cos(theta0) * dt
+                fg[2 + _vy_start + i] = vy1 - (vy0 + ay0 * _dt); //ax0 * CppAD::cos(theta0) * dt + ay0 * CppAD::sin(theta0) * dt
+
+                //fg[2 + _cte_start + i] = cte1 - ((f0 - y0) + (vx0 * CppAD::sin(etheta0) * _dt)) - ((f0 - x0) + (vy0 * CppAD::cos(etheta0) * _dt));
+                fg[2 + _cte_start + i] = cte1 - ((f0 - y0) + (vx0 * CppAD::sin(etheta0) * _dt));
+                fg[2 + _etheta_start + i] = etheta1 - ((theta0 - trj_grad0) + w0 * _dt);
+
             }
         }
 };
