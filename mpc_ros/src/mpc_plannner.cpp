@@ -459,6 +459,7 @@ vector<double> MPC::holonomicModelSolve(Eigen::VectorXd state, Eigen::VectorXd c
     // Should be 0 besides initial state.
     Dvector constraints_lowerbound(n_constraints);
     Dvector constraints_upperbound(n_constraints);
+    
     for (int i = 0; i < n_constraints; i++)
     {
         constraints_lowerbound[i] = 0;

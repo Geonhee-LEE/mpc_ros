@@ -1,5 +1,3 @@
-
-
 MPCPlannerROS:
 # Robot Configuration Parameters
   map_frame: "map"
@@ -20,7 +18,7 @@ MPCPlannerROS:
   trans_stopped_vel: 0.01
 
   max_vel_theta: 1.5
-  min_vel_theta: 0.1
+  min_vel_theta: -1.5
   theta_stopped_vel: 0.01
 
   acc_lim_x: 2.0
@@ -63,10 +61,10 @@ MPCPlannerROS:
   ref_vel: 1.0 #1.0
   ref_etheta: 0.0
   w_cte: 1000.0
-  w_etheta: 0.0
-  w_vel: 10.0 #100.0
+  w_etheta: 10.0
+  w_vel: 100.0 #100.0
   w_angvel: 1000.0 #100.0
-  w_angvel_d: 0.0
+  w_angvel_d: 10.0
   w_accel: 50.0
   w_accel_d: 10.0
   bound_value: 1.0e3 # Bound value for other variables

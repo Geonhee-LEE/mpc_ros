@@ -36,3 +36,5 @@ cd CUSTOM_PATH/Ipopt-3.12.8/build
 sudo cp -a include/* /usr/include/.  
 sudo cp -a lib/* /usr/lib/.  
 ```
+
+

@@ -64,6 +64,7 @@ namespace mpc_ros{
         private_nh.param<std::string>("base_frame", _base_frame, "base_footprint");
         private_nh.param<std::string>("model_type", model_type, "unicycle");
 
+        cout << "model_type : " << model_type << endl;
 
         //Publishers and Subscribers
         _sub_odom   = _nh.subscribe("odom", 1, &MPCPlannerROS::odomCB, this);
@@ -653,11 +654,13 @@ namespace mpc_ros{
 
             if(_speed_x >= max_vel_trans)
                 _speed_x = max_vel_trans;
+
             if(_speed_x < -max_vel_trans)
                 _speed_x = -max_vel_trans;
 
             if (_speed_y >= max_vel_trans)
                 _speed_y = max_vel_trans;
+        
             if(_speed_y < -max_vel_trans)
                 _speed_y = -max_vel_trans;
         }
@@ -672,13 +675,13 @@ namespace mpc_ros{
             //cout << "odom_path: \n" << odom_path << endl;
             //cout << "x_points: \n" << x_veh << endl;
             //cout << "y_points: \n" << y_veh << endl;
-            cout << "coeffs: \n" << coeffs << endl;
-            cout << "_w: \n" << _w << endl;
-            cout << "_throttle_x: \n" << _throttle_x << endl;
-            cout << "_throttle_y: \n" << _throttle_y << endl;
+            cout << "coeffs : \n" << coeffs << endl;
+            cout << "_w : \n" << _w << endl;
+            cout << "_throttle_x : \n" << _throttle_x << endl;
+            cout << "_throttle_y : \n" << _throttle_y << endl;
 
-            cout << "_speed_x: \n" << _speed_x << endl;
-            cout << "_speed_y: \n" << _speed_y << endl;
+            cout << "_speed_x : \n" << _speed_x << endl;
+            cout << "_speed_y : \n" << _speed_y << endl;
         }
 
         // Display the MPC predicted trajectory

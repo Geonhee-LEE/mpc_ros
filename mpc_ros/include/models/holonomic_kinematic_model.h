@@ -27,7 +27,6 @@ namespace mpc_ros {
 class HolonomicKinematicModel : public KinematicModel 
 {
     public:
-        HolonomicKinematicModel(){}
         
         HolonomicKinematicModel(Eigen::VectorXd coeffs) 
         { 
@@ -46,6 +45,8 @@ class HolonomicKinematicModel : public KinematicModel
             _w_angvel_d = 0;
             _w_accel_d = 0;
 
+            _mpc_steps   = 40;
+
             _x_start     = 0;
             _y_start     = _x_start + _mpc_steps;
             _theta_start   = _y_start + _mpc_steps;
@@ -55,6 +56,7 @@ class HolonomicKinematicModel : public KinematicModel
             _cte_start   = _vy_start + _mpc_steps;
             _etheta_start  = _cte_start + _mpc_steps;
             _angvel_start = _etheta_start + _mpc_steps;
+
             _ax_start     = _angvel_start + _mpc_steps - 1;
             _ay_start     = _ax_start + _mpc_steps - 1;
         }
@@ -103,11 +105,13 @@ class HolonomicKinematicModel : public KinematicModel
             {
               fg[0] += _w_cte * CppAD::pow(vars[_cte_start + i] - _ref_cte, 2); // cross deviation error
               fg[0] += _w_etheta * CppAD::pow(vars[_etheta_start + i] - _ref_etheta, 2); // heading error
+              
               fg[0] += _w_vel * CppAD::pow(vars[_vx_start + i] - _ref_vel, 2); // speed_x error
               fg[0] += _w_vel * CppAD::pow(vars[_vy_start + i] - _ref_vel, 2); // speed_y error
 
               cost_cte +=  _w_cte * CppAD::pow(vars[_cte_start + i] - _ref_cte, 2);
               cost_etheta +=  (_w_etheta * CppAD::pow(vars[_etheta_start + i] - _ref_etheta, 2)); 
+              
               cost_vel_x +=  (_w_vel * CppAD::pow(vars[_vx_start + i] - _ref_vel, 2)); 
               cost_vel_y +=  (_w_vel * CppAD::pow(vars[_vy_start + i] - _ref_vel, 2)); 
                         
@@ -198,7 +202,7 @@ class HolonomicKinematicModel : public KinematicModel
                 //fg[2 + _cte_start + i] = cte1 - ((f0 - y0) + (vx0 * CppAD::sin(etheta0) * _dt)) - ((f0 - x0) + (vy0 * CppAD::cos(etheta0) * _dt));
                 fg[2 + _cte_start + i] = cte1 - ((f0 - y0) + (vx0 * CppAD::sin(etheta0) * _dt));
                 fg[2 + _etheta_start + i] = etheta1 - ((theta0 - trj_grad0) + w0 * _dt);
-                
+
             }
         }
 };

@@ -52,8 +52,8 @@ catkin_package(
 ###########
 
 # General MPC_Node 
-ADD_EXECUTABLE( MPC_Node src/MPC.cpp src/MPC_Node.cpp )
-TARGET_LINK_LIBRARIES(MPC_Node ipopt ${catkin_LIBRARIES} )
+# ADD_EXECUTABLE( MPC_Node src/MPC.cpp src/MPC_Node.cpp )
+# TARGET_LINK_LIBRARIES(MPC_Node ipopt ${catkin_LIBRARIES} )
 
 # Total navigation with MPC_Node
 ADD_EXECUTABLE( nav_mpc src/navMPC.cpp src/navMPCNode.cpp )
