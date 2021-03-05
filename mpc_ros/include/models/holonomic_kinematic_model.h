@@ -122,6 +122,7 @@ class HolonomicKinematicModel : public KinematicModel
               fg[0] += _w_angvel * CppAD::pow(vars[_angvel_start + i], 2);
               fg[0] += _w_accel * CppAD::pow(vars[_ax_start + i], 2);
               fg[0] += _w_accel * CppAD::pow(vars[_ay_start + i], 2); //error
+              
              }
 
             // Minimize the value gap between sequential actuations.

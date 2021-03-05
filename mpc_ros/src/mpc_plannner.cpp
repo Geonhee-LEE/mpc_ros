@@ -219,6 +219,7 @@ vector<double> MPC::unicycleModelSolve(Eigen::VectorXd state, Eigen::VectorXd co
     // Cost
     auto cost = solution.obj_value;
     std::cout << "------------ Total Cost(solution): " << cost << "------------" << std::endl;
+
     cout << "max_angvel:" << _max_angvel <<endl;
     cout << "max_throttle:" << _max_throttle <<endl;
  
@@ -474,6 +475,7 @@ vector<double> MPC::holonomicModelSolve(Eigen::VectorXd state, Eigen::VectorXd c
     constraints_lowerbound[_cte_h_start] = cte;
     constraints_lowerbound[_etheta_h_start] = etheta;
     
+
     constraints_upperbound[_x_start] = x;
     constraints_upperbound[_y_start] = y;
     constraints_upperbound[_theta_start] = theta;
@@ -529,7 +531,9 @@ vector<double> MPC::holonomicModelSolve(Eigen::VectorXd state, Eigen::VectorXd c
 
     // Cost
     auto cost = solution.obj_value;
+
     std::cout << "------------ Total Cost(solution): " << cost << "------------" << std::endl;
+    
     cout << "max_angvel:" << _max_angvel <<endl;
     cout << "max_throttle:" << _max_throttle <<endl;
  
@@ -538,17 +542,51 @@ vector<double> MPC::holonomicModelSolve(Eigen::VectorXd state, Eigen::VectorXd c
     this->mpc_x = {};
     this->mpc_y = {};
     this->mpc_theta = {};
+    
+    cout << solution.x[0] <<endl;
+
+    cout << "solution.x:" << sizeof(solution.x) <<endl;
+    cout << "x start:" << _x_start <<endl;
+    cout << "y start:" << _y_start <<endl;
+    cout << "theta start:" << _theta_start <<endl;
+    cout << "_angvel_h_start:" << _angvel_h_start <<endl;
+    cout << "_ax_start:" << _ax_start <<endl;
+    cout << "_ay_start:" << _ay_start <<endl;
+
+
+
+
     for (int i = 0; i < _mpc_steps; i++) 
     {
+        cout << "mpc_steps:" << _mpc_steps <<endl;
+        cout << "i:" << i <<endl;
+
         this->mpc_x.push_back(solution.x[_x_start + i]);
+
+        cout << "_x_start:" << i <<endl;
+
         this->mpc_y.push_back(solution.x[_y_start + i]);
+
+        cout << "_y_start:" << i <<endl;
+
         this->mpc_theta.push_back(solution.x[_theta_start + i]);
+
+        cout << "_theta_start:" << i <<endl;
+
     }
     
     vector<double> result;
+
     result.push_back(solution.x[_angvel_h_start]);
+    cout << "_angvel_h_start:" << i <<endl;
+
     result.push_back(solution.x[_ax_start]);
+
+    cout << "_ax_start:" << i <<endl;
+
     result.push_back(solution.x[_ay_start]);
+
+    cout << "_ay_start:" << i <<endl;
 
     return result;
 }
