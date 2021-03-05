@@ -576,6 +576,8 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         VectorXd state(7);
         if(_delay_mode)
         {
+
+            
             // Kinematic model is used to predict vehicle state at the actual moment of control (current time + delay dt)
             const double px_act = vx * dt;
             const double py_act = vy * dt;

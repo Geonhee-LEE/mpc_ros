@@ -236,10 +236,10 @@ class FG_eval
                 fg[2 + _vx_start + i] = vx1 - (vx0 + ax0 * _dt); //ax0 * CppAD::sin(theta0) * dt + ay0 * CppAD::cos(theta0) * dt
                 fg[2 + _vy_start + i] = vy1 - (vy0 + ay0 * _dt); //ax0 * CppAD::cos(theta0) * dt + ay0 * CppAD::sin(theta0) * dt
 
-                //fg[2 + _cte_start + i] = cte1 - ((f0 - y0) + (vx0 * CppAD::sin(etheta0) * _dt) + (vy0 * CppAD::cos(etheta0) * _dt));
+                //fg[2 + _cte_start + i] = cte1 - ((f0 - y0) + (vx0 * CppAD::sin(etheta0) * _dt)) - ((f0 - x0) + (vy0 * CppAD::cos(etheta0) * _dt));
                 fg[2 + _cte_start + i] = cte1 - ((f0 - y0) + (vx0 * CppAD::sin(etheta0) * _dt));
-
                 fg[2 + _etheta_start + i] = etheta1 - ((theta0 - trj_grad0) + w0 * _dt);
+
             }
             cout << "operatoer: " << fg.size() << endl; 
 

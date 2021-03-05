@@ -17,7 +17,7 @@
 
 
     <!--  ************** Robot model ***************  -->
-    <param name="robot_description" command="$(find xacro)/xacro.py $(find servingbot_description)/urdf/holonomic.urdf.xacro" if="$(eval model == 'holo_bot')"/>
+    <param name="robot_description" command="$(find xacro)/xacro.py $(find mpc_model_gazebo)/urdf/holonomic.urdf.xacro" if="$(eval model == 'holo_bot')"/>
 
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="world_name" value="$(find mpc_ros)/worlds/sq_world.world"/>
@@ -28,7 +28,7 @@
         <arg name="debug" value="false"/>
     </include>
     
-    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model simple_holo -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -R $(arg roll) -P $(arg pitch) -Y $(arg yaw) -param robot_description" />
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model holonomic_bot -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -R $(arg roll) -P $(arg pitch) -Y $(arg yaw) -param robot_description" />
       
     <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
         <param name="publish_frequency" type="double" value="50.0" />
