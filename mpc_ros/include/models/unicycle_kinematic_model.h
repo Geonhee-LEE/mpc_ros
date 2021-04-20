@@ -88,6 +88,7 @@ class UnicycleKinematicModel : public KinematicModel
         {
             // fg[0] for cost function
             fg[0] = 0;
+
             cost_cte =  0;
             cost_etheta = 0;
             cost_vel = 0;
@@ -111,8 +112,9 @@ class UnicycleKinematicModel : public KinematicModel
 
             // Minimize the value gap between sequential actuations.
             for (int i = 0; i < _mpc_steps - 2; i++) {
-              fg[0] += _w_angvel_d * CppAD::pow(vars[_angvel_start + i + 1] - vars[_angvel_start + i], 2);
               fg[0] += _w_accel_d * CppAD::pow(vars[_a_start + i + 1] - vars[_a_start + i], 2);
+              fg[0] += _w_angvel_d * CppAD::pow(vars[_angvel_start + i + 1] - vars[_angvel_start + i], 2);
+
             }
             
             
@@ -179,7 +181,8 @@ class UnicycleKinematicModel : public KinematicModel
                 fg[2 + _v_start + i] = v1 - (v0 + a0 * _dt);
                 fg[2 + _cte_start + i] = cte1 - ((f0 - y0) + (v0 * CppAD::sin(etheta0) * _dt));
                 //fg[2 + _etheta_start + i] = etheta1 - ((theta0 - trj_grad0) + w0 * _dt);//theta0-trj_grad0)->etheta : it can have more curvature prediction, but its gradient can be only adjust positive plan.   
-                fg[2 + _etheta_start + i] = etheta1 - (etheta0 + w0 * _dt);
+                //fg[2 + _etheta_start + i] = etheta1 - (etheta0 + w0 * _dt);
+                fg[2 + _etheta_start + i] = etheta1 - ((theta0 - trj_grad0) + w0 * _dt);
             }
         }
 };

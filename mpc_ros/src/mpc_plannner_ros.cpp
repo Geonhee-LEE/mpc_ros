@@ -477,30 +477,49 @@ namespace mpc_ros{
 
         // Waypoints related parameters
         const int N = odom_path.poses.size(); // Number of waypoints
-        const double costheta = cos(theta);
-        const double sintheta = sin(theta);
+        
+        std::array<double, 40> ptsx;
+        std::array<double, 40> ptsy;
+        
+        const double costheta = cos(-theta);
+        const double sintheta = sin(-theta);
         
         cout << "px, py : " << px << ", "<< py << ", theta: " << theta << " , N: " << N << endl;
         // Convert to the vehicle coordinate system
         VectorXd x_veh(N);
         VectorXd y_veh(N);
+        
+        
         for(int i = 0; i < N; i++) 
         {
             const double dx = odom_path.poses[i].pose.position.x - px;
             const double dy = odom_path.poses[i].pose.position.y - py;
-            x_veh[i] = dx * costheta + dy * sintheta;
-            y_veh[i] = dy * costheta - dx * sintheta;
+            //x_veh[i] = dx * costheta - dy * sintheta;
+            //y_veh[i] = dy * costheta + dx * sintheta;
+            
+            ptsx[i] = dx * costheta - dy * sintheta;
+            ptsy[i] = dy * costheta + dx * sintheta;
+            
             //cout << "x_veh : " << x_veh[i]<< ", y_veh: " << y_veh[i] << endl;
         }
 
+        double *ptrx = &ptsx[0];
+        Eigen::Map<Eigen::VectorXd> ptsx_transform(ptrx, 6);
+
+        double *ptry = &ptsy[0];
+        Eigen::Map<Eigen::VectorXd> ptsy_transform(ptry, 6);
+
+        const Eigen::VectorXd &coeffs = polyfit(ptsx_transform, ptsy_transform, 3);
+
         // Fit waypoints
-        auto coeffs = polyfit(x_veh, y_veh, 3); 
+        //auto coeffs = polyfit(x_veh, y_veh, 3); 
         const double cte  = polyeval(coeffs, 0.0);
         cout << "coeffs : " << coeffs[0] << endl;
         cout << "pow : " << pow(0.0 ,0) << endl;
         cout << "cte : " << cte << endl;
-        double etheta = atan(coeffs[1]);
+        double etheta = -atan(coeffs[1]);
 
+        /*
         // Global coordinate system about theta
         double gx = 0;
         double gy = 0;
@@ -525,6 +544,8 @@ namespace mpc_ros{
         else
             etheta = 0;  
         cout << "etheta: "<< etheta << ", atan2(gy,gx): " << atan2(gy,gx) << ", temp_theta:" << traj_deg << endl;
+
+        */
 
         // Difference bewteen current position and goal position
         const double x_err = goal_pose.pose.position.x -  base_odom.pose.pose.position.x;
@@ -809,8 +830,11 @@ namespace mpc_ros{
             for (int i = 0; i < order; i++) 
                 A(j, i + 1) = A(j, i) * xvals(j);
         }
-        auto Q = A.householderQr();
-        auto result = Q.solve(yvals);
+
+        Eigen::VectorXd result = A.householderQr().solve(yvals);
+
+        //auto Q = A.householderQr();
+        //auto result = Q.solve(yvals);
         return result;
     }
 

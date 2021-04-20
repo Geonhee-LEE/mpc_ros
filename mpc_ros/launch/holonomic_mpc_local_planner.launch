@@ -44,7 +44,7 @@
     <!--  ************** Localization **************  -->
     
     <node pkg="amcl" type="amcl" name="amcl" output="screen">
-        <rosparam file="$(find mpc_ros)/params/amcl_params.yaml" command="load" />
+        <rosparam file="$(find mpc_ros)/params/holonomic_amcl_params.yaml" command="load" />
         <param name="initial_pose_x"            value="$(arg x_pos)"/>
         <param name="initial_pose_y"            value="$(arg y_pos)"/>
         <param name="initial_pose_a"            value="$(arg yaw)"/>
