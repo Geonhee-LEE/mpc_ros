@@ -48,6 +48,17 @@ link_directories(/usr/lib)
 ADD_EXECUTABLE( MPC_Node src/MPC.cpp src/MPC_Node.cpp )
 TARGET_LINK_LIBRARIES(MPC_Node ipopt ${catkin_LIBRARIES} )
 
+
+# General holonomic MPC_Node 
+ADD_EXECUTABLE( MPC_Node_holo src/MPC_holo.cpp src/MPC_Node_holo.cpp )
+TARGET_LINK_LIBRARIES(MPC_Node_holo ipopt ${catkin_LIBRARIES} )
+
+
+# Simple holonomic MPC_Node 
+ADD_EXECUTABLE( MPC_Node_holo_simple src/MPC_holo_simple.cpp src/MPC_Node_holo_simple.cpp )
+TARGET_LINK_LIBRARIES(MPC_Node_holo_simple ipopt ${catkin_LIBRARIES} )
+
+
 # Total navigation with MPC_Node
 ADD_EXECUTABLE( nav_mpc src/navMPC.cpp src/navMPCNode.cpp )
 TARGET_LINK_LIBRARIES(nav_mpc ipopt ${catkin_LIBRARIES} )

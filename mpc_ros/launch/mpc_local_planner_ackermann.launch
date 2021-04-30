@@ -1,0 +1,98 @@
+<launch>
+
+    <!--  ************** Global Parameters ***************  -->
+    <param name="use_sim_time" value="true"/>
+    <arg name="controller"  default="mpc" doc="opt: dwa, mpc, pure_pursuit"/> 
+    <arg name="model"  default="holo_bot" doc="opt: serving_bot, holo_bot"/> 
+    <arg name="tf_prefix"  default=""/> 
+
+
+    <arg name="cmd_timeout" default="0.5"/>
+
+
+    <!--  ************** GAZEBO Simulator ***************  -->
+    <arg name="x_pos" default="0.0"/>
+    <arg name="y_pos" default="0.0"/>
+    <arg name="z_pos" default="0.0"/>
+    <arg name="roll" default="0"/>
+    <arg name="pitch" default="0"/>
+    <arg name="yaw" default="-1.507"/>
+    <arg name="gui" default="false"/>
+
+
+    <!--  ************** Robot model ***************  -->
+    <param name="robot_description"
+          command="$(find xacro)/xacro $(find mpc_model_description)/urdf/car_like/ackermann_bot.urdf.xacro"/>
+
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" value="$(find mpc_ros)/worlds/sq_world.world"/>
+        <arg name="paused" value="false"/>
+        <arg name="use_sim_time" value="true"/>
+        <arg name="gui" value="$(arg gui)"/>
+        <arg name="headless" value="false"/>
+        <arg name="debug" value="false"/>
+    </include>
+    
+    <!-- Spawn the vehicle. -->
+    <node name="spawn_vehicle" pkg="gazebo_ros" type="spawn_model"
+            args="-urdf -param robot_description -model ackermann_bot
+                -x $(arg x_pos) -y $(arg x_pos) -z $(arg x_pos)
+                -R $(arg roll) -P $(arg pitch) -Y $(arg yaw) -param robot_description"/>
+
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+        <param name="publish_frequency" type="double" value="50.0" />
+    </node>
+
+
+    <!-- Load the joint controllers. One of these publishes the joint states
+            to joint_states. -->
+    <node name="controller_spawner" pkg="controller_manager" type="spawner"
+            args="$(find mpc_model_gazebo)/config/car_like/ackermann_bot_joint_ctrlr_params.yaml"/>
+
+    <!-- Control the steering, axle, and shock absorber joints. -->
+    <node name="ackermann_controller" pkg="mpc_model_gazebo"
+            type="ackermann_controller.py">
+        <param name="cmd_timeout" value="$(arg cmd_timeout)"/>
+        <rosparam file="$(find mpc_model_gazebo)/config/car_like/ackermann_bot_ackermann_ctrlr_params.yaml" command="load"/>
+    </node>
+
+    <!--  ************** Map **************  -->
+    <node name="map_server" pkg="map_server" type="map_server" args="$(find mpc_ros)/map/sq_world.yaml" output="screen">
+        <param name="frame_id" value="map"/>
+    </node>
+
+    <!--  ************** Localization **************  -->
+    
+    <node pkg="amcl" type="amcl" name="amcl" output="screen">
+        <rosparam file="$(find mpc_ros)/params/amcl_params.yaml" command="load" />
+        <param name="initial_pose_x"            value="$(arg x_pos)"/>
+        <param name="initial_pose_y"            value="$(arg y_pos)"/>
+        <param name="initial_pose_a"            value="$(arg yaw)"/>
+    </node>
+
+    <!--  ************** Navigation ***************  -->    
+    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+        <rosparam file="$(find mpc_ros)/params/costmap_common_params.yaml" command="load" ns="global_costmap" />
+        <rosparam file="$(find mpc_ros)/params/costmap_common_params.yaml" command="load" ns="local_costmap" />
+        <rosparam file="$(find mpc_ros)/params/local_costmap_params.yaml" command="load" />
+        <rosparam file="$(find mpc_ros)/params/global_costmap_params.yaml" command="load" />    
+        
+        <!-- Global Planner -->
+        <param name="base_global_planner" value="global_planner/GlobalPlanner" />
+        <param name="planner_frequency" value="1.0" />
+        <param name="planner_frequency" value="0.0" if="$(eval controller == 'pure_pursuit')"/>
+        <param name="planner_patience" value="5.0" />
+        <rosparam file="$(find mpc_ros)/params/global_planner_params.yaml" command="load" />
+        
+        <!-- Local Planner -->
+        <rosparam file="$(find mpc_ros)/params/mpc_last_params.yaml" command="load" />
+        <param name="base_local_planner" value="mpc_ros/MPCPlannerROS"  if="$(eval controller == 'mpc')"/>
+        <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS"  if="$(eval controller == 'dwa')"/>    
+        
+        <!-- external controller >
+        <remap from="/cmd_vel" to="/fake_cmd" unless="$(eval controller == 'dwa')"/-->
+    </node>
+
+    <!--  ************** Visualisation **************  -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find mpc_ros)/params/total_rviz_navigation.rviz"/>
+</launch>

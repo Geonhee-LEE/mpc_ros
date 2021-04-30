@@ -69,7 +69,7 @@ class MPCNode
                _w_angvel, _w_accel, _w_angvel_d, _w_accel_d, _max_angvel, _max_throttle, _bound_value;
 
         //double _Lf; 
-        double _dt, _w, _throttle, _speed, _max_speed;
+        double _dt, _w, _throttle_x, _throttle_y, _speed_x, _speed_y, _max_speed;
         double _pathLength, _goalRadius, _waypointsDist;
         int _controller_freq, _downSampling, _thread_numbers;
         bool _goal_received, _goal_reached, _path_computed, _pub_twist_flag, _debug_info, _delay_mode;
@@ -154,7 +154,6 @@ MPCNode::MPCNode()
     _pub_globalpath  = _nh.advertise<nav_msgs::Path>("/global_path", 1); // Global path generated from another source
     _pub_odompath  = _nh.advertise<nav_msgs::Path>("/mpc_reference", 1); // reference path for MPC ///mpc_reference 
     _pub_mpctraj   = _nh.advertise<nav_msgs::Path>("/mpc_trajectory", 1);// MPC trajectory output
-
     //_pub_ackermann = _nh.advertise<ackermann_msgs::AckermannDriveStamped>("/ackermann_cmd", 1);
     if(_pub_twist_flag)
         _pub_twist = _nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1); //for stage (Ackermann msg non-supported)
@@ -166,9 +165,12 @@ MPCNode::MPCNode()
     _goal_received = false;
     _goal_reached  = false;
     _path_computed = false;
-    _throttle = 0.0; 
+    _throttle_x = 0.0; 
+    _throttle_y = 0.0; 
+
     _w = 0.0;
-    _speed = 0.0;
+    _speed_x = 0.0;
+    _speed_y = 0.0;
 
     //_ackermann_msg = ackermann_msgs::AckermannDriveStamped();
     _twist_msg = geometry_msgs::Twist();
@@ -194,11 +196,13 @@ MPCNode::MPCNode()
     _mpc.LoadParams(_mpc_params);
 }
 
+
 // Public: return _thread_numbers
 int MPCNode::get_thread_numbers()
 {
     return _thread_numbers;
 }
+
 
 // Evaluate a polynomial.
 double MPCNode::polyeval(Eigen::VectorXd coeffs, double x) 
@@ -210,6 +214,7 @@ double MPCNode::polyeval(Eigen::VectorXd coeffs, double x)
     }
     return result;
 }
+
 
 // Fit a polynomial.
 // Adapted from
@@ -528,17 +533,21 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         nav_msgs::Odometry odom = _odom; 
         nav_msgs::Path odom_path = _odom_path;   
 
-        // Update system states: X=[x, y, theta, v]
+        // Update system states: X=[x, y, theta, vx, vy]
         const double px = odom.pose.pose.position.x; //pose: odom frame
         const double py = odom.pose.pose.position.y;
         tf::Pose pose;
         tf::poseMsgToTF(odom.pose.pose, pose);
         const double theta = tf::getYaw(pose.getRotation());
-        const double v = odom.twist.twist.linear.x; //twist: body fixed frame
+        const double vx = odom.twist.twist.linear.x; //twist: body fixed frame
+        const double vy = odom.twist.twist.linear.y; //twist: body fixed frame
+
         // Update system inputs: U=[w, throttle]
         const double w = _w; // steering -> w
         //const double steering = _steering;  // radian
-        const double throttle = _throttle; // accel: >0; brake: <0
+        const double throttle_x = _throttle_x; // accel: >0; brake: <0
+        const double throttle_y = _throttle_y; // accel: >0; brake: <0
+
         const double dt = _dt;
         //const double Lf = _Lf;
 
@@ -564,47 +573,66 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
         const double cte  = polyeval(coeffs, 0.0);
         const double etheta = atan(coeffs[1]);
 
-        VectorXd state(6);
+        VectorXd state(5);
         if(_delay_mode)
         {
             // Kinematic model is used to predict vehicle state at the actual moment of control (current time + delay dt)
-            const double px_act = v * dt;
-            const double py_act = 0;
-            const double theta_act = w * dt; //(steering) theta_act = v * steering * dt / Lf;
-            const double v_act = v + throttle * dt; //v = v + a * dt
+            const double px_act = vx * dt;
+            const double py_act = vy * dt;
+            const double vx_act = vx + throttle_x * dt; //v = v + a * dt
+            const double vy_act = vy + throttle_y * dt; //v = v + a * dt
             
-            const double cte_act = cte + v * sin(etheta) * dt;
-            const double etheta_act = etheta - theta_act;  
+            const double cte_act = cte + vx * dt;
             
-            state << px_act, py_act, theta_act, v_act, cte_act, etheta_act;
+            //state << px_act, py_act, theta_act, vx_act, vy_act, cte_act, etheta_act;
+            state << px_act, py_act, vx_act, vy_act, cte_act;
+
         }
         else
         {
-            state << 0, 0, 0, v, cte, etheta;
+            //state << 0, 0, 0, vx, vy, cte, etheta;
+            state << 0, 0, vx, vy, cte;
+
         }
         
         // Solve MPC Problem
         vector<double> mpc_results = _mpc.Solve(state, coeffs);
               
         // MPC result (all described in car frame), output = (acceleration, w)        
-        _w = mpc_results[0]; // radian/sec, angular velocity
-        _throttle = mpc_results[1]; // acceleration
-        _speed = v + _throttle*dt;  // speed
-        if (_speed >= _max_speed)
-            _speed = _max_speed;
-        if(_speed <= 0.0)
-            _speed = 0.0;
+        _w = 0; //mpc_results[0]; // radian/sec, angular velocity
+        _throttle_x = mpc_results[0]; // acceleration
+        _throttle_y = mpc_results[1]; // acceleration
+        
+        _speed_x = vx + _throttle_x*dt;  // speed
+        _speed_y = vy + _throttle_y*dt;  // speed
+        
+        if (_speed_x >= _max_speed)
+            _speed_x = _max_speed;
+        if(_speed_x <= 0.0)
+            _speed_x = 0.0;
+
+        if (_speed_y >= _max_speed)
+            _speed_y = _max_speed;
+        if(_speed_y <= 0.0)
+            _speed_y = 0.0;
 
         if(_debug_info)
         {
             cout << "\n\nDEBUG" << endl;
             cout << "theta: " << theta << endl;
-            cout << "V: " << v << endl;
+            cout << "Vx: " << vx << endl;
+            cout << "Vy: " << vy << endl;
 
+            //cout << "odom_path: \n" << odom_path << endl;
+            //cout << "x_points: \n" << x_veh << endl;
+            //cout << "y_points: \n" << y_veh << endl;
             cout << "coeffs: \n" << coeffs << endl;
             cout << "_w: \n" << _w << endl;
-            cout << "_throttle: \n" << _throttle << endl;
-            cout << "_speed: \n" << _speed << endl;
+            cout << "_throttle_x: \n" << _throttle_x << endl;
+            cout << "_throttle_y: \n" << _throttle_y << endl;
+            cout << "_speed_x: \n" << _speed_x << endl;
+            cout << "_speed_y: \n" << _speed_y << endl;
+
         }
 
         // Display the MPC predicted trajectory
@@ -626,8 +654,10 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
     }
     else
     {
-        _throttle = 0.0;
-        _speed = 0.0;
+        _throttle_x = 0.0;
+        _throttle_y = 0.0;
+        _speed_x = 0.0;
+        _speed_y = 0.0;
         _w = 0;
         if(_goal_reached && _goal_received)
             cout << "Goal Reached: control loop !" << endl;
@@ -646,7 +676,9 @@ void MPCNode::controlLoopCB(const ros::TimerEvent&)
     // publish general cmd_vel 
     if(_pub_twist_flag)
     {
-        _twist_msg.linear.x  = _speed; 
+        _twist_msg.linear.x  = _speed_x; 
+        _twist_msg.linear.y  = _speed_y; 
+
         _twist_msg.angular.z = _w;
         _pub_twist.publish(_twist_msg);
     }
