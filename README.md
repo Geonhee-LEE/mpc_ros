@@ -10,7 +10,7 @@ This repository is implemented with mobile robot model from bycycle to the unicy
 ## Features
 * Nonlinear Unicycle Model Based MPC (through ipopt solver)  
 * AMCL localization, fake localization (encoder-odometry based)  
-* GAZEBO simulation, [servingbot](https://github.com/NSCL/servingbot_ros)
+* GAZEBO simulation, [servingbot](https://github.com/CzJaewan/servingbot.git)
 
 ### Installation
 1. Ubuntu 18.04
@@ -23,7 +23,7 @@ sudo apt install ros-melodic-costmap-2d  ros-melodic-move-base ros-melodic-globa
 5. create your own catkin_ws and clone the repositories. 
 ```
 git clone https://github.com/Geonhee-LEE/mpc_ros.git 
-git clone https://github.com/NSCL/servingbot_ros
+git clone https://github.com/CzJaewan/servingbot.git
 ```
 
 ## Launch
