@@ -529,32 +529,51 @@ namespace mpc_ros{
 
         cout << "x_err:"<< x_err << ", y_err:"<< y_err  << endl;
 
-        VectorXd state(6);
-        if(_delay_mode)
-        {
-            // Kinematic model is used to predict vehicle state at the actual moment of control (current time + delay dt)
-            const double px_act = v * dt;
-            const double py_act = 0;
-            const double theta_act = w * dt; //(steering) theta_act = v * steering * dt / Lf;
-            const double v_act = v + throttle * dt; //v = v + a * dt
-            
-            const double cte_act = cte + v * sin(etheta) * dt;
-            const double etheta_act = etheta - theta_act;  
-            
-            state << px_act, py_act, theta_act, v_act, cte_act, etheta_act;
-        }
-        else
-        {
-            state << 0, 0, 0, v, cte, etheta;
-        }
-
         // Solve MPC Problem
         ros::Time begin = ros::Time::now();
         vector<double> mpc_results;
-        if(model_type == "unicycle")
+        VectorXd state(6);
+        if(model_type == "unicycle"){
+            if(_delay_mode)
+            {
+                // Kinematic model is used to predict vehicle state at the actual moment of control (current time + delay dt)
+                const double px_act = v * dt;
+                const double py_act = 0;
+                const double theta_act = w * dt;
+                const double v_act = v + throttle * dt; //v = v + a * dt
+                
+                const double cte_act = cte + v * sin(etheta) * dt;
+                const double etheta_act = etheta - theta_act;  
+                
+                state << px_act, py_act, theta_act, v_act, cte_act, etheta_act;
+            }
+            else
+            {
+                state << 0, 0, 0, v, cte, etheta;
+            }
             mpc_results = _mpc.unicycleModelSolve(state, coeffs); 
-        else if(model_type == "bicycle")
+
+        }
+        else if(model_type == "bicycle"){
+            if(_delay_mode)
+            {
+                // Kinematic model is used to predict vehicle state at the actual moment of control (current time + delay dt)
+                const double px_act = v * dt;
+                const double py_act = 0;
+                const double theta_act = v * w * dt / _Lf; //(steering) theta_act = v * steering * dt / Lf;
+                const double v_act = v + throttle * dt; //v = v + a * dt
+                
+                const double cte_act = cte + v * sin(etheta) * dt;
+                const double etheta_act = etheta - theta_act;  
+                
+                state << px_act, py_act, theta_act, v_act, cte_act, etheta_act;
+            }
+            else
+            {
+                state << 0, 0, 0, v, cte, etheta;
+            }
             mpc_results = _mpc.bicycleModelSolve(state, coeffs); 
+        }
         else if(model_type == "holonimic")
             mpc_results = _mpc.holonomicModelSolve(state, coeffs); 
         ros::Time end = ros::Time::now();
