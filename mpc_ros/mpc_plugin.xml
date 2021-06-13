@@ -1,0 +1,7 @@
+<library path="lib/libmpc_ros">
+	<class name ="mpc_ros/MPCPlannerROS" type ="mpc_ros::MPCPlannerROS" base_class_type= "nav_core::BaseLocalPlanner">
+		<description>
+			Plugin for MPCPlannerROS that allows to follow the global path.
+		</description>
+	</class>
+</library>

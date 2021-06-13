@@ -16,8 +16,10 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   nav_msgs
   #ackermann_msgs
+  pluginlib
   message_generation
   move_base
+  base_local_planner
   roscpp
   rospy
   std_msgs
@@ -25,24 +27,29 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
 )
 
-
-catkin_package(
-   INCLUDE_DIRS include
-#  LIBRARIES mpc_ros
-#  CATKIN_DEPENDS costmap_2d dynamic_reconfigure geometry_msgs message_generation move_base roscpp rospy std_msgs tf visualization_msgs
-#  DEPENDS system_lib
-)
-
-###########
-## Build ##
-###########
-
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories( ${catkin_INCLUDE_DIRS} include )
 include_directories(/usr/include)
 link_directories(/usr/lib)
 
+
+# dynamic reconfigure
+generate_dynamic_reconfigure_options(
+    cfg/MPCPlanner.cfg
+)
+
+
+catkin_package(
+   INCLUDE_DIRS include
+   LIBRARIES mpc_ros
+   CATKIN_DEPENDS costmap_2d dynamic_reconfigure geometry_msgs move_base roscpp rospy std_msgs tf visualization_msgs pluginlib
+#  DEPENDS system_lib
+)
+
+###########
+## Build ##
+###########
 
 # General MPC_Node 
 ADD_EXECUTABLE( MPC_Node src/MPC.cpp src/MPC_Node.cpp )
@@ -61,8 +68,12 @@ add_executable(Pure_Pursuit src/Pure_Pursuit.cpp)
 target_link_libraries(Pure_Pursuit ${catkin_LIBRARIES})
 
 # Own Global planner for tracking desired trajectory
- add_library(global_planner_lib src/global_planner/global_planner.cpp)
- TARGET_LINK_LIBRARIES(global_planner_lib ipopt ${catkin_LIBRARIES} )
+add_library(global_planner_lib src/global_planner/global_planner.cpp)
+TARGET_LINK_LIBRARIES(global_planner_lib ipopt ${catkin_LIBRARIES} )
+
+# MPC Local planner plugin
+add_library(mpc_ros src/mpc_plannner_ros.cpp src/mpc_plannner.cpp)
+TARGET_LINK_LIBRARIES(mpc_ros ipopt ${catkin_LIBRARIES} )
 
 #############
 ## Example ##

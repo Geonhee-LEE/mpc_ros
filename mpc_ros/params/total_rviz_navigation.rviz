@@ -6,14 +6,10 @@ Panels:
       Expanded:
         - /Global Options1
         - /TF1/Frames1
-        - /Global Planner1
-        - /Global Planner1/GlobalPath1
-        - /MPC_Reference1
-        - /MPC_Trajectory1
-        - /Pure_Pursuit1
-        - /PoseArray1
-      Splitter Ratio: 0.605095983
-    Tree Height: 744
+        - /Local Planner1
+        - /Local Planner1/MPC_Reference1
+      Splitter Ratio: 0.43225806951522827
+    Tree Height: 715
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -22,7 +18,7 @@ Panels:
       - /2D Nav Goal1
       - /Publish Point1
     Name: Tool Properties
-    Splitter Ratio: 0.588679016
+    Splitter Ratio: 0.5886790156364441
   - Class: rviz/Views
     Expanded:
       - /Current View1
@@ -33,30 +29,141 @@ Panels:
     Name: Time
     SyncMode: 0
     SyncSource: ""
+Preferences:
+  PromptSaveOnExit: true
+Toolbars:
+  toolButtonStyle: 2
 Visualization Manager:
   Class: ""
   Displays:
     - Class: rviz/TF
-      Enabled: false
+      Enabled: true
       Frame Timeout: 15
       Frames:
         All Enabled: false
-      Marker Scale: 10
+        base_footprint:
+          Value: true
+        base_link:
+          Value: true
+        body_link:
+          Value: true
+        caster_back_left_link:
+          Value: true
+        caster_back_right_link:
+          Value: true
+        caster_front_link:
+          Value: true
+        imu_link:
+          Value: true
+        lidar_link:
+          Value: true
+        map:
+          Value: true
+        odom:
+          Value: true
+        wheel_left_link:
+          Value: true
+        wheel_right_link:
+          Value: true
+      Marker Scale: 1
       Name: TF
       Show Arrows: false
       Show Axes: true
       Show Names: false
       Tree:
-        {}
+        map:
+          odom:
+            base_footprint:
+              base_link:
+                body_link:
+                  {}
+                caster_back_left_link:
+                  {}
+                caster_back_right_link:
+                  {}
+                caster_front_link:
+                  {}
+                imu_link:
+                  {}
+                lidar_link:
+                  {}
+                wheel_left_link:
+                  {}
+                wheel_right_link:
+                  {}
       Update Interval: 0
-      Value: false
+      Value: true
+    - Alpha: 1
+      Class: rviz/RobotModel
+      Collision Enabled: false
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        base_footprint:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        body_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        caster_back_left_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        caster_back_right_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        caster_front_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        imu_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        lidar_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheel_left_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        wheel_right_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+      Name: RobotModel
+      Robot Description: robot_description
+      TF Prefix: ""
+      Update Interval: 0
+      Value: true
+      Visual Enabled: true
     - Alpha: 0.5
       Cell Size: 1
       Class: rviz/Grid
       Color: 249; 249; 255
       Enabled: false
       Line Style:
-        Line Width: 0.0299999993
+        Line Width: 0.029999999329447746
         Value: Lines
       Name: Grid
       Normal Cell Count: 0
@@ -70,20 +177,20 @@ Visualization Manager:
       Value: false
     - Alpha: 1
       Axes Length: 1
-      Axes Radius: 0.100000001
+      Axes Radius: 0.10000000149011612
       Class: rviz/Pose
       Color: 255; 25; 0
       Enabled: false
-      Head Length: 0.300000012
-      Head Radius: 0.100000001
+      Head Length: 0.30000001192092896
+      Head Radius: 0.10000000149011612
       Name: Pose
       Shaft Length: 1
-      Shaft Radius: 0.0500000007
+      Shaft Radius: 0.05000000074505806
       Shape: Arrow
       Topic: /move_base/current_goal
       Unreliable: false
       Value: false
-    - Alpha: 0.400000006
+    - Alpha: 0.4000000059604645
       Class: rviz/Map
       Color Scheme: map
       Draw Behind: false
@@ -126,7 +233,7 @@ Visualization Manager:
           Queue Size: 10
           Selectable: true
           Size (Pixels): 3
-          Size (m): 0.00999999978
+          Size (m): 0.009999999776482582
           Style: Flat Squares
           Topic: /scan
           Unreliable: false
@@ -134,17 +241,17 @@ Visualization Manager:
           Use rainbow: true
           Value: false
         - Alpha: 1
-          Arrow Length: 0.100000001
-          Axes Length: 0.300000012
-          Axes Radius: 0.00999999978
+          Arrow Length: 0.10000000149011612
+          Axes Length: 0.30000001192092896
+          Axes Radius: 0.009999999776482582
           Class: rviz/PoseArray
           Color: 255; 25; 0
           Enabled: false
-          Head Length: 0.0700000003
-          Head Radius: 0.0299999993
+          Head Length: 0.07000000029802322
+          Head Radius: 0.029999999329447746
           Name: AMCL Particles
-          Shaft Length: 0.230000004
-          Shaft Radius: 0.00999999978
+          Shaft Length: 0.23000000417232513
+          Shaft Radius: 0.009999999776482582
           Shape: Arrow (Flat)
           Topic: /particlecloud
           Unreliable: false
@@ -163,7 +270,7 @@ Visualization Manager:
             {}
           Update Interval: 0
           Value: false
-        - Angle Tolerance: 0.100000001
+        - Angle Tolerance: 0.10000000149011612
           Class: rviz/Odometry
           Covariance:
             Orientation:
@@ -175,7 +282,7 @@ Visualization Manager:
               Scale: 1
               Value: true
             Position:
-              Alpha: 0.300000012
+              Alpha: 0.30000001192092896
               Color: 204; 51; 204
               Scale: 1
               Value: true
@@ -183,16 +290,16 @@ Visualization Manager:
           Enabled: false
           Keep: 100
           Name: Odometry
-          Position Tolerance: 0.100000001
+          Position Tolerance: 0.10000000149011612
           Shape:
             Alpha: 1
             Axes Length: 1
-            Axes Radius: 0.100000001
+            Axes Radius: 0.10000000149011612
             Color: 255; 25; 0
-            Head Length: 0.300000012
-            Head Radius: 0.100000001
+            Head Length: 0.30000001192092896
+            Head Radius: 0.10000000149011612
             Shaft Length: 1
-            Shaft Radius: 0.0500000007
+            Shaft Radius: 0.05000000074505806
             Value: Arrow
           Topic: /odom
           Unreliable: false
@@ -205,12 +312,12 @@ Visualization Manager:
           Buffer Length: 1
           Class: rviz/Path
           Color: 25; 255; 0
-          Enabled: true
-          Head Diameter: 0.300000012
-          Head Length: 0.200000003
-          Length: 0.300000012
-          Line Style: Billboards
-          Line Width: 0.200000003
+          Enabled: false
+          Head Diameter: 0.30000001192092896
+          Head Length: 0.20000000298023224
+          Length: 0.30000001192092896
+          Line Style: Lines
+          Line Width: 0.20000000298023224
           Name: GlobalPath
           Offset:
             X: 0
@@ -218,13 +325,13 @@ Visualization Manager:
             Z: 0
           Pose Color: 255; 85; 255
           Pose Style: None
-          Radius: 0.0299999993
-          Shaft Diameter: 0.100000001
-          Shaft Length: 0.100000001
+          Radius: 0.029999999329447746
+          Shaft Diameter: 0.10000000149011612
+          Shaft Length: 0.10000000149011612
           Topic: /move_base/GlobalPlanner/plan
           Unreliable: false
-          Value: true
-        - Alpha: 0.400000006
+          Value: false
+        - Alpha: 0.4000000059604645
           Class: rviz/Map
           Color Scheme: costmap
           Draw Behind: false
@@ -239,53 +346,98 @@ Visualization Manager:
     - Class: rviz/Group
       Displays:
         - Alpha: 1
-          Arrow Length: 0.300000012
-          Axes Length: 0.300000012
-          Axes Radius: 0.00999999978
-          Class: rviz/PoseArray
-          Color: 255; 25; 0
-          Enabled: false
-          Head Length: 0.0700000003
-          Head Radius: 0.0299999993
-          Name: TebPoses
-          Shaft Length: 0.230000004
-          Shaft Radius: 0.00999999978
-          Shape: Arrow (Flat)
-          Topic: /move_base/TebLocalPlannerROS/teb_poses
-          Unreliable: false
-          Value: false
-        - Class: rviz/Marker
-          Enabled: false
-          Marker Topic: /move_base/TebLocalPlannerROS/teb_markers
-          Name: TebMarker
-          Namespaces:
-            {}
-          Queue Size: 100
-          Value: false
-        - Alpha: 1
           Buffer Length: 1
           Class: rviz/Path
           Color: 255; 0; 0
-          Enabled: false
-          Head Diameter: 0.300000012
-          Head Length: 0.200000003
-          Length: 0.300000012
+          Enabled: true
+          Head Diameter: 0.30000001192092896
+          Head Length: 0.20000000298023224
+          Length: 0.30000001192092896
           Line Style: Lines
-          Line Width: 0.0299999993
-          Name: LocalPath
+          Line Width: 0.029999999329447746
+          Name: MPCGlobalPath
           Offset:
             X: 0
             Y: 0
             Z: 0
           Pose Color: 255; 85; 255
           Pose Style: None
-          Radius: 0.0299999993
-          Shaft Diameter: 0.100000001
-          Shaft Length: 0.100000001
-          Topic: /move_base/TrajectoryPlannerROS/global_plan
+          Radius: 0.029999999329447746
+          Shaft Diameter: 0.10000000149011612
+          Shaft Length: 0.10000000149011612
+          Topic: /move_base/MPCPlannerROS/global_plan
+          Unreliable: false
+          Value: true
+        - Alpha: 1
+          Buffer Length: 1
+          Class: rviz/Path
+          Color: 255; 0; 0
+          Enabled: false
+          Head Diameter: 0.30000001192092896
+          Head Length: 0.20000000298023224
+          Length: 0.30000001192092896
+          Line Style: Lines
+          Line Width: 0.029999999329447746
+          Name: MPCLocalPath
+          Offset:
+            X: 0
+            Y: 0
+            Z: 0
+          Pose Color: 255; 85; 255
+          Pose Style: None
+          Radius: 0.029999999329447746
+          Shaft Diameter: 0.10000000149011612
+          Shaft Length: 0.10000000149011612
+          Topic: /move_base/MPCPlannerROS/local_plan
           Unreliable: false
           Value: false
-        - Alpha: 0.800000012
+        - Alpha: 1
+          Buffer Length: 1
+          Class: rviz/Path
+          Color: 255; 255; 0
+          Enabled: true
+          Head Diameter: 0.30000001192092896
+          Head Length: 0.20000000298023224
+          Length: 0.30000001192092896
+          Line Style: Billboards
+          Line Width: 0.10000000149011612
+          Name: MPC_Reference
+          Offset:
+            X: 0
+            Y: 0
+            Z: 0.10000000149011612
+          Pose Color: 255; 85; 255
+          Pose Style: None
+          Radius: 0.029999999329447746
+          Shaft Diameter: 0.10000000149011612
+          Shaft Length: 0.10000000149011612
+          Topic: /mpc_reference
+          Unreliable: false
+          Value: true
+        - Alpha: 1
+          Buffer Length: 1
+          Class: rviz/Path
+          Color: 255; 0; 0
+          Enabled: true
+          Head Diameter: 0.30000001192092896
+          Head Length: 0.009999999776482582
+          Length: 0.5
+          Line Style: Lines
+          Line Width: 0.029999999329447746
+          Name: MPC_Trajectory
+          Offset:
+            X: 0
+            Y: 0
+            Z: 0
+          Pose Color: 255; 85; 255
+          Pose Style: Axes
+          Radius: 0.05000000074505806
+          Shaft Diameter: 0.10000000149011612
+          Shaft Length: 0.009999999776482582
+          Topic: /mpc_trajectory
+          Unreliable: false
+          Value: true
+        - Alpha: 0.800000011920929
           Class: rviz/Map
           Color Scheme: map
           Draw Behind: false
@@ -297,52 +449,6 @@ Visualization Manager:
           Value: true
       Enabled: true
       Name: Local Planner
-    - Alpha: 1
-      Buffer Length: 1
-      Class: rviz/Path
-      Color: 255; 255; 0
-      Enabled: true
-      Head Diameter: 0.300000012
-      Head Length: 0.200000003
-      Length: 0.300000012
-      Line Style: Billboards
-      Line Width: 0.300000012
-      Name: MPC_Reference
-      Offset:
-        X: 0
-        Y: 0
-        Z: 0.100000001
-      Pose Color: 255; 85; 255
-      Pose Style: None
-      Radius: 0.0299999993
-      Shaft Diameter: 0.100000001
-      Shaft Length: 0.100000001
-      Topic: /mpc_reference
-      Unreliable: false
-      Value: true
-    - Alpha: 1
-      Buffer Length: 1
-      Class: rviz/Path
-      Color: 255; 0; 0
-      Enabled: true
-      Head Diameter: 0.300000012
-      Head Length: 0.00999999978
-      Length: 0.5
-      Line Style: Lines
-      Line Width: 0.0299999993
-      Name: MPC_Trajectory
-      Offset:
-        X: 0
-        Y: 0
-        Z: 0
-      Pose Color: 255; 85; 255
-      Pose Style: Axes
-      Radius: 0.0500000007
-      Shaft Diameter: 0.100000001
-      Shaft Length: 0.00999999978
-      Topic: /mpc_trajectory
-      Unreliable: false
-      Value: true
     - Class: rviz/Marker
       Enabled: false
       Marker Topic: /pure_pursuit/path_marker
@@ -352,103 +458,15 @@ Visualization Manager:
       Queue Size: 100
       Value: false
     - Alpha: 1
-      Class: rviz/RobotModel
-      Collision Enabled: false
-      Enabled: true
-      Links:
-        All Links Enabled: true
-        Expand Joint Details: false
-        Expand Link Details: false
-        Expand Tree: false
-        Link Tree Style: Links in Alphabetic Order
-        base_footprint:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        caster_back_left_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        caster_back_right_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        imu_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        lidar_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        sonar_bl:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        sonar_br:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        sonar_f:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        sonar_fl:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        sonar_fr:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        sonar_l:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        sonar_r:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        wheel_left_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        wheel_right_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-      Name: RobotModel
-      Robot Description: robot_description
-      TF Prefix: ""
-      Update Interval: 0
-      Value: true
-      Visual Enabled: true
-    - Alpha: 1
       Buffer Length: 1
       Class: rviz/Path
       Color: 200; 200; 200
-      Enabled: true
-      Head Diameter: 0.300000012
-      Head Length: 0.200000003
-      Length: 0.0500000007
+      Enabled: false
+      Head Diameter: 0.30000001192092896
+      Head Length: 0.20000000298023224
+      Length: 0.05000000074505806
       Line Style: Billboards
-      Line Width: 0.0299999993
+      Line Width: 0.029999999329447746
       Name: Generated Path
       Offset:
         X: 0
@@ -456,22 +474,22 @@ Visualization Manager:
         Z: 0
       Pose Color: 255; 85; 255
       Pose Style: None
-      Radius: 0.00499999989
-      Shaft Diameter: 0.100000001
-      Shaft Length: 0.100000001
+      Radius: 0.004999999888241291
+      Shaft Diameter: 0.10000000149011612
+      Shaft Length: 0.10000000149011612
       Topic: /desired_path
       Unreliable: false
-      Value: true
+      Value: false
     - Alpha: 1
       Buffer Length: 1
       Class: rviz/Path
       Color: 255; 255; 0
-      Enabled: true
-      Head Diameter: 0.300000012
-      Head Length: 0.200000003
-      Length: 0.300000012
+      Enabled: false
+      Head Diameter: 0.30000001192092896
+      Head Length: 0.20000000298023224
+      Length: 0.30000001192092896
       Line Style: Lines
-      Line Width: 0.0299999993
+      Line Width: 0.029999999329447746
       Name: Recorded Path
       Offset:
         X: 0
@@ -479,22 +497,22 @@ Visualization Manager:
         Z: 0
       Pose Color: 255; 85; 255
       Pose Style: None
-      Radius: 0.0299999993
-      Shaft Diameter: 0.100000001
-      Shaft Length: 0.100000001
+      Radius: 0.029999999329447746
+      Shaft Diameter: 0.10000000149011612
+      Shaft Length: 0.10000000149011612
       Topic: /recorded_path
       Unreliable: false
-      Value: true
+      Value: false
     - Alpha: 1
       Buffer Length: 1
       Class: rviz/Path
       Color: 25; 255; 0
-      Enabled: true
-      Head Diameter: 0.300000012
-      Head Length: 0.200000003
-      Length: 0.300000012
+      Enabled: false
+      Head Diameter: 0.30000001192092896
+      Head Length: 0.20000000298023224
+      Length: 0.30000001192092896
       Line Style: Billboards
-      Line Width: 0.300000012
+      Line Width: 0.30000001192092896
       Name: Path
       Offset:
         X: 0
@@ -502,24 +520,24 @@ Visualization Manager:
         Z: 0
       Pose Color: 255; 85; 255
       Pose Style: None
-      Radius: 0.0299999993
-      Shaft Diameter: 0.100000001
-      Shaft Length: 0.100000001
+      Radius: 0.029999999329447746
+      Shaft Diameter: 0.10000000149011612
+      Shaft Length: 0.10000000149011612
       Topic: /global_path
       Unreliable: false
-      Value: true
+      Value: false
     - Alpha: 1
-      Arrow Length: 0.300000012
-      Axes Length: 0.300000012
-      Axes Radius: 0.00999999978
+      Arrow Length: 0.30000001192092896
+      Axes Length: 0.30000001192092896
+      Axes Radius: 0.009999999776482582
       Class: rviz/PoseArray
       Color: 168; 171; 171
       Enabled: false
-      Head Length: 0.0700000003
-      Head Radius: 0.0299999993
+      Head Length: 0.07000000029802322
+      Head Radius: 0.029999999329447746
       Name: PoseArray
-      Shaft Length: 0.230000004
-      Shaft Radius: 0.00999999978
+      Shaft Length: 0.23000000417232513
+      Shaft Radius: 0.009999999776482582
       Shape: Arrow (Flat)
       Topic: /particlecloud
       Unreliable: false
@@ -539,7 +557,10 @@ Visualization Manager:
     - Class: rviz/FocusCamera
     - Class: rviz/Measure
     - Class: rviz/SetInitialPose
+      Theta std deviation: 0.2617993950843811
       Topic: /initialpose
+      X std deviation: 0.5
+      Y std deviation: 0.5
     - Class: rviz/SetGoal
       Topic: /move_base_simple/goal
     - Class: rviz/PublishPoint
@@ -549,33 +570,33 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 61.5654564
+      Distance: 22.66962242126465
       Enable Stereo Rendering:
-        Stereo Eye Separation: 0.0599999987
+        Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 15.0182447
-        Y: 5.11296701
-        Z: -2.91664314
+        X: 1.6164482831954956
+        Y: -4.018435001373291
+        Z: -5.246603488922119
       Focal Shape Fixed Size: true
-      Focal Shape Size: 0.0500000007
+      Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
-      Near Clip Distance: 0.00999999978
-      Pitch: 1.33979678
+      Near Clip Distance: 0.009999999776482582
+      Pitch: 1.2597968578338623
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.700418
+      Yaw: 4.680418491363525
     Saved: ~
 Window Geometry:
   Displays:
-    collapsed: true
-  Height: 1028
-  Hide Left Dock: true
+    collapsed: false
+  Height: 1015
+  Hide Left Dock: false
   Hide Right Dock: true
-  QMainWindow State: 000000ff00000000fd00000004000000000000016a0000037afc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000006100fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c00610079007300000000280000037a000000d700fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f000002c4fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a005600690065007700730000000028000002c4000000ad00fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000003a50000003efc0100000002fb0000000800540069006d00650100000000000003a50000030000fffffffb0000000800540069006d00650100000000000004500000000000000000000003a50000037a00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000400000000000001d300000359fc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed0000049200000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d00000359000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f000002c4fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a005600690065007700730000000028000002c4000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004380000003efc0100000002fb0000000800540069006d0065010000000000000438000002eb00fffffffb0000000800540069006d006501000000000000045000000000000000000000025f0000035900000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
@@ -584,6 +605,6 @@ Window Geometry:
     collapsed: false
   Views:
     collapsed: true
-  Width: 933
-  X: 987
-  Y: 159
+  Width: 1080
+  X: 3848
+  Y: 426
