@@ -20,6 +20,7 @@
 #include <vector>
 #include <map>
 #include <Eigen/Core>
+#include <ros/console.h>
 
 using namespace std;
 

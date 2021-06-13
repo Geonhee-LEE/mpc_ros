@@ -17,6 +17,7 @@
 #ifndef MPC_LOCAL_PLANNER_NODE_ROS_H
 #define MPC_LOCAL_PLANNER_NODE_ROS_H
 
+#include <ros/console.h>
 #include <vector>
 #include <map>
 #include <Eigen/Core>
@@ -167,7 +168,7 @@ namespace mpc_ros{
             double _dt, _w, _throttle, _speed, _max_speed;
             double _pathLength, _goalRadius, _waypointsDist;
             int _downSampling;
-            bool _debug_info, _delay_mode;
+            bool _delay_mode;
             double polyeval(Eigen::VectorXd coeffs, double x);
             Eigen::VectorXd polyfit(Eigen::VectorXd xvals, Eigen::VectorXd yvals, int order);
 
