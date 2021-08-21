@@ -1,30 +1,36 @@
-# Model Predictive Control implementation about ROS 
+# Nonlinear Model Predictive Control 
 
 
 
 ## Abstract
 
-This repository is implemented with mobile robot model from bycycle to the unicycle which means differential drive wheeled mobile robot for promising tracking performance. For running this NMPC algorithm, you can use the GAZEBO simulatior or customized mobile robot and compare with DWA algorithm given defalut local planner in ROS. 
+The goal of this repository is to implement the path tracking algorithm of mobile robot using the Nonlinear Model Predictive Control(NMPC), one of the optimal controllers. 
+The NMPC can provide the poweful and effective performance among existing optimal controllers since it can have the preview ability and easy to regulate constraints. This repository is based on ROS(Robot Operating System). Therefore it supports the local planner plugin and standalone node as well.  
 
 
 ## Features
-* Nonlinear Unicycle Model Based MPC (through ipopt solver)  
-* AMCL localization, fake localization (encoder-odometry based)  
-* GAZEBO simulation, [servingbot](https://github.com/CzJaewan/servingbot.git)
+* Nonlinear Model Pridictive Control (through ipopt solver)  
+* Wheeled Mobile Robot 
+
 
 ### Installation
 1. Ubuntu 18.04
 2. Install ROS Melodic 
 3. Install ROS dependencies: 
-```
-sudo apt install ros-melodic-costmap-2d  ros-melodic-move-base ros-melodic-global-planner ros-melodic-amcl
-```
+
+  ```
+  sudo apt install ros-melodic-costmap-2d  ros-melodic-move-base ros-melodic-global-planner ros-melodic-amcl
+  ```
+  
 4. Install Ipopt: Please refer the tutorial in "document/ipopt_install".  
 5. create your own catkin_ws and clone the repositories. 
-```
-git clone https://github.com/Geonhee-LEE/mpc_ros.git 
-git clone https://github.com/CzJaewan/servingbot.git
-```
+
+  ```
+  git clone https://github.com/Geonhee-LEE/mpc_ros.git 
+  git clone https://github.com/CzJaewan/servingbot.git
+  ```
+
+> NOTE: you can also refer other models such as ackermann model, holonomic model. you can see it [mpc_ros_description](https://github.com/Geonhee-LEE/mpc_ros_description)
 
 ## Launch
 
