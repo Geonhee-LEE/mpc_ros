@@ -15,8 +15,8 @@ The NMPC can provide the poweful and effective performance among existing optima
 
 ### Installation
 1. Ubuntu 18.04
-2. Install ROS Melodic 
-3. Install ROS dependencies: 
+2. Install ROS Melodic.
+3. Install ROS dependencies.
 
     ```
     sudo apt install ros-melodic-costmap-2d \
@@ -26,7 +26,7 @@ The NMPC can provide the poweful and effective performance among existing optima
     ```
   
 4. Install Ipopt: Please refer the tutorial in ["document/ipopt_install"](https://github.com/Geonhee-LEE/mpc_ros/tree/melodic/assets/document/ipopt_install).  
-5. Create your own catkin_ws and clone the repositories
+5. Create your own catkin_ws and clone the repositories.
     ```
     git clone https://github.com/Geonhee-LEE/mpc_ros.git 
     ```
@@ -35,7 +35,7 @@ The NMPC can provide the poweful and effective performance among existing optima
       git clone https://github.com/CzJaewan/servingbot.git
       ```
   
-6. Build and Try it: 
+6. Build and Try it.
 
 > NOTE: you can also refer other models such as ackermann model, holonomic model. you can see it [mpc_ros_description](https://github.com/Geonhee-LEE/mpc_ros_description)
 
