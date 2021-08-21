@@ -18,40 +18,57 @@ The NMPC can provide the poweful and effective performance among existing optima
 2. Install ROS Melodic 
 3. Install ROS dependencies: 
 
-  ```
-  sudo apt install ros-melodic-costmap-2d  ros-melodic-move-base ros-melodic-global-planner ros-melodic-amcl
-  ```
+    ```
+    sudo apt install ros-melodic-costmap-2d \
+    ros-melodic-move-base \
+    ros-melodic-global-planner \
+    ros-melodic-amcl
+    ```
   
 4. Install Ipopt: Please refer the tutorial in "document/ipopt_install".  
-5. create your own catkin_ws and clone the repositories. 
-
-  ```
-  git clone https://github.com/Geonhee-LEE/mpc_ros.git 
-  git clone https://github.com/CzJaewan/servingbot.git
-  ```
+5. Create your own catkin_ws and clone the repositories
+    ```
+    git clone https://github.com/Geonhee-LEE/mpc_ros.git 
+    ```
+    - _(optional)_ If you already have the urdf model, you don't need to clone below  
+      ```
+      git clone https://github.com/CzJaewan/servingbot.git
+      ```
+  
+6. Build and Try it: 
 
 > NOTE: you can also refer other models such as ackermann model, holonomic model. you can see it [mpc_ros_description](https://github.com/Geonhee-LEE/mpc_ros_description)
 
 ## Launch
 
 ### Run Navigation algorithm with MPC in simulation: 
+
+- It can be selected with DWA, MPC, Pure persuit according to 'controller' argument.
 ```
 roslaunch mpc_ros nav_gazebo.launch
 ```
-It can be selected with DWA, MPC, Pure persuit according to 'controller' argument.
 
 
 ### Run tracking the reference line with MPC
+
+- Tracking the trajectory such as infinity-shaped, epitrochoid, square using non-linear model predictive control.
 ```
 roslaunch mpc_ros ref_trajectory_tracking_gazebo.launch
 ```
 
-Tracking the trajectory such as infinity-shaped, epitrochoid, square using non-linear model predictive control.
+
+## How to use as local planner
+
+- After building successfully, you should just change the base_local_planner param with `mpc_ros/MPCPlannerROS`.
+```
+<param name="base_local_planner" value="mpc_ros/MPCPlannerROS"/>
+```
+
 
 
 ## Youtube video
 ---
-[![Video Label](http://img.youtube.com/vi/5IqFGBmDGjU/0.jpg)](https://www.youtube.com/watch?v=5IqFGBmDGjU) mpc
+[![Video Label](http://img.youtube.com/vi/5IqFGBmDGjU/0.jpg)](https://www.youtube.com/watch?v=5IqFGBmDGjU) 
 
 
 ### About us
@@ -62,5 +79,6 @@ License: Apache 2.0
 
 ### Reference
 
-HyphaROS MPC MiniCar(https://hypharosworkshop.wordpress.com/)
+- HyphaROS MPC MiniCar(https://hypharosworkshop.wordpress.com/)
+- Udacity Self-Driving Car Nanodegree - Model Predictive Control (MPC) Project(https://github.com/darienmt/CarND-MPC-Project-P5)
 
