@@ -9,13 +9,13 @@ The NMPC can provide the poweful and effective performance among existing optima
 
 
 ## Features
-* Nonlinear Model Pridictive Control (through ipopt solver)  
+* Nonlinear Model Pridictive Control (through [ipopt solver](https://coin-or.github.io/Ipopt/))  
 * Wheeled Mobile Robot 
 
 
 ### Installation
 1. Ubuntu 18.04
-2. Install ROS Melodic.
+2. Install [ROS](http://wiki.ros.org/) Melodic.
 3. Install ROS dependencies.
 
     ```
@@ -34,10 +34,11 @@ The NMPC can provide the poweful and effective performance among existing optima
       ```
       git clone https://github.com/CzJaewan/servingbot.git
       ```
+      
+    > NOTE: you can also refer other models such as ackermann model, holonomic model. you can see it [mpc_ros_description](https://github.com/Geonhee-LEE/mpc_ros_description)
   
-6. Build and Try it.
+6. Build (_catkin_make_) and Try it.
 
-> NOTE: you can also refer other models such as ackermann model, holonomic model. you can see it [mpc_ros_description](https://github.com/Geonhee-LEE/mpc_ros_description)
 
 ## Launch
 
