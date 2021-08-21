@@ -82,4 +82,4 @@ License: Apache 2.0
 
 - HyphaROS MPC MiniCar(https://hypharosworkshop.wordpress.com/)
 - Udacity Self-Driving Car Nanodegree - Model Predictive Control (MPC) Project(https://github.com/darienmt/CarND-MPC-Project-P5)
-
+- (Korea) Path Tracking with Nonlinear Model Predictive Control for Differential Drive Wheeled Robot(https://www.dbpia.co.kr/Journal/articleDetail?nodeId=NODE10475067)
