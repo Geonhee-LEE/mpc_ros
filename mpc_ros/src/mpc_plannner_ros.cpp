@@ -196,6 +196,7 @@ namespace mpc_ros{
         latchedStopRotateController_.resetLatching();
         planner_util_.setPlan(orig_global_plan);
         
+	return true;
     }
 
     void MPCPlannerROS::updatePlanAndLocalCosts(
