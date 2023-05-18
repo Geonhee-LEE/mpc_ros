@@ -143,7 +143,7 @@ class BaseControl:
             VL = WL * self.wheelRad # V = omega * radius, unit: m/s
             VR = WR * self.wheelRad
             Vx = (VR+VL)/2.0
-            Vyaw = Vx * math.tan(self.cmd_steering) / self.wheelSep;
+            Vyaw = (VR-VL) * math.tan(self.cmd_steering) / self.wheelSep;
 
             # Pose
             self.current_time = rospy.Time.now()
